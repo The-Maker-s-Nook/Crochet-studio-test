@@ -1,0 +1,29 @@
+/* ===== Sales: discounts & checkout ===== */
+.salebox{margin-top:16px;background:var(--card2);border:1.5px solid var(--lav-soft);border-radius:18px;padding:14px;display:flex;flex-direction:column;gap:10px}
+.salebox .row{font-weight:700}
+.adjbtns{display:flex;gap:8px}
+button.dashed{flex:1;min-height:46px;background:transparent;color:var(--tl);box-shadow:none;border:2px dashed var(--lav);border-radius:14px;font-size:14px;padding:8px 6px}
+.discline{color:var(--pink-soft-ink);font-weight:700}
+.totalrow{align-items:baseline}.bigtotal{font-family:var(--display);font-size:26px;color:var(--ink)}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+button.chipbtn{min-height:38px;padding:6px 14px;font-size:13px;font-weight:700;background:var(--card);color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--lav-line)}
+button.chipbtn.on{background:var(--ink);color:#fff;box-shadow:none;font-weight:800}
+.previewbox{background:var(--ground);border-radius:16px;padding:12px 14px;margin-top:14px;display:flex;flex-direction:column;gap:6px;font-weight:700}
+.warn-text{color:var(--bad)!important;font-weight:700}
+.rline{align-items:flex-start;gap:8px;margin:6px 0;font-weight:700}.rline .iconbtn.sm{margin-top:-6px}
+.block{display:block;font-weight:600}
+.linkrow{display:flex;gap:10px;margin:-4px 0 0 -6px}.linkrow .linkbtn{min-height:36px;font-size:13px}
+.linkbtn{background:none;box-shadow:none;color:var(--pink-ink);padding:6px 6px;min-height:44px;font-weight:800;text-decoration:underline;text-underline-offset:3px}
+.paygrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:10px}
+button.paybtn{min-height:62px;padding:6px 4px;flex-direction:column;gap:2px;border-radius:16px;background:var(--card);color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--lav-line);font-size:13px;font-weight:700}
+button.paybtn.on{background:var(--lav-soft);box-shadow:inset 0 0 0 2px var(--lav-deep);font-weight:800}
+.sqtag{font-size:10px;font-weight:800;background:var(--alt-bg);color:var(--alt-ink);padding:1px 7px;border-radius:999px}
+ol.steps{margin:6px 0 10px;padding-left:20px;display:flex;flex-direction:column;gap:6px;line-height:1.45}
+.tiles3{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:8px}.tiles3 .panel{padding:12px;margin:0}.tiles3 .stat{font-size:20px}
+button.salerow{width:100%;display:flex;align-items:center;gap:10px;text-align:left;justify-content:flex-start;background:transparent;color:var(--ink);box-shadow:none;border-radius:0;border-bottom:1px solid var(--lav-soft);padding:12px 0;font-weight:400;min-height:64px}
+button.salerow:last-child{border-bottom:0}.salerow b{font-weight:800}.salerow .muted{font-size:13px;margin-top:2px}
+.pills{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.saleslink{margin:0 0 14px!important;background:var(--card)!important}.saleslink .row{align-items:center}.saleslink span{display:inline-flex;align-items:center;gap:6px}
+.reasonrow{margin:10px 0}.reasonrow .row{font-size:14px;font-weight:700;margin-bottom:4px}
+.paystats{grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:8px}.paystat{background:var(--ground);border-radius:14px;padding:10px;text-align:center}.paystat .muted{font-size:12px;font-weight:700}
+@media(max-width:360px){.paygrid{grid-template-columns:repeat(2,minmax(0,1fr))}}

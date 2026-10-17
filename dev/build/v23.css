@@ -1,0 +1,31 @@
+html,body{touch-action:manipulation}
+.dlg-msg,.modal-card,.toast{overflow-wrap:anywhere}
+.regiongrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+button.regionbtn{min-height:72px;flex-direction:column;gap:2px;border-radius:18px;background:var(--card);color:var(--ink);box-shadow:inset 0 0 0 2px var(--lav-soft)}
+button.regionbtn span{font-size:13px;font-weight:700;color:var(--ink2)}
+button.regionbtn.on{background:#F7F3FF;box-shadow:inset 0 0 0 2.5px var(--lav-deep)}
+.chip.tagchip{display:inline-block;margin-top:6px;font-size:12px;background:var(--lav-soft);color:var(--hero-ink)}
+.chipbtn.newtag{background:var(--card);color:var(--pink-ink);box-shadow:inset 0 0 0 1.5px var(--lav-line);border:0}
+label.tagrow{display:flex;align-items:center;gap:12px;min-height:60px;padding:6px 4px;border-bottom:1px solid var(--lav-soft);margin:0;cursor:pointer;font-size:15px}
+label.tagrow:last-child{border-bottom:0}
+label.tagrow input{width:22px;height:22px;flex-shrink:0;accent-color:var(--pink)}
+label.tagrow .muted{display:block;font-size:13px;font-weight:600}
+label.tagrow.here{opacity:.6;cursor:default}
+.panel.folded>*:not(.foldhead){display:none}
+.foldhead{cursor:pointer}
+h3[role=button]{cursor:pointer;display:flex;align-items:center;gap:6px}
+.foldchev{font-size:15px;color:var(--ink3);transition:transform .2s;margin-left:2px}
+.panel:not(.folded) .foldchev{transform:rotate(180deg)}
+.panel>h3.foldhead{margin-bottom:0}.panel:not(.folded)>h3.foldhead{margin-bottom:12px}
+.fmtgrid{display:flex;flex-direction:column;gap:10px}
+button.fmt{display:flex;flex-direction:column;align-items:flex-start;text-align:left;gap:2px;min-height:64px;border-radius:16px;background:var(--card);color:var(--ink);box-shadow:inset 0 0 0 2px var(--lav-soft);padding:10px 14px}
+button.fmt span{font-size:13px;font-weight:600;color:var(--ink2)}
+button.fmt.on{background:#F7F3FF;box-shadow:inset 0 0 0 2.5px var(--lav-deep)}
+body.viewing nav{z-index:1001}
+#vbody{position:relative;padding-bottom:110px}
+.vmarkbtn.on{background:var(--ink);color:#fff}
+.vtip{background:var(--alt-bg);color:var(--alt-ink);font-weight:800;font-size:13px;padding:9px 14px}
+.pmark{position:absolute;display:flex;align-items:center;gap:6px;pointer-events:none;z-index:2;transition:opacity .5s}
+.pmark .pdot{width:24px;height:24px;border-radius:50%;background:var(--pink);border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.35)}
+.pmark .plabel{background:var(--pink);color:#fff;font-weight:800;font-size:12px;padding:5px 10px;border-radius:999px;box-shadow:0 2px 8px rgba(0,0,0,.3);white-space:nowrap}
+.pmark.fade{opacity:0}

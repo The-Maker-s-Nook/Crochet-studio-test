@@ -1,0 +1,3 @@
+.thumb-add{flex-direction:column;gap:3px;cursor:pointer;border:2px dashed var(--lav-line);box-sizing:border-box;color:var(--lav-deep)}.thumb-add small{font-size:10px;font-weight:800;line-height:1}.thumb-add:active{background:var(--lav)}
+button.helpq{width:26px;height:26px;min-height:26px;padding:0;border-radius:50%;background:var(--lav-soft);color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--lav-line);font-size:14px;font-weight:800;margin-left:6px;vertical-align:middle;display:inline-flex}
+.brand[role=button]{cursor:pointer}

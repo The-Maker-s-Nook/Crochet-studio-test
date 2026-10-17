@@ -1,0 +1,7 @@
+/* ===== Search + quick sale ===== */
+.searchbox{margin:10px 0 6px}.searchbox input{width:100%}
+.qrow{gap:10px;align-items:center}.qrow.out{opacity:.55}.qrow .qcount{min-width:18px;text-align:center}.qrow .muted{font-size:13px}
+.quickbox{position:sticky;bottom:calc(84px + env(safe-area-inset-bottom));z-index:6;margin-top:10px}
+.quickbar{display:flex;align-items:center;gap:12px;background:var(--ink);color:#fff;border-radius:20px;padding:10px 10px 10px 16px;box-shadow:0 8px 22px var(--shadow2)}
+.quickbar .qtotal{font-family:var(--display);font-size:20px}.quickbar .hint{color:#CFC3E6}.quickbar button{flex-shrink:0}
+button.quicksell{width:100%;margin:-4px 0 14px}
