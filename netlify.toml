@@ -1,0 +1,15 @@
+# Crochet Studio is a ready-made web app: no build step.
+# Netlify publishes the files in this folder as they are.
+[build]
+  publish = "."
+  command = ""
+
+# Always check for a fresh copy of the app code, so updates reach phones quickly.
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "no-cache"
+[[headers]]
+  for = "/index.html"
+  [headers.values]
+    Cache-Control = "no-cache"

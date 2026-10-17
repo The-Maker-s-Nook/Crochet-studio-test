@@ -1,0 +1,59 @@
+CROCHET STUDIO - NOTES FOR THE APP OWNER (version 23)
+
+LIVE TEST ADDRESS
+   https://crochetstudiotest.netlify.app
+
+HOW TO UPDATE THE LIVE APP
+   1. In the app: Settings > Backup & restore > Download backup (just in case).
+   2. Unzip the new crochet-studio.zip on your computer.
+   3. Netlify > your project > Deploys > drag the whole "crochet-studio" folder
+      onto the drop area at the bottom of that page.
+      (Do NOT use the Netlify Drop page; that makes a new site with a new address.)
+   4. Open the app and tap "Refresh" when "New version ready" appears.
+   Each upload uses about 15 of Netlify's 300 free monthly credits.
+   Always change the version number in sw.js (crochet-studio-v23 -> v24) with every change.
+
+INSTALLING ON A PHONE OR TABLET
+   Android (Chrome): open the address, then tap Install (on the Welcome or Home
+   screen), or Chrome menu (3 dots) > Install app / Add to Home screen.
+   iPhone / iPad (Safari only): Share (square with arrow) > Add to Home Screen.
+   Testers: send them the Crochet Studio Tester Guide.
+
+ACCOUNTS AND CLOUD (Supabase)
+   Project: crochet-studio-test (Free plan)
+   Dashboard: https://supabase.com/dashboard/project/jrxapujzegvsjgljzxrp
+   - Data: table "app_data" (one private row per account).
+   - Pattern files: storage bucket "user-files" (a private folder per account).
+   - Don't edit or delete the table, bucket or their security rules.
+   - Never share the secret / service_role key or the database password.
+   - The free plan pauses after 1 week with no activity. Supabase emails you;
+     press Restore in the dashboard. Phones keep working; only syncing stops.
+   - The free plan has no automatic backups: download an app backup now and then.
+   - Built-in emails are limited to a few per hour. Set up your own email
+     sender (SMTP) before inviting many testers.
+
+BACKUPS
+   Settings > Backup & restore > Download backup (or Share backup).
+   A backup holds products, materials, photos, markets, sales and patterns.
+   Signed-in data is also kept in the account; a backup file is your own extra
+   copy, useful for undoing mistakes.
+
+SQUARE CARD PAYMENTS
+   Square Developer account: https://developer.squareup.com (app "Crochet Studio").
+   Application ID is built into the app. Point of Sale API > Web callback URL
+   must match the app's address (now https://crochetstudiotest.netlify.app/).
+   If the address changes (own domain, app stores), update the callback URL there.
+   Users turn it on in Settings > Payments and need the Square Point of Sale app.
+
+TESTER VERSION (23)
+   - Feedback emails go to Aaron.mete.5@hotmail.com (Settings > Send feedback).
+     To change it, search index.html for FEEDBACK_EMAIL.
+   - Pattern limit is 5 per account while testing (PATTERN_LIMIT in index.html).
+   - Spreadsheet import is beta. It reads the CrochetWBay pricing spreadsheet
+     (.xlsx or .csv). Settings > Import from spreadsheet > Undo removes the last import.
+
+   - Update notes for testers: guides/whats-new-23.pdf and guides/tester-guide.pdf.
+     They open from Settings > What's new & tester guide, and a "What's new" message
+     shows once after each update. For the next version, add the new PDFs to guides/,
+     update GUIDES in index.html and the list in sw.js.
+   - Currency: Settings > Country & currency (CAD / USD). Square charges in it.
