@@ -280,3 +280,7 @@ body.viewing nav{z-index:1001}
 header .brand{white-space:nowrap;min-width:0}
 @media (max-width:400px){header .brand{font-size:26px;gap:8px}header .brand .badge svg{width:38px;height:38px}.hdrbtns{gap:6px}}
 @media (max-width:350px){header .brand{font-size:22px}}
+/* Product cards: reminder bell in the top-left corner, over the photo's corner */
+.panel.item.hasbell{position:relative}
+.cornerbell{position:absolute;top:6px;left:6px;z-index:2;width:32px;height:32px;min-height:32px;padding:0;border-radius:50%;background:var(--card);color:var(--ink2);box-shadow:0 1px 4px var(--shadow2),inset 0 0 0 1.5px var(--lav-line)}
+.cornerbell.on{background:var(--lav-deep);color:#fff;box-shadow:0 1px 4px var(--shadow2)}
