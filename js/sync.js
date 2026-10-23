@@ -564,6 +564,8 @@ async function doSignup() {
         return needField('suEmail', 'Enter your email address.');
     if (pw.length < 8)
         return needField('suPass', 'Choose a password with at least 8 characters.');
+    if ($('suPass2') && $('suPass2').value !== pw)
+        return needField('suPass2', 'The passwords don’t match. Type the same password in both boxes.');
     await busy(async () => {
         let r = await authApi.signUp(email, pw);
         authFlow = { purpose: 'signup', email, pw };
@@ -709,6 +711,8 @@ async function saveNewPassword(fid, inModal) {
     let pw = $(fid).value;
     if (pw.length < 8)
         return needField(fid, 'Choose a password with at least 8 characters.');
+    if ($(fid + '2') && $(fid + '2').value !== pw)
+        return needField(fid + '2', 'The passwords don’t match. Type the same password in both boxes.');
     await busy(async () => {
         await authApi.updatePassword(pw);
         if (inModal) {
@@ -749,7 +753,7 @@ async function finishSetup(mode) {
     startUpload();
 }
 function openChangePassword() {
-    openModal(`<div class="row"><h2 style="margin:0">Change password</h2>${closeX()}</div><label for="npw">New password</label>${pwField('npw', 'new-password', `onkeydown="if(event.key==='Enter')saveNewPassword('npw',true)"`)}<div class="hint">At least 8 characters</div><div class="actions"><button onclick="saveNewPassword('npw',true)">Save password</button></div>`);
+    openModal(`<div class="row"><h2 style="margin:0">Change password</h2>${closeX()}</div><label for="npw">New password</label>${pwField('npw', 'new-password', `onkeydown="if(event.key==='Enter')saveNewPassword('npw',true)"`)}<div class="hint">At least 8 characters</div><label for="npw2">Confirm new password</label>${pwField('npw2', 'new-password', `onkeydown="if(event.key==='Enter')saveNewPassword('npw',true)"`)}<div class="actions"><button onclick="saveNewPassword('npw',true)">Save password</button></div>`);
     setTimeout(() => $('npw')?.focus(), 60);
 }
 async function signOut() {
