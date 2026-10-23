@@ -119,7 +119,8 @@ async function importPdf(e) {
 let viewerPageUrls = [], viewerItem = null, viewerUrl = '', viewerPdf = null, viewerZoom = 1, viewerToken = 0, pdfjsLib = null;
 const ZOOMS = [.5, .75, 1, 1.25, 1.5, 2, 2.5, 3];
 function isImagePattern(p) {
-    return (p.mime || '').startsWith('image/') || /\.(jpe?g|png)$/i.test(p.name || '');
+    // The file type saved at import decides; the name only matters for very old patterns saved without one, so renaming is safe.
+    return p.mime ? p.mime.startsWith('image/') : /\.(jpe?g|png)$/i.test(p.name || '');
 }
 async function renderViewer() {
     let body = $('vbody'), p = viewerItem;
