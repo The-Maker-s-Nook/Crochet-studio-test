@@ -2,8 +2,14 @@
 // Part of the Crochet Studio app. Files load in the order listed in index.html.
 
 function patterns() {
-    let list = pdfCache.slice().sort((a, b) => String(b.date).localeCompare(String(a.date)));
-    return `<div class="row"><h2>Pattern Library</h2></div><div class="panel"><h3>Add pattern</h3>${patternUsage()}<div class="actions"><button onclick="patternPick('patternFile')">Choose file (PDF / JPG / PNG)</button><button class="alt" onclick="patternPick('patternCamera')">📷 Camera</button></div><input class="hidden" id="patternFile" type="file" accept="application/pdf,.pdf,image/jpeg,.jpg,.jpeg,image/png,.png" onchange="importPdf(event)"><input class="hidden" id="patternCamera" type="file" accept="image/*" capture="environment" onchange="importPdf(event)"><p class="hint">${signedIn() ? 'Patterns are saved privately to your account.' : 'Patterns stay private on this device.'} A preview photo is made automatically; tap “Photo” to take or choose your own. Only import patterns you have permission to use.</p></div>${list.map(p => `<div class="panel item"><button class="thumbbtn" onclick="openPattern('${p.id}')" aria-label="Open ${esc(p.name)}">${thumb(p.thumb || '', "")}</button><div class="grow"><div class="item-title" style="word-break:break-word">${esc(p.name)}</div><div class="muted">${(p.mime || '').startsWith('image/') ? 'Image' : 'PDF'} · ${new Date(p.date).toLocaleDateString()}</div><div class="actions"><button class="small" onclick="openPattern('${p.id}')">Open</button><button class="alt small" onclick="pickPatternPhoto('${p.id}')">${ic('camera', 15)} Photo</button><button class="alt small" onclick="renamePattern('${p.id}')">${ic('pencil', 15)} Rename</button><button class="danger small" onclick="removePdf('${p.id}')">Delete</button></div></div></div>`).join('') || '<div class="panel muted">No patterns imported yet.</div>'}`;
+    let list = pdfCache.slice().sort((a, b) => String(b.date).localeCompare(String(a.date))), f = patternTagFilter && patternTag(patternTagFilter) ? patternTagFilter : '';
+    let has = x => !f || patternTagIds(x.id).includes(f), files = list.filter(has), links = (data.patternLinks || []).filter(has).sort(byName);
+    let add = `<div class="panel"><h3>Add pattern</h3>${patternUsage()}<div class="actions"><button onclick="patternPick('patternFile')">Choose file (PDF / JPG / PNG)</button><button class="alt" onclick="patternPick('patternCamera')">📷 Camera</button><button class="alt" onclick="editPatternLink()">${ic('link', 15)} Link</button></div><input class="hidden" id="patternFile" type="file" accept="application/pdf,.pdf,image/jpeg,.jpg,.jpeg,image/png,.png" onchange="importPdf(event)"><input class="hidden" id="patternCamera" type="file" accept="image/*" capture="environment" onchange="importPdf(event)"><p class="hint">${signedIn() ? 'Patterns are saved privately to your account.' : 'Patterns stay private on this device.'} A preview photo is made automatically; tap “Photo” to take or choose your own. Use <b>Link</b> to save a pattern that’s online, like an Instagram post (links don’t count toward the limit). Only import patterns you have permission to use.</p></div>`;
+    let tags = `<div class="chips pattags" role="group" aria-label="Show patterns with tag"><button type="button" class="chipbtn ${f ? '' : 'on'}" aria-pressed="${!f}" onclick="filterPatternTag('')">All</button>${(data.patternTags || []).slice().sort(byName).map(t => `<button type="button" class="chipbtn ${f === t.id ? 'on' : ''}" aria-pressed="${f === t.id}" onclick="filterPatternTag('${t.id}')">${esc(t.name)}</button>`).join('')}<button type="button" class="chipbtn newtag" onclick="editPatternTag()">+ Tag</button>${f ? `<button type="button" class="linkbtn" onclick="editPatternTag('${f}')">Edit tag</button>` : ''}</div>`;
+    let linkPanel = links.length ? `<details class="panel patlinks" ${lsGet('csLinksOpen', false) ? 'open' : ''} ontoggle="lsSet('csLinksOpen', this.open)"><summary><b>${ic('link', 16)} Links</b> <span class="muted">${links.length}</span></summary>${links.map(patternLinkRow).join('')}</details>` : '';
+    let cards = files.map(p => `<div class="panel item"><button class="thumbbtn" onclick="openPattern('${p.id}')" aria-label="Open ${esc(p.name)}">${thumb(p.thumb || '', "")}</button><div class="grow"><div class="item-title" style="word-break:break-word">${esc(p.name)}</div><div class="muted">${(p.mime || '').startsWith('image/') ? 'Image' : 'PDF'} · ${new Date(p.date).toLocaleDateString()}</div>${patternTagChips(p.id)}<div class="actions"><button class="small" onclick="openPattern('${p.id}')">Open</button><button class="alt small" onclick="pickPatternPhoto('${p.id}')">${ic('camera', 15)} Photo</button><button class="alt small" onclick="renamePattern('${p.id}')">${ic('pencil', 15)} Rename</button><button class="alt small" onclick="patternTagsModal('${p.id}')">${ic('tag', 15)} Tags</button><button class="danger small" onclick="removePdf('${p.id}')">Delete</button></div></div></div>`).join('');
+    let empty = !list.length && !(data.patternLinks || []).length ? '<div class="panel muted">No patterns added yet.</div>' : !cards && !linkPanel ? '<div class="panel muted">No patterns with this tag yet. Tap <b>Tags</b> on a pattern or edit a link to add it.</div>' : '';
+    return `<div class="row"><h2>Pattern Library</h2></div>${add}${tags}${linkPanel}${cards}${empty}`;
 }
 let patternPhotoFor = null;
 function pickPatternPhoto(pid) {
@@ -239,6 +245,10 @@ async function removePdf(pid) {
     if (!await appConfirm('Delete this pattern from the library?'))
         return;
     await pdfDelete(pid);
+    if (data.patternTagOf?.[pid]) {
+        delete data.patternTagOf[pid];
+        save();
+    }
     await refreshPdfs();
     toast('Pattern deleted.');
 }
@@ -247,7 +257,8 @@ function fillPatternOptions() {
     if (!e)
         return;
     let p = product(editing);
-    e.innerHTML = '<option value="">No pattern</option>' + pdfCache.map(x => `<option value="${x.id}">${esc(x.name)}</option>`).join('');
+    let links = (data.patternLinks || []).slice().sort(byName);
+    e.innerHTML = '<option value="">No pattern</option>' + (links.length ? '<optgroup label="Files">' : '') + pdfCache.map(x => `<option value="${x.id}">${esc(x.name)}</option>`).join('') + (links.length ? '</optgroup><optgroup label="Links">' + links.map(x => `<option value="${x.id}">🔗 ${esc(x.name)}</option>`).join('') + '</optgroup>' : '');
     e.value = p?.patternId || '';
 }
 // ---- Pattern limit (test version) ----
@@ -550,4 +561,174 @@ async function addPageLinks(page, box, css) {
 function patLinkClick(e) {
     if (patArm || Date.now() - patMarkAt < 700)
         e.preventDefault();
+}
+
+
+// ---- Pattern tags and saved links (e.g. a pattern posted on Instagram) ----
+ICONS.link = '<path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/>';
+let patternTagFilter = '', linkTagDraft = [];
+function patternTag(tid) {
+    return (data.patternTags || []).find(t => t.id === tid);
+}
+function patternTagIds(itemId) {
+    return (data.patternTagOf?.[itemId] || []).filter(patternTag);
+}
+function setPatternTagIds(itemId, ids) {
+    data.patternTagOf ||= {};
+    ids = [...new Set(ids)].filter(patternTag);
+    if (ids.length)
+        data.patternTagOf[itemId] = ids;
+    else
+        delete data.patternTagOf[itemId];
+}
+function patternTagChips(itemId) {
+    let t = patternTagIds(itemId).map(patternTag).sort(byName);
+    return t.length ? `<div class="tagline">${t.map(x => `<span class="chip">${esc(x.name)}</span>`).join(' ')}</div>` : '';
+}
+function filterPatternTag(tid) {
+    patternTagFilter = patternTagFilter === tid ? '' : tid;
+    render();
+}
+function patternLink(lid) {
+    return (data.patternLinks || []).find(l => l.id === lid);
+}
+function linkHost(u) {
+    try {
+        return new URL(u).hostname.replace(/^www\./, '');
+    }
+    catch {
+        return '';
+    }
+}
+function patternLinkRow(l) {
+    let href = safeLink(l.url);
+    return `<div class="patlinkrow"><a class="grow linkopen" href="${esc(href || '#')}" target="_blank" rel="noopener noreferrer"><b>${esc(l.name)}</b><span class="muted block">${esc(linkHost(href) || l.url)}</span>${patternTagChips(l.id)}</a><button class="iconbtn small" aria-label="Edit ${esc(l.name)}" onclick="editPatternLink('${l.id}')">${ic('pencil', 16)}</button></div>`;
+}
+function openPatternLink(lid) {
+    let l = patternLink(lid), href = l && safeLink(l.url);
+    if (!href)
+        return appAlert('That link couldn’t be opened. Check it under Patterns › Links.');
+    window.open(href, '_blank', 'noopener');
+}
+// Product page: a linked pattern can be a file or a saved link.
+function productPatternBtn(p) {
+    if (!p.patternId)
+        return '';
+    if (patternLink(p.patternId))
+        return `<button class="alt" onclick="openPatternLink('${p.patternId}')">${ic('link', 15)} Open pattern link</button>`;
+    return `<button class="alt" onclick="openPattern('${p.patternId}')">Open pattern</button>`;
+}
+function linkTagChipsHtml() {
+    let tags = (data.patternTags || []).slice().sort(byName);
+    return tags.map(t => `<button type="button" class="chipbtn ${linkTagDraft.includes(t.id) ? 'on' : ''}" aria-pressed="${linkTagDraft.includes(t.id)}" onclick="toggleLinkTag('${t.id}')">${esc(t.name)}</button>`).join('') || '<span class="muted">No pattern tags yet. Make one with + Tag on the Patterns page.</span>';
+}
+function toggleLinkTag(tid) {
+    linkTagDraft = linkTagDraft.includes(tid) ? linkTagDraft.filter(x => x !== tid) : [...linkTagDraft, tid];
+    $('linkTags').innerHTML = linkTagChipsHtml();
+}
+function editPatternLink(lid) {
+    let l = lid ? patternLink(lid) : null;
+    linkTagDraft = l ? patternTagIds(l.id) : patternTagFilter && patternTag(patternTagFilter) ? [patternTagFilter] : [];
+    openModal(`<div class="row"><h2 style="margin:0">${l ? 'Edit link' : 'Add a pattern link'}</h2>${closeX()}</div><label for="linkUrl">Link</label><input id="linkUrl" type="url" inputmode="url" autocomplete="off" value="${esc(l?.url || '')}" placeholder="Paste the link, e.g. https://www.instagram.com/p/…"><label for="linkName">Name</label><input id="linkName" maxlength="120" value="${esc(l?.name || '')}" placeholder="e.g. Bumble bee (Instagram)"><label>Tags <span class="muted">(optional)</span></label><div id="linkTags" class="chips">${linkTagChipsHtml()}</div><div class="actions"><button onclick="savePatternLink(${l ? `'${l.id}'` : ''})">Save link</button>${l ? `<button class="alt" onclick="openPatternLink('${l.id}')">Open</button><button class="danger" onclick="deletePatternLink('${l.id}')">Delete</button>` : `<button class="alt" onclick="closeModal()">Cancel</button>`}</div>`);
+    setTimeout(() => $(l ? 'linkName' : 'linkUrl')?.focus(), 50);
+}
+function savePatternLink(lid) {
+    let raw = String($('linkUrl').value || '').trim(), m = raw.match(URL_RX), href = safeLink(m ? m[0] : raw), name = normName($('linkName').value);
+    if (!href || !/^https?:\/\/[^\s/]+\.[^\s/]+/.test(href))
+        return needField('linkUrl', 'Paste a web link, e.g. https://www.instagram.com/p/…');
+    if (!name)
+        return needField('linkName', 'Give this link a name, e.g. Bumble bee (Instagram).');
+    data.patternLinks ||= [];
+    let l = lid ? patternLink(lid) : null;
+    if (!l) {
+        l = { id: id(), date: new Date().toISOString() };
+        data.patternLinks.push(l);
+    }
+    Object.assign(l, { name, url: href });
+    setPatternTagIds(l.id, linkTagDraft);
+    save();
+    closeModal();
+    render();
+    toast(lid ? 'Link saved.' : 'Link added to your patterns.');
+}
+async function deletePatternLink(lid) {
+    let l = patternLink(lid);
+    if (!l)
+        return closeModal();
+    let used = data.products.filter(p => p.patternId === lid);
+    if (!await appConfirm(`Delete the link “${l.name}”?${used.length ? `\n\n${used.length === 1 ? used[0].name + ' uses' : used.length + ' products use'} it as their pattern; ${used.length === 1 ? 'it' : 'they'} will have no pattern.` : ''}`, { ok: 'Delete', danger: true }))
+        return;
+    data.patternLinks = data.patternLinks.filter(x => x.id !== lid);
+    delete data.patternTagOf?.[lid];
+    used.forEach(p => p.patternId = '');
+    save();
+    closeModal();
+    render();
+    toast('Link deleted.');
+}
+// Tags on one pattern file
+function patternTagsModal(itemId) {
+    let p = pdfCache.find(x => x.id === itemId), on = new Set(patternTagIds(itemId)), tags = (data.patternTags || []).slice().sort(byName);
+    openModal(`<div class="row"><h2 style="margin:0">Tags</h2>${closeX()}</div><p class="muted">${esc(p?.name || '')} · pick any</p><div class="chips">${tags.map(t => `<button type="button" class="chipbtn ${on.has(t.id) ? 'on' : ''}" aria-pressed="${on.has(t.id)}" onclick="togglePatternTag('${itemId}','${t.id}')">${esc(t.name)}</button>`).join('') || '<span class="muted">No pattern tags yet.</span>'}</div><div class="row addnote" style="margin-top:12px"><label for="ptNew" class="sr-only">New tag</label><input id="ptNew" placeholder="New tag, e.g. Bees" maxlength="40" onkeydown="if(event.key==='Enter'){event.preventDefault();addPatternTagTo('${itemId}')}"><button onclick="addPatternTagTo('${itemId}')">Add</button></div><div class="actions"><button onclick="closeModal()">Done</button></div>`);
+}
+function togglePatternTag(itemId, tid) {
+    let ids = patternTagIds(itemId);
+    setPatternTagIds(itemId, ids.includes(tid) ? ids.filter(x => x !== tid) : [...ids, tid]);
+    save();
+    render();
+    patternTagsModal(itemId);
+}
+function makePatternTag(name) {
+    name = normName(name);
+    if (!name)
+        return null;
+    let dup = (data.patternTags || []).find(t => t.name.toLowerCase() === name.toLowerCase());
+    if (dup)
+        return dup;
+    let t = { id: id(), name };
+    data.patternTags.push(t);
+    return t;
+}
+function addPatternTagTo(itemId) {
+    let t = makePatternTag($('ptNew')?.value);
+    if (!t)
+        return needField('ptNew', 'Type a name for the new tag.');
+    setPatternTagIds(itemId, [...patternTagIds(itemId), t.id]);
+    save();
+    render();
+    patternTagsModal(itemId);
+}
+// + Tag (new) or Edit tag (rename / delete) on the Patterns page
+function editPatternTag(tid) {
+    let t = tid ? patternTag(tid) : null;
+    openModal(`<div class="row"><h2 style="margin:0">${t ? 'Edit' : 'New'} pattern tag</h2>${closeX()}</div><label for="ptName">Tag name</label><input id="ptName" maxlength="40" value="${esc(t?.name || '')}" placeholder="e.g. Bees, Amigurumi, Holiday" onkeydown="if(event.key==='Enter'){event.preventDefault();savePatternTag(${t ? `'${t.id}'` : ''})}"><div class="actions"><button onclick="savePatternTag(${t ? `'${t.id}'` : ''})">Save tag</button>${t ? `<button class="danger" onclick="deletePatternTag('${t.id}')">Delete tag</button>` : `<button class="alt" onclick="closeModal()">Cancel</button>`}</div>`);
+    setTimeout(() => $('ptName')?.focus(), 50);
+}
+function savePatternTag(tid) {
+    let name = normName($('ptName').value), dup = (data.patternTags || []).find(x => x.name.toLowerCase() === name.toLowerCase() && x.id !== tid);
+    if (!name)
+        return needField('ptName', 'Enter a tag name.');
+    if (dup)
+        return needField('ptName', `You already have a “${dup.name}” tag.`);
+    if (tid)
+        patternTag(tid).name = name;
+    else
+        data.patternTags.push({ id: id(), name });
+    save();
+    closeModal();
+    render();
+    toast(tid ? 'Tag renamed.' : `Tag “${name}” made. Tap Tags on a pattern to add it.`);
+}
+async function deletePatternTag(tid) {
+    let t = patternTag(tid);
+    if (!t || !await appConfirm(`Delete the “${t.name}” tag?\n\nYour patterns and links stay, just without this tag.`, { ok: 'Delete', danger: true }))
+        return;
+    data.patternTags = data.patternTags.filter(x => x.id !== tid);
+    for (let k of Object.keys(data.patternTagOf || {}))
+        setPatternTagIds(k, data.patternTagOf[k].filter(x => x !== tid));
+    if (patternTagFilter === tid)
+        patternTagFilter = '';
+    save();
+    closeModal();
+    render();
 }

@@ -35,6 +35,12 @@ function migrateData(d, fresh) {
         d.expenses = [];
     if (!Array.isArray(d.reminders))
         d.reminders = [];
+    if (!Array.isArray(d.patternLinks))
+        d.patternLinks = [];
+    if (!Array.isArray(d.patternTags))
+        d.patternTags = [];
+    if (!d.patternTagOf || typeof d.patternTagOf !== 'object')
+        d.patternTagOf = {};
     if (!d.settings.currency)
         d.settings.currency = guessCurrency();
     // Version 24 tax options. New setups: add tax to sales, material prices before tax. Older data keeps how it worked.
