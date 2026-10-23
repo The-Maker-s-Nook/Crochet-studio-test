@@ -615,7 +615,7 @@ function productPatternBtn(p) {
     if (!p.patternId)
         return '';
     if (patternLink(p.patternId))
-        return `<button class="alt" onclick="openPatternLink('${p.patternId}')">${ic('link', 15)} Open pattern link</button>`;
+        return `<a class="btnlink alt" href="${esc(safeLink(patternLink(p.patternId).url) || '#')}" target="_blank" rel="noopener noreferrer">${ic('link', 15)} Open pattern link</a>`;
     return `<button class="alt" onclick="openPattern('${p.patternId}')">Open pattern</button>`;
 }
 function linkTagChipsHtml() {
