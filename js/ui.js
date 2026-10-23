@@ -287,9 +287,11 @@ function photoMenu(onFiles, multiple = false) {
     photoMenuDone = { onFiles, multiple };
     openModal(`<div class="row"><h2 style="margin:0">Add a photo</h2>${closeX()}</div><div class="photomenu"><button class="alt" onclick="photoFrom('camera')">${ic('camera', 20)} Take photo</button><button class="alt" onclick="photoFrom('gallery')">${ic('folder', 20)} Choose from gallery</button><button class="alt" onclick="photoFrom('files')">${ic('download', 20)} Browse files</button></div>`);
 }
-function photoFrom(src) {
-    let job = photoMenuDone;
-    closeModal();
+// keepJob: used from inside another box (e.g. Edit link) so that box stays open
+function photoFrom(src, keepJob) {
+    let job = keepJob || photoMenuDone;
+    if (!keepJob)
+        closeModal();
     if (!job)
         return;
     let i = document.createElement('input');

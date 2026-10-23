@@ -566,7 +566,7 @@ function patLinkClick(e) {
 
 // ---- Pattern tags and saved links (e.g. a pattern posted on Instagram) ----
 ICONS.link = '<path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/>';
-let patternTagFilter = '', linkTagDraft = [];
+let patternTagFilter = '', linkTagDraft = [], linkPhotoDraft = '';
 function patternTag(tid) {
     return (data.patternTags || []).find(t => t.id === tid);
 }
@@ -630,7 +630,8 @@ function toggleLinkTag(tid) {
 function editPatternLink(lid) {
     let l = lid ? patternLink(lid) : null;
     linkTagDraft = l ? patternTagIds(l.id) : patternTagFilter && patternTag(patternTagFilter) ? [patternTagFilter] : [];
-    openModal(`<div class="row"><h2 style="margin:0">${l ? 'Edit link' : 'Add a pattern link'}</h2>${closeX()}</div><label for="linkUrl">Link</label><input id="linkUrl" type="url" inputmode="url" autocomplete="off" value="${esc(l?.url || '')}" placeholder="Paste the link, e.g. https://www.instagram.com/p/…"><label for="linkName">Name</label><input id="linkName" maxlength="120" value="${esc(l?.name || '')}" placeholder="e.g. Bumble bee (Instagram)">${l ? `<label>Photo</label><div class="row linkphoto">${l.photo ? thumb(l.photo) : photoSlot('', '', 'link', l.id, l.name)}<div class="actions grow" style="margin:0"><button type="button" class="alt small" onclick="closeModal();pickPhotoFor('link','${l.id}')">${ic('camera', 15)} ${l.photo ? 'Change photo' : 'Add photo'}</button>${l.photo ? `<button type="button" class="danger small" onclick="removeLinkPhoto('${l.id}')">Remove photo</button>` : ''}</div></div>` : ''}<label>Tags <span class="muted">(optional)</span></label><div id="linkTags" class="chips">${linkTagChipsHtml()}</div><div class="actions"><button onclick="savePatternLink(${l ? `'${l.id}'` : ''})">Save link</button>${l ? `<button class="alt" onclick="openPatternLink('${l.id}')">Open</button><button class="danger" onclick="deletePatternLink('${l.id}')">Delete</button>` : `<button class="alt" onclick="closeModal()">Cancel</button>`}</div>`);
+    linkPhotoDraft = l?.photo || '';
+    openModal(`<div class="row"><h2 style="margin:0">${l ? 'Edit link' : 'Add a pattern link'}</h2>${closeX()}</div><label for="linkUrl">Link</label><input id="linkUrl" type="url" inputmode="url" autocomplete="off" value="${esc(l?.url || '')}" placeholder="Paste the link, e.g. https://www.instagram.com/p/…"><label for="linkName">Name</label><input id="linkName" maxlength="120" value="${esc(l?.name || '')}" placeholder="e.g. Bumble bee (Instagram)"><label>Photo <span class="muted">(optional)</span></label><div id="linkPhoto">${linkPhotoHtml()}</div><label>Tags <span class="muted">(optional)</span></label><div id="linkTags" class="chips">${linkTagChipsHtml()}</div><div class="actions"><button onclick="savePatternLink(${l ? `'${l.id}'` : ''})">Save link</button>${l ? `<button class="alt" onclick="openPatternLink('${l.id}')">Open</button><button class="danger" onclick="deletePatternLink('${l.id}')">Delete</button>` : `<button class="alt" onclick="closeModal()">Cancel</button>`}</div>`);
     setTimeout(() => $(l ? 'linkName' : 'linkUrl')?.focus(), 50);
 }
 function savePatternLink(lid) {
@@ -646,6 +647,16 @@ function savePatternLink(lid) {
         data.patternLinks.push(l);
     }
     Object.assign(l, { name, url: href });
+    if (linkPhotoDraft) {
+        if (l.photo !== linkPhotoDraft) {
+            l.photo = linkPhotoDraft;
+            l.photos = [linkPhotoDraft];
+        }
+    }
+    else {
+        delete l.photo;
+        delete l.photos;
+    }
     setPatternTagIds(l.id, linkTagDraft);
     save();
     closeModal();
@@ -733,14 +744,30 @@ async function deletePatternTag(tid) {
     closeModal();
     render();
 }
-function removeLinkPhoto(lid) {
-    let l = patternLink(lid);
-    if (!l)
-        return;
-    delete l.photo;
-    delete l.photos;
-    save();
-    render();
-    editPatternLink(lid);
-    toast('Photo removed.');
+// Photo inside the Add/Edit link box: picked here, saved with Save link
+function linkPhotoHtml(menu) {
+    let pic = linkPhotoDraft ? thumb(linkPhotoDraft) : `<span role="button" tabindex="0" class="thumb thumb-empty thumb-add" aria-label="Add a photo" onclick="showLinkPhotoMenu()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showLinkPhotoMenu()}">${ic('camera', 22)}<small>Add photo</small></span>`;
+    let btns = menu ? `<button type="button" class="alt small" onclick="linkPhotoFrom('camera')">${ic('camera', 15)} Take photo</button><button type="button" class="alt small" onclick="linkPhotoFrom('gallery')">${ic('folder', 15)} Gallery</button><button type="button" class="alt small" onclick="linkPhotoFrom('files')">${ic('download', 15)} Files</button><button type="button" class="linkbtn" onclick="hideLinkPhotoMenu()">Cancel</button>` : `<button type="button" class="alt small" onclick="showLinkPhotoMenu()">${ic('camera', 15)} ${linkPhotoDraft ? 'Change photo' : 'Add photo'}</button>${linkPhotoDraft ? `<button type="button" class="danger small" onclick="removeLinkPhoto()">Remove photo</button>` : ''}`;
+    return `<div class="row linkphoto">${pic}<div class="actions grow" style="margin:0">${btns}</div></div>`;
+}
+function showLinkPhotoMenu() {
+    $('linkPhoto').innerHTML = linkPhotoHtml(true);
+}
+function hideLinkPhotoMenu() {
+    $('linkPhoto').innerHTML = linkPhotoHtml();
+}
+function linkPhotoFrom(src) {
+    photoFrom(src, { multiple: false, onFiles: e => {
+        let f = e.target.files?.[0];
+        if (f)
+            resizePhoto(f, pic => {
+                linkPhotoDraft = pic;
+                if ($('linkPhoto'))
+                    hideLinkPhotoMenu();
+            }, 480);
+    } });
+}
+function removeLinkPhoto() {
+    linkPhotoDraft = '';
+    hideLinkPhotoMenu();
 }
