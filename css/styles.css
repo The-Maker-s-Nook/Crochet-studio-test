@@ -317,3 +317,6 @@ header .brand{white-space:nowrap;min-width:0}
 .tagline{margin-top:5px;display:flex;flex-wrap:wrap;gap:4px}
 a.btnlink{display:inline-flex;align-items:center;gap:6px;padding:12px 18px;border-radius:999px;font-size:16px;font-weight:800;min-height:44px;text-decoration:none;flex-shrink:0;background:var(--alt-bg);color:var(--alt-ink);box-shadow:inset 0 0 0 1.5px var(--alt-ring)}
 a.btnlink:active{filter:brightness(.95)}
+.patlinkrow .thumb,.patlinkrow .linkpic{flex-shrink:0}
+.patlinkrow .linkpic{display:block;line-height:0}
+.linkphoto{justify-content:flex-start;gap:12px}

@@ -602,7 +602,8 @@ function linkHost(u) {
 }
 function patternLinkRow(l) {
     let href = safeLink(l.url);
-    return `<div class="patlinkrow"><a class="grow linkopen" href="${esc(href || '#')}" target="_blank" rel="noopener noreferrer"><b>${esc(l.name)}</b><span class="muted block">${esc(linkHost(href) || l.url)}</span>${patternTagChips(l.id)}</a><button class="iconbtn small" aria-label="Edit ${esc(l.name)}" onclick="editPatternLink('${l.id}')">${ic('pencil', 16)}</button></div>`;
+    let pic = l.photo ? `<a class="linkpic" href="${esc(href || '#')}" target="_blank" rel="noopener noreferrer" aria-label="Open ${esc(l.name)}">${thumb(l.photo)}</a>` : photoSlot('', '', 'link', l.id, l.name);
+    return `<div class="patlinkrow">${pic}<a class="grow linkopen" href="${esc(href || '#')}" target="_blank" rel="noopener noreferrer"><b>${esc(l.name)}</b><span class="muted block">${esc(linkHost(href) || l.url)}</span>${patternTagChips(l.id)}</a><button class="iconbtn small" aria-label="Edit ${esc(l.name)}" onclick="editPatternLink('${l.id}')">${ic('pencil', 16)}</button></div>`;
 }
 function openPatternLink(lid) {
     let l = patternLink(lid), href = l && safeLink(l.url);
@@ -629,7 +630,7 @@ function toggleLinkTag(tid) {
 function editPatternLink(lid) {
     let l = lid ? patternLink(lid) : null;
     linkTagDraft = l ? patternTagIds(l.id) : patternTagFilter && patternTag(patternTagFilter) ? [patternTagFilter] : [];
-    openModal(`<div class="row"><h2 style="margin:0">${l ? 'Edit link' : 'Add a pattern link'}</h2>${closeX()}</div><label for="linkUrl">Link</label><input id="linkUrl" type="url" inputmode="url" autocomplete="off" value="${esc(l?.url || '')}" placeholder="Paste the link, e.g. https://www.instagram.com/p/…"><label for="linkName">Name</label><input id="linkName" maxlength="120" value="${esc(l?.name || '')}" placeholder="e.g. Bumble bee (Instagram)"><label>Tags <span class="muted">(optional)</span></label><div id="linkTags" class="chips">${linkTagChipsHtml()}</div><div class="actions"><button onclick="savePatternLink(${l ? `'${l.id}'` : ''})">Save link</button>${l ? `<button class="alt" onclick="openPatternLink('${l.id}')">Open</button><button class="danger" onclick="deletePatternLink('${l.id}')">Delete</button>` : `<button class="alt" onclick="closeModal()">Cancel</button>`}</div>`);
+    openModal(`<div class="row"><h2 style="margin:0">${l ? 'Edit link' : 'Add a pattern link'}</h2>${closeX()}</div><label for="linkUrl">Link</label><input id="linkUrl" type="url" inputmode="url" autocomplete="off" value="${esc(l?.url || '')}" placeholder="Paste the link, e.g. https://www.instagram.com/p/…"><label for="linkName">Name</label><input id="linkName" maxlength="120" value="${esc(l?.name || '')}" placeholder="e.g. Bumble bee (Instagram)">${l ? `<label>Photo</label><div class="row linkphoto">${l.photo ? thumb(l.photo) : photoSlot('', '', 'link', l.id, l.name)}<div class="actions grow" style="margin:0"><button type="button" class="alt small" onclick="closeModal();pickPhotoFor('link','${l.id}')">${ic('camera', 15)} ${l.photo ? 'Change photo' : 'Add photo'}</button>${l.photo ? `<button type="button" class="danger small" onclick="removeLinkPhoto('${l.id}')">Remove photo</button>` : ''}</div></div>` : ''}<label>Tags <span class="muted">(optional)</span></label><div id="linkTags" class="chips">${linkTagChipsHtml()}</div><div class="actions"><button onclick="savePatternLink(${l ? `'${l.id}'` : ''})">Save link</button>${l ? `<button class="alt" onclick="openPatternLink('${l.id}')">Open</button><button class="danger" onclick="deletePatternLink('${l.id}')">Delete</button>` : `<button class="alt" onclick="closeModal()">Cancel</button>`}</div>`);
     setTimeout(() => $(l ? 'linkName' : 'linkUrl')?.focus(), 50);
 }
 function savePatternLink(lid) {
@@ -731,4 +732,15 @@ async function deletePatternTag(tid) {
     save();
     closeModal();
     render();
+}
+function removeLinkPhoto(lid) {
+    let l = patternLink(lid);
+    if (!l)
+        return;
+    delete l.photo;
+    delete l.photos;
+    save();
+    render();
+    editPatternLink(lid);
+    toast('Photo removed.');
 }

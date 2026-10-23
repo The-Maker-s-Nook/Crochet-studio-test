@@ -233,7 +233,7 @@ function slotPhotoChosen(e) {
     if (f.type && !f.type.startsWith('image/'))
         return appAlert('Choose a photo (JPG or PNG).');
     resizePhoto(f, src => {
-        let list = t.kind === 'product' ? [product(t.id)] : t.kind === 'group' ? (matGroupInfo[Number(t.id)]?.items || []).filter(m => !(m.photo || m.photos?.length)) : [material(t.id)];
+        let list = t.kind === 'product' ? [product(t.id)] : t.kind === 'link' ? [patternLink(t.id)] : t.kind === 'group' ? (matGroupInfo[Number(t.id)]?.items || []).filter(m => !(m.photo || m.photos?.length)) : [material(t.id)];
         list = list.filter(Boolean);
         if (!list.length)
             return;
