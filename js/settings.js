@@ -1,12 +1,17 @@
 // Settings screens: pricing, tax, backup, payments, country & currency, feedback, guides, What's new
 // Part of the Crochet Studio app. Files load in the order listed in index.html.
 
+// Settings › Finances: everything to do with money, in one place.
+function settingsFinances() {
+    let s = data.settings, meth = { labour: 'Materials + hourly labour', multiply: 'Materials × multiplier', markup: 'Materials with markup + labour' }[s.method] || '', pt = (PRODUCT_TAX.find(x => x[0] === s.productTax) || [, ''])[1], noRate = s.taxRate === null || s.taxRate === undefined || s.taxRate === '';
+    return `${backBtn()}<h2 style="margin-top:12px">Finances</h2><div class="panel menu">${menuRow('percent', 'Tax', noRate ? 'Add your sales tax rate' : `${num(s.taxRate)}% · ${pt}`, "go('settingsTax')")}${menuRow('tag', 'Pricing defaults', `${cash(s.hourly)}/hr · ${meth}`, "go('settingsPricing')")}${menuRow('globe', 'Country & currency', currencyName() + ' · also used for Square', "go('settingsRegion')")}${menuRow('card', 'Payments', squareOn() ? 'Square card payments on' : 'Cash, card and e-transfer', "go('settingsPayments')")}</div>`;
+}
 function menuRow(icon, title, sub, action) {
     return `<button class="menu-row" onclick="${action}"><span class="tic lav">${ic(icon, 18)}</span><span class="grow"><b>${esc(title)}</b><span class="muted">${esc(sub)}</span></span><span class="chev" aria-hidden="true">›</span></button>`;
 }
 function settings() {
     let s = data.settings, meth = { labour: 'Materials + hourly labour', multiply: 'Materials × multiplier', markup: 'Materials with markup + labour' }[s.method] || '';
-    return `${navStack.length ? backBtn() : ''}<h2 style="margin-top:12px">Settings</h2><div class="panel menu">${menuRow('user', 'Account', signedIn() ? session.user.email : (s.userName ? s.userName + ' · not signed in' : 'Sign in to sync your devices'), "go('settingsAccount')")}${menuRow('globe', 'Country & currency', currencyName() + ' · also used for Square', "go('settingsRegion')")}${menuRow('tag', 'Pricing defaults', `${cash(s.hourly)}/hr · ${meth}`, "go('settingsPricing')")}${menuRow('percent', 'Tax', `${num(s.taxRate)}% · ${s.taxOnSales ? 'added to sales' : 'not added to sales'}`, "go('settingsTax')")}${menuRow('card', 'Payments', squareOn() ? 'Square card payments on' : 'Cash, card and e-transfer', "go('settingsPayments')")}${menuRow('download', 'Backup & restore', data.lastBackup ? 'Last backup ' + new Date(data.lastBackup).toLocaleDateString() : 'No backup yet', "go('settingsBackup')")}${menuRow('download', 'Import from spreadsheet', 'Beta · bring in products and materials', "go('settingsImport')")}${menuRow('mail', 'Send feedback', 'Report a problem or share an idea', "go('settingsFeedback')")}${menuRow('book', 'What’s new & tester guide', `Version ${APP_VERSION} notes · guide updated`, "go('settingsGuides')")}</div><p class="hint" style="margin:-4px 8px 14px">Crochet Studio test version ${APP_VERSION}</p>${installCard()}<div class="panel"><h3>Danger zone</h3><button class="danger" onclick="resetData()">Delete all app data</button></div>`;
+    return `${navStack.length ? backBtn() : ''}<h2 style="margin-top:12px">Settings</h2><div class="panel menu">${menuRow('user', 'Account', signedIn() ? session.user.email : (s.userName ? s.userName + ' · not signed in' : 'Sign in to sync your devices'), "go('settingsAccount')")}${menuRow('percent', 'Finances', 'Tax, pricing defaults, currency and payments', "go('settingsFinances')")}${menuRow('download', 'Backup & restore', data.lastBackup ? 'Last backup ' + new Date(data.lastBackup).toLocaleDateString() : 'No backup yet', "go('settingsBackup')")}${menuRow('download', 'Import from spreadsheet', 'Beta · bring in products and materials', "go('settingsImport')")}${menuRow('mail', 'Send feedback', 'Report a problem or share an idea', "go('settingsFeedback')")}${menuRow('book', 'What’s new & tester guide', `Version ${APP_VERSION} notes · guide updated`, "go('settingsGuides')")}</div><p class="hint" style="margin:-4px 8px 14px">Crochet Studio test version ${APP_VERSION}</p>${installCard()}<div class="panel"><h3>Danger zone</h3><button class="danger" onclick="resetData()">Delete all app data</button></div>`;
 }
 function settingsPricing() {
     let s = data.settings;
@@ -27,15 +32,29 @@ function saveSettings() {
     goBack();
     toast('Pricing defaults saved.');
 }
+function taxSelect(fid, opts, value, extra = '') {
+    return `<select id="${fid}" ${extra}>${opts.map(([v, l]) => `<option value="${v}" ${value === v ? 'selected' : ''}>${l}</option>`).join('')}</select>`;
+}
 function settingsTax() {
-    let s = data.settings;
-    return `${backBtn()}<h2 style="margin-top:12px">Tax</h2><div class="panel"><label for="tRate" style="margin-top:0">Tax rate (%)</label><input id="tRate" type="number" min="0" max="100" step="0.01" inputmode="decimal" value="${num(s.taxRate)}"><div class="hint">Ontario HST is 13%. Change it for your province or country.</div><label class="check"><input type="checkbox" id="tPurch" ${s.taxOnPurchases ? 'checked' : ''}> Material prices I enter are before tax</label><div class="hint">Tax is added on top of what you enter when you buy materials, so the app can track the tax you paid. You can change this for each material.</div><label class="check"><input type="checkbox" id="tCosts" ${s.taxInCosts ? 'checked' : ''}> Include tax in material costs</label><div class="hint">Leave this on if you’re not registered for HST and can’t claim back the tax you pay on supplies. Product costs, suggested prices and profit then use what you actually paid. Turn it off if you claim the tax back. Prices you set yourself don’t change.</div>${taxExample()}<label class="check"><input type="checkbox" id="tSales" ${s.taxOnSales ? 'checked' : ''}> Add tax to my selling prices</label><div class="hint">Tax is added at market checkout and tracked as tax collected. You can change this for each product.</div><div class="actions"><button onclick="saveTaxSettings()">Save</button></div></div><p class="hint" style="margin:0 6px">Tax totals are shown in Reports by calendar year. They're a guide only, not tax advice.</p>`;
+    let s = data.settings, noRate = s.taxRate === null || s.taxRate === undefined || s.taxRate === '';
+    return `${backBtn()}<h2 style="margin-top:12px">Tax</h2><div class="panel"><label for="tRate" style="margin-top:0">Sales tax rate (%)</label><input id="tRate" type="number" min="0" max="100" step="0.01" inputmode="decimal" value="${noRate ? '' : num(s.taxRate)}" placeholder="e.g. 13" oninput="refreshTaxExample()"><div class="hint">Use your local sales tax rate, for example 13% in Ontario, 5% GST in Alberta, or your state and local rate added together in the US.</div>
+<div class="labelrow"><label for="tProduct">Product tax</label>${helpBtn('productTax')}</div>${taxSelect('tProduct', PRODUCT_TAX, s.productTax)}
+<div class="labelrow"><label for="tMaterial">Material tax</label>${helpBtn('materialTax')}</div>${taxSelect('tMaterial', MATERIAL_TAX, s.materialTax, 'onchange="refreshTaxExample()"')}
+<div class="labelrow"><label class="check" style="margin:0"><input type="checkbox" id="tNotClaiming" ${s.notClaimingTax ? 'checked' : ''} onchange="refreshTaxExample()"> Not claiming tax on materials</label>${helpBtn('notClaiming')}</div>
+<div id="taxEx">${taxExample()}</div><p class="hint">You can override these for one product, material or expense on its own screen.</p><div class="actions"><button onclick="saveTaxSettings()">Save</button></div></div><p class="hint" style="margin:0 6px">Tax totals are shown in Reports by calendar year. They're a guide only, not tax advice.</p>`;
+}
+// Preview the example with the choices on screen, before saving.
+function refreshTaxExample() {
+    let s = data.settings, keep = { taxRate: s.taxRate, materialTax: s.materialTax, notClaimingTax: s.notClaimingTax };
+    Object.assign(s, { taxRate: num($('tRate').value), materialTax: $('tMaterial').value, notClaimingTax: $('tNotClaiming').checked });
+    $('taxEx').innerHTML = taxExample();
+    Object.assign(s, keep);
 }
 function saveTaxSettings() {
     let v = $('tRate').value.trim(), r = Number(v);
     if (v === '' || !(r >= 0 && r <= 100))
-        return needField('tRate', 'Enter a tax rate between 0 and 100.');
-    Object.assign(data.settings, { taxRate: r, taxOnPurchases: $('tPurch').checked, taxOnSales: $('tSales').checked, taxInCosts: $('tCosts').checked });
+        return needField('tRate', 'Enter your sales tax rate between 0 and 100. Use 0 if you don’t pay or charge tax.');
+    Object.assign(data.settings, { taxRate: r, productTax: $('tProduct').value, materialTax: $('tMaterial').value, notClaimingTax: $('tNotClaiming').checked });
     save();
     goBack();
     toast('Tax settings saved.');
@@ -44,13 +63,13 @@ function logPurchase(m, packs, price) {
     packs = Number(packs) || 0;
     if (!m || packs <= 0)
         return;
-    let pr = num(price ?? m.price), taxed = m.taxed ?? data.settings.taxOnPurchases;
-    data.purchases.push({ id: id(), materialId: m.id, date: new Date().toISOString(), packs, price: pr, taxed: !!taxed, rate: taxRate(), tax: taxed ? taxOn(packs * pr) : 0, store: m.store || '' });
+    let pr = num(price ?? m.price), t = materialTaxInfo(m);
+    data.purchases.push({ id: id(), materialId: m.id, date: new Date().toISOString(), packs, price: pr, taxed: t.mode !== 'none', mode: t.mode, rate: t.rate, tax: purchaseTax(m, packs * pr), store: m.store || '' });
 }
-// ---- Settings › Payments ----
+// ---- Settings › Finances › Payments ----
 function settingsPayments() {
     let on = squareOn();
-    return `${backBtn()}<h2 style="margin-top:12px">Payments</h2><div class="panel"><label class="check" style="margin-top:0"><input type="checkbox" id="sqOn" ${on ? 'checked' : ''} onchange="data.settings.squareEnabled=this.checked;save();render()"> Use Square for card payments</label><p class="hint">When a customer pays by card, Crochet Studio opens the <b>Square Point of Sale</b> app with the total ready. After the payment, Square brings you back and the sale is saved.</p></div>${on ? `<div class="panel"><h3>Before your first sale</h3><ol class="steps"><li>Install <b>Square Point of Sale</b>, sign in to your Square account and choose your location.</li><li>Connect your card reader in the Square app, if you use one.</li><li>If Crochet Studio adds tax to your sales, turn off Square's own sales tax so it isn't charged twice.</li><li>Run a $1.00 test below, then refund it in Square.</li></ol><p class="hint">Payments go to your own Square account and Square's normal card fees apply. Square charges in ${sqCurrency() === 'USD' ? 'US dollars (USD)' : 'Canadian dollars (CAD)'}, your app's currency. Change it in Settings › Country &amp; currency; it must match your Square account's country. You need the Square Point of Sale app on this device; being signed in to Square in a web browser won't work.</p><button class="alt" onclick="squareTest()">${ic('card', 18)} Test Square with $1.00</button></div>` : ''}<div class="panel muted">Cash, card on your own reader and e-transfer can always be recorded at checkout.</div>`;
+    return `${backBtn()}<h2 style="margin-top:12px">Payments</h2><div class="panel"><label class="check" style="margin-top:0"><input type="checkbox" id="sqOn" ${on ? 'checked' : ''} onchange="data.settings.squareEnabled=this.checked;save();render()"> Use Square for card payments</label><p class="hint">When a customer pays by card, Crochet Studio opens the <b>Square Point of Sale</b> app with the total ready. After the payment, Square brings you back and the sale is saved.</p></div>${on ? `<div class="panel"><h3>Before your first sale</h3><ol class="steps"><li>Install <b>Square Point of Sale</b>, sign in to your Square account and choose your location.</li><li>Connect your card reader in the Square app, if you use one.</li><li>If Crochet Studio adds tax to your sales, turn off Square's own sales tax so it isn't charged twice.</li><li>Run a $1.00 test below, then refund it in Square.</li></ol><p class="hint">Payments go to your own Square account and Square's normal card fees apply. Square charges in ${sqCurrency() === 'USD' ? 'US dollars (USD)' : 'Canadian dollars (CAD)'}, your app's currency. Change it in Settings › Finances › Country &amp; currency; it must match your Square account's country. You need the Square Point of Sale app on this device; being signed in to Square in a web browser won't work.</p><button class="alt" onclick="squareTest()">${ic('card', 18)} Test Square with $1.00</button></div>` : ''}<div class="panel muted">Cash, card on your own reader and e-transfer can always be recorded at checkout.</div>`;
 }
 // ---- Send feedback ----
 function deviceInfo() {
@@ -92,7 +111,7 @@ async function copyFeedbackEmail() {
 const currencyName = () => data.settings.currency === 'USD' ? 'United States · USD' : 'Canada · CAD';
 function settingsRegion() {
     let c = data.settings.currency || 'CAD';
-    return `${backBtn()}<h2 style="margin-top:12px">Country &amp; currency</h2><div class="panel"><div class="regiongrid">${[['CAD', 'Canada', 'CAD $'], ['USD', 'United States', 'USD $']].map(([v, n, s]) => `<button class="regionbtn ${c === v ? 'on' : ''}" aria-pressed="${c === v}" onclick="setCurrency('${v}')"><b>${n}</b><span>${s}</span></button>`).join('')}</div><p class="hint">The whole app uses this currency, and Square charges in it. It must match your Square account's country, or Square says “invalid request”.</p></div><div class="panel muted">Prices aren't converted, only labelled. Set your sales tax rate in Settings › Tax${c === 'USD' ? ' (in the US it depends on your state)' : ''}.</div>`;
+    return `${backBtn()}<h2 style="margin-top:12px">Country &amp; currency</h2><div class="panel"><div class="regiongrid">${[['CAD', 'Canada', 'CAD $'], ['USD', 'United States', 'USD $']].map(([v, n, s]) => `<button class="regionbtn ${c === v ? 'on' : ''}" aria-pressed="${c === v}" onclick="setCurrency('${v}')"><b>${n}</b><span>${s}</span></button>`).join('')}</div><p class="hint">The whole app uses this currency, and Square charges in it. It must match your Square account's country, or Square says “invalid request”.</p></div><div class="panel muted">Prices aren't converted, only labelled. Set your sales tax rate in Settings › Finances › Tax${c === 'USD' ? ' (in the US it depends on your state)' : ''}.</div>`;
 }
 function setCurrency(v) {
     data.settings.currency = v;
@@ -102,7 +121,7 @@ function setCurrency(v) {
     toast(v === 'USD' ? 'Currency set to US dollars.' : 'Currency set to Canadian dollars.');
 }
 // ---- What's new + guides ----
-const GUIDES = { whats: { file: 'guides/whats-new-23.pdf', name: 'What’s new in version 23' }, guide: { file: 'guides/tester-guide.pdf', name: 'Crochet Studio Tester Guide' } };
+const GUIDES = { whats: { file: 'guides/whats-new-24.pdf', name: 'What’s new in version 24' }, guide: { file: 'guides/tester-guide.pdf', name: 'Crochet Studio Tester Guide' } };
 async function openGuide(k) {
     let g = GUIDES[k];
     if (!g)

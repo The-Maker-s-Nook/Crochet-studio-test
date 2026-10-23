@@ -223,18 +223,7 @@ function photoSlot(src, style, kind, id, label, small) {
 }
 function pickPhotoFor(kind, id) {
     photoTarget = { kind, id };
-    let i = $('slotPhotoInput');
-    if (!i) {
-        i = document.createElement('input');
-        i.type = 'file';
-        i.accept = 'image/*';
-        i.id = 'slotPhotoInput';
-        i.className = 'hidden';
-        i.addEventListener('change', slotPhotoChosen);
-        document.body.appendChild(i);
-    }
-    i.value = '';
-    i.click();
+    photoMenu(slotPhotoChosen);
 }
 function slotPhotoChosen(e) {
     let f = e.target.files?.[0], t = photoTarget;
@@ -260,6 +249,10 @@ function slotPhotoChosen(e) {
 const HELP = {
     deduct: ['Automatic material deduction', 'When this is on, adding finished stock to a product (+1, or + Add quantity) also takes the materials it uses out of your material stock.\n\nExample: a Small bee uses 40 g of yarn, 80 g of stuffing and 1 pair of eyes. Add 2 Small bees and 80 g of yarn, 160 g of stuffing and 2 pairs of eyes are taken out.\n\nOnly materials with “Track remaining stock” turned on are changed.'],
     mult: ['Default material multiplier', 'Only used when the pricing method is Materials × multiplier.\n\nThe suggested price is your material cost times this number. Example: $5 of materials × 3 = $15. Labour isn’t added with this method.'],
+    productTax: ['Product tax', 'Choose how sales tax works on the prices you sell at.\n\nAdd tax to sale price: your price is before tax. Tax is added at checkout. A $4.00 item at 10% charges $4.40.\n\nTax already included in sale price: your price already has tax in it. Checkout charges your price and shows the tax inside it. A $4.40 item at 10% shows $4.00 + $0.40 tax = $4.40.\n\nNeither: no tax is added or tracked on your sales. Choose this if you don’t charge sales tax. Reports won’t show sales tax collected.'],
+    materialTax: ['Material tax', 'Choose how tax works on the material prices you enter.\n\nInputted pricing includes tax: the prices you typed in already have tax in them (like a receipt total). The app works out the tax part for you.\n\nAdd tax to inputted pricing: the prices you typed in are before tax (like a shelf price). The app adds tax on top.\n\nNeither: you don’t pay tax on materials, or you don’t want to track it. Reports won’t show tax paid on materials.\n\nSuggested prices and markup use your material cost before tax, so you’re never charging markup on tax.'],
+    notClaiming: ['Not claiming tax on materials', 'Tick this if you can’t get back the tax you pay on materials (for example, you’re not registered to collect sales tax, or you don’t claim it at tax time).\n\nWhen ticked, the tax you paid counts as part of your material cost, so suggested prices and markup cover it. When unticked, the app treats that tax as money you’ll get back and leaves it out of your costs.\n\nEither way, Reports still show how much tax you paid on materials.'],
+    taxOverride: ['Override tax settings', 'Tick this to give just this item its own tax option and rate, for example tax-free yarn, something bought in another province or state, or a product you price differently.\n\nWhatever you choose here is used for this item only. Changing the main Tax settings later won’t change it.'],
     markup: ['Default markup', 'Only used when the pricing method is Materials with markup + labour.\n\nThe suggested price is your material cost plus this percentage, plus your hourly labour. Example: $5 of materials with a 50% markup = $7.50, then labour is added.']
 };
 function showHelp(k) {
@@ -269,4 +262,55 @@ function showHelp(k) {
 }
 function helpBtn(k) {
     return `<button type="button" class="helpq" aria-label="What is this?" onclick="event.preventDefault();event.stopPropagation();showHelp('${k}')">?</button>`;
+}
+
+// ---- Per-item tax override (products, materials, expenses) ----
+function taxOverrideField(prefix, item, kind, onchange = '') {
+    let o = item?.taxOverride, on = !!o?.on, opts = kind === 'product' ? PRODUCT_TAX : MATERIAL_TAX, main = kind === 'product' ? data.settings.productTax : data.settings.materialTax, mainLabel = (opts.find(x => x[0] === main) || opts[opts.length - 1])[1];
+    return `<div class="taxov"><div class="labelrow" style="margin:0"><label class="check" style="margin:0"><input type="checkbox" id="${prefix}TaxOn" ${on ? 'checked' : ''} onchange="$('${prefix}TaxBox').classList.toggle('hidden',!this.checked);$('${prefix}TaxHint').classList.toggle('hidden',this.checked);${onchange}"> Override tax settings</label>${helpBtn('taxOverride')}</div><div id="${prefix}TaxHint" class="hint ${on ? 'hidden' : ''}" style="margin-top:4px">Following your Tax settings: ${esc(mainLabel)}${main === 'none' ? '' : ` · ${num(taxRate())}%`}</div><div id="${prefix}TaxBox" class="grid2 ${on ? '' : 'hidden'}"><div><label for="${prefix}TaxMode">Tax option</label>${taxSelect(prefix + 'TaxMode', opts, on ? o.mode : main, onchange ? `onchange="${onchange}"` : '')}</div><div><label for="${prefix}TaxRate">Rate (%)</label><input id="${prefix}TaxRate" type="number" min="0" max="100" step="0.01" inputmode="decimal" value="${on ? num(o.rate) : num(taxRate())}" ${onchange ? `oninput="${onchange}"` : ''}></div></div></div>`;
+}
+// What the override boxes say now (null = follow the main settings).
+function readTaxOverride(prefix) {
+    if (!$(prefix + 'TaxOn')?.checked)
+        return null;
+    return { on: true, mode: $(prefix + 'TaxMode').value, rate: num($(prefix + 'TaxRate').value) };
+}
+function badTaxOverride(prefix) {
+    if (!$(prefix + 'TaxOn')?.checked)
+        return false;
+    let v = $(prefix + 'TaxRate').value.trim(), r = Number(v);
+    return v === '' || !(r >= 0 && r <= 100);
+}
+// ---- Add a photo: our own menu (newer Android otherwise jumps straight to the gallery) ----
+let photoMenuDone = null;
+function photoMenu(onFiles, multiple = false) {
+    photoMenuDone = { onFiles, multiple };
+    openModal(`<div class="row"><h2 style="margin:0">Add a photo</h2>${closeX()}</div><div class="photomenu"><button class="alt" onclick="photoFrom('camera')">${ic('camera', 20)} Take photo</button><button class="alt" onclick="photoFrom('gallery')">${ic('folder', 20)} Choose from gallery</button><button class="alt" onclick="photoFrom('files')">${ic('download', 20)} Browse files</button></div>`);
+}
+function photoFrom(src) {
+    let job = photoMenuDone;
+    closeModal();
+    if (!job)
+        return;
+    let i = document.createElement('input');
+    i.type = 'file';
+    i.className = 'hidden';
+    i.multiple = job.multiple && src !== 'camera';
+    // Camera: opens the camera. Gallery: photos only. Files: any file, so the phone shows its file browser; non-images are skipped.
+    if (src === 'camera') {
+        i.accept = 'image/*';
+        i.setAttribute('capture', 'environment');
+    }
+    else if (src === 'gallery')
+        i.accept = 'image/*';
+    i.addEventListener('change', () => {
+        let files = [...(i.files || [])], pics = files.filter(f => (f.type || '').startsWith('image/') || /\.(jpe?g|png|webp|heic|heif|gif)$/i.test(f.name));
+        i.remove();
+        if (files.length && !pics.length)
+            return appAlert('That file isn’t a photo. Choose a JPG, PNG or other image file.');
+        if (pics.length)
+            job.onFiles({ target: { files: pics, value: '' } });
+    });
+    document.body.appendChild(i);
+    i.click();
 }

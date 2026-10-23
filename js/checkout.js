@@ -26,7 +26,7 @@ function resetSale() {
     saleAdj = { prices: {}, discount: null };
     payTmp = { method: 'cash', given: '' };
 }
-toggleMarketSale = function () {
+function toggleMarketSale() {
     if (saleKind === 'quick' && marketSaleMode && Object.keys(marketSaleDraft).length) {
         saleKind = 'market';
         marketSaleMode = true;
@@ -38,11 +38,11 @@ toggleMarketSale = function () {
     marketSaleMode = !marketSaleMode;
     resetSale();
     render();
-};
+}
 // ---- Sale panel on the market screen ----
 function salePanel() {
     let o = computeOrder(marketSaleDraft, saleAdj), d = saleAdj.discount, changed = Object.keys(saleAdj.prices).filter(pid => marketSaleDraft[pid]).length, dis = o.items ? '' : 'disabled';
-    return `<div class="salebox"><div class="eyebrow">This sale</div><div class="row"><span>${o.items} item${o.items === 1 ? '' : 's'}${changed ? ` · ${changed} price${changed > 1 ? 's' : ''} changed` : ''}</span><b>${cash(o.sub)}</b></div>${o.disc ? `<div class="row discline"><span>${esc(discLabel(d, o.sub))}</span><b>−${cash(o.disc)}</b></div>` : ''}${o.tax ? `<div class="row"><span>Tax</span><span>${cash(o.tax)}</span></div>` : ''}<div class="adjbtns"><button class="dashed" ${dis} onclick="openDiscount()">${ic('tag', 18)} ${d ? 'Edit discount' : 'Discount / deal'}</button><button class="dashed" ${dis} onclick="openPriceEdit()">${ic('pencil', 18)} Change a price</button></div><div class="row totalrow"><b>Total</b><span class="bigtotal">${cash(o.total)}</span></div><button class="btn-wide" ${dis} onclick="openReview()">Review sale</button></div>`;
+    return `<div class="salebox"><div class="eyebrow">This sale</div><div class="row"><span>${o.items} item${o.items === 1 ? '' : 's'}${changed ? ` · ${changed} price${changed > 1 ? 's' : ''} changed` : ''}</span><b>${cash(o.sub)}</b></div>${o.disc ? `<div class="row discline"><span>${esc(discLabel(d, o.sub))}</span><b>−${cash(o.disc)}</b></div>` : ''}${taxRows(o)}<div class="adjbtns"><button class="dashed" ${dis} onclick="openDiscount()">${ic('tag', 18)} ${d ? 'Edit discount' : 'Discount / deal'}</button><button class="dashed" ${dis} onclick="openPriceEdit()">${ic('pencil', 18)} Change a price</button></div><div class="row totalrow"><b>Total</b><span class="bigtotal">${cash(o.total)}</span></div><button class="btn-wide" ${dis} onclick="openReview()">Review sale</button></div>`;
 }
 function openReview() {
     if (!computeOrder(marketSaleDraft, saleAdj).items)
@@ -85,7 +85,7 @@ function discFromTmp() {
 }
 function discPreviewHtml() {
     let sub = ctxSub(discCtx), t = discTmp, d = discFromTmp(), a = t.value === '' ? 0 : discountAmount(sub, d), warn = t.value !== '' && ((t.type === 'total' && num(t.value) >= sub) || (t.type !== 'total' && a <= 0)) ? '<div class="hint warn-text">That isn’t a discount. Check the number.</div>' : (t.type === 'pct' && num(t.value) > 100) ? '<div class="hint warn-text">Can’t be more than 100%.</div>' : '';
-    return `<div class="row"><span>Subtotal</span><span>${cash(sub)}</span></div><div class="row discline"><span>Discount${a && sub ? ` (${Math.round(a / sub * 1000) / 10}% off)` : ''}</span><span>−${cash(a)}</span></div><div class="row totalrow"><b>New total</b><span class="bigtotal">${cash(sub - a)}</span></div>${warn}${taxRate() && data.settings.taxOnSales ? '<div class="hint">Tax, if added, is worked out on the new total.</div>' : ''}`;
+    return `<div class="row"><span>Subtotal</span><span>${cash(sub)}</span></div><div class="row discline"><span>Discount${a && sub ? ` (${Math.round(a / sub * 1000) / 10}% off)` : ''}</span><span>−${cash(a)}</span></div><div class="row totalrow"><b>New total</b><span class="bigtotal">${cash(sub - a)}</span></div>${warn}${data.settings.productTax === 'add' && taxRate() ? '<div class="hint">Sales tax is worked out on the new total.</div>' : data.settings.productTax === 'included' ? '<div class="hint">Your prices include sales tax, so the tax inside goes down with the discount.</div>' : ''}`;
 }
 function discPreview() {
     let e = $('discPreview');
@@ -199,7 +199,7 @@ function saleReview() {
         return `${backBtn()}<div class="panel" style="margin-top:12px"><p class="muted">There's no sale in progress.</p></div>`;
     let d = saleAdj.discount, meth = payTmp.method, cardSq = meth === 'card' && squareOn(), given = payTmp.given === '' ? NaN : Number(payTmp.given);
     let lines = o.lines.map(l => `<div class="row rline"><span class="grow">${esc(l.name)} × ${l.qty}${l.price !== l.list ? `<span class="hint block">${esc(l.reason || 'Price change')} · ${cash(l.price)} each</span>` : ''}</span><span>${l.price !== l.list ? `<s class="hint">${cash(l.qty * l.list)}</s> ` : ''}${cash(l.qty * l.price)}</span></div>`).join('');
-    return `${backBtn()}<h2 style="margin-top:12px">Review sale</h2><div class="muted" style="margin:-8px 0 12px;font-weight:700">${m ? esc(m.name) : 'Quick sale'}</div><div class="panel">${lines}<div class="divider" style="height:1.5px;margin:10px 0"></div><div class="row"><span class="muted">Subtotal</span><span>${cash(o.sub)}</span></div>${o.disc ? `<div class="row discline"><span>${esc(discLabel(d, o.sub))}</span><span>−${cash(o.disc)}</span></div><div class="linkrow"><button class="linkbtn" onclick="openDiscount()">Edit discount</button><button class="linkbtn" onclick="saleAdj.discount=null;render()">Remove</button></div>` : `<div class="linkrow"><button class="linkbtn" onclick="openDiscount()">+ Add a discount</button><button class="linkbtn" onclick="openPriceEdit()">Change a price</button></div>`}${o.tax ? `<div class="row"><span class="muted">Tax (${num(taxRate())}%)</span><span>${cash(o.tax)}</span></div>` : ''}<div class="divider" style="height:1.5px;margin:10px 0"></div><div class="row totalrow"><b>Total</b><span class="bigtotal">${cash(o.total)}</span></div></div><div class="panel"><div class="eyebrow">How are they paying?</div><div class="paygrid">${PAY_METHODS.map(([k, l]) => `<button class="paybtn ${meth === k ? 'on' : ''}" aria-pressed="${meth === k}" onclick="payTmp.method='${k}';payTmp.touched=true;render()">${k === 'card' ? ic('card', 18) : ''}${l}${k === 'card' && squareOn() ? '<span class="sqtag">Square</span>' : ''}</button>`).join('')}</div>${meth === 'cash' ? `<label for="cashGiven">Cash given (optional)</label><input id="cashGiven" type="number" inputmode="decimal" min="0" step="0.01" value="${esc(payTmp.given)}" placeholder="${cash(o.total)}" oninput="payTmp.given=this.value;let c=$('changeDue');if(c)c.innerHTML=changeHtml(${o.total})"><div id="changeDue">${changeHtml(o.total)}</div>` : ''}${cardSq ? `<p class="hint">Square opens with ${cash(o.total)} ready. After the payment, Square brings you back here and the sale is saved.</p>` : meth === 'card' ? `<p class="hint">Records a card payment taken on your own reader. Turn on Square in Settings › Payments to open Square automatically.</p>` : ''}</div><button class="btn-wide" onclick="completeSale()">${cardSq ? `${ic('card', 18)} Charge ${cash(o.total)} with Square` : `Complete sale · ${cash(o.total)}`}</button>`;
+    return `${backBtn()}<h2 style="margin-top:12px">Review sale</h2><div class="muted" style="margin:-8px 0 12px;font-weight:700">${m ? esc(m.name) : 'Quick sale'}</div><div class="panel">${lines}<div class="divider" style="height:1.5px;margin:10px 0"></div><div class="row"><span class="muted">Subtotal</span><span>${cash(o.sub)}</span></div>${o.disc ? `<div class="row discline"><span>${esc(discLabel(d, o.sub))}</span><span>−${cash(o.disc)}</span></div><div class="linkrow"><button class="linkbtn" onclick="openDiscount()">Edit discount</button><button class="linkbtn" onclick="saleAdj.discount=null;render()">Remove</button></div>` : `<div class="linkrow"><button class="linkbtn" onclick="openDiscount()">+ Add a discount</button><button class="linkbtn" onclick="openPriceEdit()">Change a price</button></div>`}${taxRows(o)}<div class="divider" style="height:1.5px;margin:10px 0"></div><div class="row totalrow"><b>Total</b><span class="bigtotal">${cash(o.total)}</span></div></div><div class="panel"><div class="eyebrow">How are they paying?</div><div class="paygrid">${PAY_METHODS.map(([k, l]) => `<button class="paybtn ${meth === k ? 'on' : ''}" aria-pressed="${meth === k}" onclick="payTmp.method='${k}';payTmp.touched=true;render()">${k === 'card' ? ic('card', 18) : ''}${l}${k === 'card' && squareOn() ? '<span class="sqtag">Square</span>' : ''}</button>`).join('')}</div>${meth === 'cash' ? `<label for="cashGiven">Cash given (optional)</label><input id="cashGiven" type="number" inputmode="decimal" min="0" step="0.01" value="${esc(payTmp.given)}" placeholder="${cash(o.total)}" oninput="payTmp.given=this.value;let c=$('changeDue');if(c)c.innerHTML=changeHtml(${o.total})"><div id="changeDue">${changeHtml(o.total)}</div>` : ''}${cardSq ? `<p class="hint">Square opens with ${cash(o.total)} ready. After the payment, Square brings you back here and the sale is saved.</p>` : meth === 'card' ? `<p class="hint">Records a card payment taken on your own reader. Turn on Square in Settings › Finances › Payments to open Square automatically.</p>` : ''}</div><button class="btn-wide" onclick="completeSale()">${cardSq ? `${ic('card', 18)} Charge ${cash(o.total)} with Square` : `Complete sale · ${cash(o.total)}`}</button>`;
 }
 function changeHtml(total) {
     let g = payTmp.given === '' ? NaN : Number(payTmp.given);
@@ -272,7 +272,7 @@ function finalizeOrder(mid, draft, adj, payment, force) {
         }
         else
             trimAllocations(l.pid);
-        let rec = { id: id(), orderId: oid, marketId: mid || null, productId: l.pid, qty: l.qty, listPrice: l.list, price: l.price, disc: l.disc, tax: l.tax, taxed: l.taxed, taxRate: taxRate(), date, estimatedMaterialCost: recipeCost(l.p) };
+        let rec = { id: id(), orderId: oid, marketId: mid || null, productId: l.pid, qty: l.qty, listPrice: l.list, price: l.price, disc: l.disc, tax: l.tax, taxed: l.taxed, taxIncluded: l.taxIncluded || undefined, taxRate: l.taxRate, date, estimatedMaterialCost: recipeCost(l.p) };
         if (l.price !== l.list)
             rec.priceReason = l.reason || 'Price change';
         data.sales.push(rec);
@@ -292,15 +292,17 @@ function recomputeOrder(oid) {
         return;
     let lines = ls.map(x => ({ x, qty: num(x.qty), price: num(x.price) })), sub = round2(lines.reduce((a, l) => a + l.qty * l.price, 0)), disc = discountAmount(sub, o.discount);
     allocate(lines, disc);
-    let tax = 0;
+    let tax = 0, added = 0;
     for (let l of lines) {
         l.x.disc = l.disc;
-        let taxed = l.x.taxed ?? num(l.x.tax) > 0;
+        let taxed = l.x.taxed ?? num(l.x.tax) > 0, rate = num(l.x.taxRate ?? taxRate()), gross = l.qty * l.price - l.disc;
         l.x.taxed = taxed;
-        l.x.tax = taxed ? taxOn(l.qty * l.price - l.disc, num(l.x.taxRate ?? taxRate())) : 0;
+        l.x.tax = !taxed ? 0 : l.x.taxIncluded ? taxInside(gross, rate) : taxOn(gross, rate);
         tax += l.x.tax;
+        if (!l.x.taxIncluded)
+            added += l.x.tax;
     }
-    Object.assign(o, { full: round2(ls.reduce((a, x) => a + lineFull(x), 0)), subtotal: sub, tax: round2(tax), total: round2(sub - disc + tax) });
+    Object.assign(o, { full: round2(ls.reduce((a, x) => a + lineFull(x), 0)), subtotal: sub, tax: round2(tax), total: round2(sub - disc + added) });
     if (o.discount)
         o.discount.amount = disc;
 }
@@ -364,9 +366,9 @@ function friendlySquareErr(code, desc) {
     if (/ALREADY_IN_PROGRESS/.test(c))
         return 'Square already has a payment in progress. Finish or cancel it in Square, then try again.';
     if (/CURRENCY/.test(c))
-        return `Your Square account uses a different currency. Crochet Studio sent ${sqCurrency()}. Change it in Settings › Country & currency.`;
+        return `Your Square account uses a different currency. Crochet Studio sent ${sqCurrency()}. Change it in Settings › Finances › Country & currency.`;
     if (/INVALID_REQUEST/.test(c))
-        return `Square turned down the request. Please check:\n\n1. Settings › Country & currency matches your Square account's country (now ${sqCurrency() === 'USD' ? 'United States · USD' : 'Canada · CAD'}).\n2. The Square Point of Sale app is up to date (check the Play Store or App Store).\n3. You're signed in to Square with your location chosen.\n\nThen tap Card again. The next try sends a simpler request. The sale is still open.`;
+        return `Square turned down the request. Please check:\n\n1. Settings › Finances › Country & currency matches your Square account's country (now ${sqCurrency() === 'USD' ? 'United States · USD' : 'Canada · CAD'}).\n2. The Square Point of Sale app is up to date (check the Play Store or App Store).\n3. You're signed in to Square with your location chosen.\n\nThen tap Card again. The next try sends a simpler request. The sale is still open.`;
     return `Square couldn't take the payment${c ? ` (${esc(code)})` : ''}. The sale is still open.`;
 }
 function restoreDraft(p) {
@@ -498,16 +500,25 @@ async function checkSquarePending() {
         sqAsking = false;
     }
 }
+// Tax lines for a sale: tax added on top, and/or the tax already inside the prices.
+function taxRows(o) {
+    let r = o.taxRates?.length === 1 ? ` (${num(o.taxRates[0])}%)` : '', out = '';
+    if (num(o.taxInside))
+        out += `<div class="row"><span class="muted">Before tax</span><span>${cash(o.rev !== undefined ? o.rev : round2(o.sub - o.disc - o.taxInside))}</span></div><div class="row"><span class="muted">Sales tax${r}, included</span><span>${cash(o.taxInside)}</span></div>`;
+    if (num(o.taxAdded))
+        out += `<div class="row"><span class="muted">Sales tax${r}</span><span>+${cash(o.taxAdded)}</span></div>`;
+    return out;
+}
 // ---- Sales list & editing ----
 function orderGroups(mid) {
     let groups = {};
     for (let s of data.sales.filter(s => mid ? s.marketId === mid : !s.marketId)) {
-        let k = s.orderId || ('legacy:' + s.id);
-        (groups[k] = groups[k] || []).push(s);
+        (groups[s.orderId] = groups[s.orderId] || []).push(s);
     }
     return Object.entries(groups).map(([k, ls]) => {
-        let o = k.startsWith('legacy:') ? null : data.orders.find(x => x.id === k), rev = round2(ls.reduce((a, x) => a + lineRev(x), 0)), full = round2(ls.reduce((a, x) => a + lineFull(x), 0)), tax = round2(ls.reduce((a, x) => a + num(x.tax), 0));
-        return { key: k, order: o, lines: ls, date: ls[0].date, rev, full, disc: round2(full - rev), tax, total: round2(rev + tax), method: o?.payment?.method || '' };
+        let o = data.orders.find(x => x.id === k), rev = round2(ls.reduce((a, x) => a + lineRev(x), 0)), full = round2(ls.reduce((a, x) => a + lineFull(x), 0)), tax = round2(ls.reduce((a, x) => a + num(x.tax), 0));
+        let inside = round2(ls.reduce((a, x) => a + (x.taxIncluded ? num(x.tax) : 0), 0)), rates = [...new Set(ls.filter(x => num(x.tax)).map(x => num(x.taxRate ?? taxRate())))];
+        return { key: k, order: o, lines: ls, date: ls[0].date, rev, full, disc: round2(full - rev), tax, taxAdded: round2(tax - inside), taxInside: inside, taxRates: rates, total: round2(rev + tax), method: o?.payment?.method || '' };
     }).sort((a, b) => String(b.date).localeCompare(String(a.date)));
 }
 function discountPills(g) {
@@ -535,21 +546,9 @@ function marketSales() {
     let gs = orderGroups(m ? m.id : null), full = gs.reduce((a, g) => a + g.full, 0), disc = gs.reduce((a, g) => a + g.disc, 0), rev = gs.reduce((a, g) => a + g.rev, 0), tax = gs.reduce((a, g) => a + g.tax, 0);
     return `${backBtn()}<h2 style="margin-top:12px">Sales</h2><div class="muted" style="margin:-8px 0 12px;font-weight:700">${m ? esc(m.name) : 'Quick sales'} · ${gs.length} sale${gs.length === 1 ? '' : 's'} · tap one to fix a mistake</div><div class="grid tiles3"><div class="panel"><div class="muted">Full price</div><div class="stat">${cash(full)}</div></div><div class="panel"><div class="muted">Discounts</div><div class="stat neg">−${cash(disc)}</div></div><div class="panel"><div class="muted">Sales</div><div class="stat pos">${cash(rev)}</div></div></div>${tax ? `<p class="hint" style="margin:0 6px 10px">Plus ${cash(tax)} tax collected.</p>` : ''}<div class="panel" style="padding:4px 14px">${gs.map(g => `<button class="salerow" onclick="go('saleEdit',()=>{selected='${g.key}'})"><span class="grow"><b>${new Date(g.date).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}${new Date(g.date).toDateString() !== new Date().toDateString() ? ' · ' + new Date(g.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : ''} · ${g.lines.reduce((a, x) => a + num(x.qty), 0)} item${g.lines.reduce((a, x) => a + num(x.qty), 0) === 1 ? '' : 's'}${g.method ? ' · ' + payLabel(g.method) : ''}</b><span class="muted block">${esc(g.lines.map(x => (product(x.productId)?.name || 'Deleted product') + (num(x.qty) > 1 ? ' ×' + x.qty : '')).join(', '))}</span>${g.disc ? `<span class="pills">${discountPills(g)}</span>` : ''}</span><b>${cash(g.total)}</b><span class="chev" aria-hidden="true">›</span></button>`).join('') || '<p class="muted">No sales yet.</p>'}</div>`;
 }
+// Every sale has an order (version 24), so a sale's key is its order id.
 function ensureOrder(key) {
-    if (!String(key).startsWith('legacy:'))
-        return key;
-    let s = data.sales.find(x => x.id === key.slice(7));
-    if (!s)
-        return null;
-    let oid = id();
-    s.orderId = oid;
-    if (s.listPrice == null)
-        s.listPrice = num(s.price);
-    data.orders.push({ id: oid, marketId: s.marketId, date: s.date, discount: null, payment: { method: '' } });
-    recomputeOrder(oid);
-    save();
-    selected = oid;
-    return oid;
+    return data.orders.some(o => o.id === key) ? key : null;
 }
 function saleEdit() {
     let key = selected, m = marketSelected ? data.markets.find(x => x.id === marketSelected) : null, g = orderGroups(m ? m.id : null).find(x => x.key === key);
@@ -560,7 +559,7 @@ function saleEdit() {
         let p = product(x.productId), list = num(x.listPrice ?? x.price), pr = num(x.price);
         return `<div class="row rline"><span class="grow">${esc(p?.name || 'Deleted product')} × ${x.qty}${pr !== list ? `<span class="hint block">${esc(x.priceReason || 'Price change')} · ${cash(pr)} each</span>` : ''}</span><span>${pr !== list ? `<s class="hint">${cash(num(x.qty) * list)}</s> ` : ''}${cash(num(x.qty) * pr)}</span><button class="iconbtn sm" aria-label="Change price of ${esc(p?.name || 'item')}" onclick="openPriceEdit(ensureOrder('${g.key}'),'${x.id}')">${ic('pencil', 16)}</button></div>`;
     }).join('');
-    return `${backBtn()}<h2 style="margin-top:12px">Sale</h2><div class="muted" style="margin:-8px 0 12px;font-weight:700">${new Date(g.date).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}${m ? ' · ' + esc(m.name) : ''}</div><div class="panel">${lines}<div class="divider" style="height:1.5px;margin:10px 0"></div><div class="row"><span class="muted">Subtotal</span><span>${cash(round2(g.lines.reduce((a, x) => a + num(x.qty) * num(x.price), 0)))}</span></div>${d && num(d.amount) ? `<div class="row discline"><span>${esc(discLabel(d, o.subtotal))}</span><span>−${cash(d.amount)}</span></div><div class="linkrow"><button class="linkbtn" onclick="openDiscount(ensureOrder('${g.key}'))">Edit discount</button></div>` : `<div class="linkrow"><button class="linkbtn" onclick="openDiscount(ensureOrder('${g.key}'))">+ Add a discount</button></div>`}${g.tax ? `<div class="row"><span class="muted">Tax</span><span>${cash(g.tax)}</span></div>` : ''}<div class="divider" style="height:1.5px;margin:10px 0"></div><div class="row totalrow"><b>Total</b><span class="bigtotal">${cash(g.total)}</span></div></div><div class="panel"><div class="eyebrow">Paid by</div>${sq ? `<p class="muted" style="margin:6px 0 0">Card through Square${o.payment.squareTxn ? ` · receipt ${esc(String(o.payment.squareTxn).slice(0, 10))}…` : o.payment.confirmedManually ? ' · confirmed by you' : ' · offline payment'}</p><p class="hint">Changing the price or discount here doesn't change what Square charged. Refund any difference in the Square app.</p>` : `<div class="paygrid">${PAY_METHODS.map(([k, l]) => `<button class="paybtn ${meth === k ? 'on' : ''}" aria-pressed="${meth === k}" onclick="setPayMethod('${g.key}','${k}')">${l}</button>`).join('')}</div>`}</div><button class="danger btn-wide" onclick="deleteSale('${g.key}')">Delete this sale</button><p class="hint" style="text-align:center;margin:8px 6px 0">${m && !m.completed ? 'Items go back into this market’s inventory.' : 'Items go back into your stock.'}</p>`;
+    return `${backBtn()}<h2 style="margin-top:12px">Sale</h2><div class="muted" style="margin:-8px 0 12px;font-weight:700">${new Date(g.date).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}${m ? ' · ' + esc(m.name) : ''}</div><div class="panel">${lines}<div class="divider" style="height:1.5px;margin:10px 0"></div><div class="row"><span class="muted">Subtotal</span><span>${cash(round2(g.lines.reduce((a, x) => a + num(x.qty) * num(x.price), 0)))}</span></div>${d && num(d.amount) ? `<div class="row discline"><span>${esc(discLabel(d, o.subtotal))}</span><span>−${cash(d.amount)}</span></div><div class="linkrow"><button class="linkbtn" onclick="openDiscount(ensureOrder('${g.key}'))">Edit discount</button></div>` : `<div class="linkrow"><button class="linkbtn" onclick="openDiscount(ensureOrder('${g.key}'))">+ Add a discount</button></div>`}${taxRows(g)}<div class="divider" style="height:1.5px;margin:10px 0"></div><div class="row totalrow"><b>Total</b><span class="bigtotal">${cash(g.total)}</span></div></div><div class="panel"><div class="eyebrow">Paid by</div>${sq ? `<p class="muted" style="margin:6px 0 0">Card through Square${o.payment.squareTxn ? ` · receipt ${esc(String(o.payment.squareTxn).slice(0, 10))}…` : o.payment.confirmedManually ? ' · confirmed by you' : ' · offline payment'}</p><p class="hint">Changing the price or discount here doesn't change what Square charged. Refund any difference in the Square app.</p>` : `<div class="paygrid">${PAY_METHODS.map(([k, l]) => `<button class="paybtn ${meth === k ? 'on' : ''}" aria-pressed="${meth === k}" onclick="setPayMethod('${g.key}','${k}')">${l}</button>`).join('')}</div>`}</div><button class="danger btn-wide" onclick="deleteSale('${g.key}')">Delete this sale</button><p class="hint" style="text-align:center;margin:8px 6px 0">${m && !m.completed ? 'Items go back into this market’s inventory.' : 'Items go back into your stock.'}</p>`;
 }
 function setPayMethod(key, k) {
     let oid = ensureOrder(key);
@@ -611,7 +610,7 @@ function marketItemRows(m) {
 function mktSearchBox(m) {
     if (!Object.keys(m.items || {}).length)
         return '';
-    return `<div class="searchbox"><input type="search" id="mktSearch" placeholder="${marketSaleMode ? 'Search items to sell' : 'Search inventory you brought'}" value="${esc(mktSearch)}" aria-label="Search inventory at this market" oninput="mktSearch=this.value;let e=$('mktItems');if(e)e.innerHTML=marketItemRows(data.markets.find(x=>x.id===marketSelected))"></div>`;
+    return `<div class="searchbox"><input type="search" id="mktSearch" placeholder="${marketSaleMode ? 'Search items to sell' : 'Search market inventory'}" value="${esc(mktSearch)}" aria-label="Search inventory at this market" oninput="mktSearch=this.value;let e=$('mktItems');if(e)e.innerHTML=marketItemRows(data.markets.find(x=>x.id===marketSelected))"></div>`;
 }
 function quickBetween(a, b) {
     return data.sales.filter(x => {

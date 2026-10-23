@@ -27,4 +27,4 @@ Every change saved to the `main` branch goes live automatically on Netlify (abou
 credits per deploy), so only finished, tested versions are saved to `main`. Work in progress
 lives on other branches, which Netlify does not deploy.
 
-Current version: 23 (files reorganized for version 24)
+Current version: 24

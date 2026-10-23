@@ -16,6 +16,7 @@ const ASSETS = [
   './js/materials.js',
   './js/patterns.js',
   './js/markets.js',
+  './js/expenses.js',
   './js/checkout.js',
   './js/reports.js',
   './js/settings.js',
@@ -30,7 +31,7 @@ const ASSETS = [
   './lib/pdf.min.js',
   './lib/pdf.worker.min.js',
   './fonts/DancingScript.ttf',
-  './guides/whats-new-23.pdf',
+  './guides/whats-new-24.pdf',
   './guides/tester-guide.pdf'
 ];
 

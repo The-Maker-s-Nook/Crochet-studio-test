@@ -28,7 +28,7 @@ function reports() {
     let qs = quickBetween(a, b);
     if (reportMarket !== 'all' && !(reportMarket === 'quick' && qs.length) && !inRange.some(m => m.id === reportMarket))
         reportMarket = 'all';
-    let sel = reportMarket === 'all' ? inRange : inRange.filter(m => m.id === reportMarket), f = marketFigures(sel, reportMarket === 'all' || reportMarket === 'quick' ? qs : []), anyDone = data.markets.some(m => m.completed), pending = data.markets.filter(m => !m.completed && data.sales.some(x => x.marketId === m.id)).length;
+    let sel = reportMarket === 'all' ? inRange : inRange.filter(m => m.id === reportMarket), useQ = reportMarket === 'all' || reportMarket === 'quick', f = marketFigures(sel, useQ ? qs : [], useQ ? looseExpensesBetween(a, b) : []), anyDone = data.markets.some(m => m.completed), pending = data.markets.filter(m => !m.completed && data.sales.some(x => x.marketId === m.id)).length;
     const mdate = m => {
         let t = marketTime(m);
         return t ? new Date(t).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : '';
@@ -39,9 +39,9 @@ function reports() {
     }, {})).sort((x, y) => y[1] - x[1]).slice(0, 5);
     let breakdown = reportMarket === 'all' && sel.length ? `<div class="panel"><h3>By market</h3>${sel.map(m => {
         let r = marketFigures([m]);
-        return `<button class="rowbtn" onclick="reportMarket='${m.id}';render()"><div class="row"><b>${esc(m.name)}</b><b class="${r.profit < 0 ? 'neg' : 'pos'}">${signedCash(r.profit)}</b></div><div class="muted">${mdate(m)} · Sales ${cash(r.revenue)} · Booth ${cash(r.booth)}</div></button>`;
+        return `<button class="rowbtn" onclick="reportMarket='${m.id}';render()"><div class="row"><b>${esc(m.name)}</b><b class="${r.profit < 0 ? 'neg' : 'pos'}">${signedCash(r.profit)}</b></div><div class="muted">${mdate(m)} · Sales ${cash(r.revenue)} · Booth ${cash(r.booth)}${r.expenses.length ? ` · Expenses ${cash(r.other)}` : ''}</div></button>`;
     }).join('')}</div>` : '';
-    return `<div class="row"><h2>Reports</h2><button class="small" onclick="go('reportDownload')">${ic('download', 16)} Download</button></div><div class="panel"><label for="repRange" style="margin-top:0">Time frame</label><select id="repRange" onchange="reportRange=this.value;reportMarket='all';render()">${opts.map(([v, l]) => `<option value="${v}" ${reportRange === v ? 'selected' : ''}>${l}</option>`).join('')}</select><label for="repMarket">Market</label><select id="repMarket" onchange="reportMarket=this.value;render()"><option value="all">All markets in this time frame (${inRange.length})</option>${inRange.map(m => `<option value="${m.id}" ${reportMarket === m.id ? 'selected' : ''}>${esc(m.name)}${mdate(m) ? ' · ' + mdate(m) : ''}</option>`).join('')}${qs.length ? `<option value="quick" ${reportMarket === 'quick' ? 'selected' : ''}>Quick sales, no market (${new Set(qs.map(x => x.orderId || x.id)).size})</option>` : ''}</select></div>${anyDone || qs.length ? '' : `<div class="panel"><h3>No completed markets yet</h3><p class="muted">A market shows up here once you mark it as completed. Open a market and tap <b>Mark market as completed</b> when it’s over.</p></div>`}<div class="grid keep2"><div class="panel"><div class="muted">Sales revenue</div><div class="stat">${cash(f.revenue)}</div></div><div class="panel"><div class="muted">Items sold</div><div class="stat">${f.qty}</div></div><div class="panel"><div class="muted">Material costs</div><div class="stat">${cash(f.materials)}</div></div><div class="panel"><div class="muted">Booth costs</div><div class="stat">${cash(f.booth)}</div></div><div class="panel wide"><div class="muted">Profit${sel.length ? ` · ${sel.length} market${sel.length > 1 ? 's' : ''}` : ''}</div><div class="stat ${f.profit < 0 ? 'bad' : 'good'}">${signedCash(f.profit)}</div></div></div>${discountReport(f)}${best.length ? `<div class="panel"><h3>Best sellers</h3>${best.map(([pid, q]) => `<div class="row entry" style="margin:6px 0"><span>${esc(product(pid)?.name || 'Deleted product')}</span><b>${q} sold</b></div>`).join('')}</div>` : ''}${breakdown}${pending ? `<div class="panel muted">${pending} market${pending > 1 ? 's have sales but aren’t' : ' has sales but isn’t'} marked completed yet, so ${pending > 1 ? 'they’re' : 'it’s'} not included here.</div>` : ''}${materialValuePanel()}${taxPanel()}<div class="panel muted">Profit = sales after discounts − material costs − booth costs, before tax. Your time and payment fees are not included.</div>`;
+    return `<div class="row"><h2>Reports</h2><button class="small" onclick="go('reportDownload')">${ic('download', 16)} Download</button></div><div class="panel"><label for="repRange" style="margin-top:0">Time frame</label><select id="repRange" onchange="reportRange=this.value;reportMarket='all';render()">${opts.map(([v, l]) => `<option value="${v}" ${reportRange === v ? 'selected' : ''}>${l}</option>`).join('')}</select><label for="repMarket">Market</label><select id="repMarket" onchange="reportMarket=this.value;render()"><option value="all">All markets in this time frame (${inRange.length})</option>${inRange.map(m => `<option value="${m.id}" ${reportMarket === m.id ? 'selected' : ''}>${esc(m.name)}${mdate(m) ? ' · ' + mdate(m) : ''}</option>`).join('')}${qs.length ? `<option value="quick" ${reportMarket === 'quick' ? 'selected' : ''}>Quick sales, no market (${new Set(qs.map(x => x.orderId || x.id)).size})</option>` : ''}</select></div>${anyDone || qs.length ? '' : `<div class="panel"><h3>No completed markets yet</h3><p class="muted">A market shows up here once you mark it as completed. Open a market and tap <b>Mark market as completed</b> when it’s over.</p></div>`}<div class="grid keep2"><div class="panel"><div class="muted">Sales revenue</div><div class="stat">${cash(f.revenue)}</div></div><div class="panel"><div class="muted">Items sold</div><div class="stat">${f.qty}</div></div><div class="panel"><div class="muted">Material costs</div><div class="stat">${cash(f.materials)}</div></div><div class="panel"><div class="muted">Booth costs</div><div class="stat">${cash(f.booth)}</div></div>${(data.expenses || []).length ? `<div class="panel"><div class="muted">Other expenses</div><div class="stat">${cash(f.other)}</div></div>` : ''}<div class="panel ${(data.expenses || []).length ? '' : 'wide'}"><div class="muted">Profit${sel.length ? ` · ${sel.length} market${sel.length > 1 ? 's' : ''}` : ''}</div><div class="stat ${f.profit < 0 ? 'bad' : 'good'}">${signedCash(f.profit)}</div></div></div>${discountReport(f)}${best.length ? `<div class="panel"><h3>Best sellers</h3>${best.map(([pid, q]) => `<div class="row entry" style="margin:6px 0"><span>${esc(product(pid)?.name || 'Deleted product')}</span><b>${q} sold</b></div>`).join('')}</div>` : ''}${breakdown}${pending ? `<div class="panel muted">${pending} market${pending > 1 ? 's have sales but aren’t' : ' has sales but isn’t'} marked completed yet, so ${pending > 1 ? 'they’re' : 'it’s'} not included here.</div>` : ''}${expensesReportPanel(f)}${materialValuePanel()}${taxPanel()}<div class="panel muted">Profit = sales after discounts − material costs − booth costs${(data.expenses || []).length ? ' − other expenses' : ''}, before tax. Your time and payment fees are not included.</div>`;
 }
 let taxYear = new Date().getFullYear();
 function taxYears() {
@@ -58,8 +58,8 @@ function taxPanel() {
     if (!ys.includes(taxYear))
         taxYear = ys[0];
     const inY = d => new Date(d).getFullYear() === taxYear;
-    let spent = data.purchases.filter(x => inY(x.date)).reduce((a, x) => a + num(x.tax), 0), coll = data.sales.filter(x => inY(x.date)).reduce((a, x) => a + num(x.tax), 0), diff = coll - spent;
-    return `<div class="panel"><div class="row"><h3 style="margin:0">Sales tax</h3><select id="taxYear" style="width:auto;min-width:110px" aria-label="Tax year" onchange="taxYear=Number(this.value);render()">${ys.map(y => `<option value="${y}" ${y === taxYear ? 'selected' : ''}>${y}</option>`).join('')}</select></div><div class="grid keep2" style="margin-top:12px"><div><div class="muted">Tax collected</div><div class="stat">${cash(coll)}</div></div><div><div class="muted">Tax paid on materials</div><div class="stat">${cash(spent)}</div></div><div class="wide"><div class="muted">Difference (collected − paid)</div><div class="stat ${diff < 0 ? 'bad' : ''}">${signedCash(diff)}</div></div></div><p class="hint">Jan 1 – Dec 31, ${taxYear}. Counts every sale and material purchase dated in that year, whether or not the market is completed. If you're registered for HST, the difference is roughly what you'd remit. A guide only; check with an accountant or the CRA.</p></div>`;
+    let spentM = data.purchases.filter(x => inY(x.date)).reduce((a, x) => a + num(x.tax), 0), spentE = (data.expenses || []).filter(x => inY(x.date + 'T12:00:00')).reduce((a, x) => a + num(x.tax), 0), spent = spentM + spentE, coll = data.sales.filter(x => inY(x.date)).reduce((a, x) => a + num(x.tax), 0), diff = coll - spent;
+    return `<div class="panel"><div class="row"><h3 style="margin:0">Sales tax</h3><select id="taxYear" style="width:auto;min-width:110px" aria-label="Tax year" onchange="taxYear=Number(this.value);render()">${ys.map(y => `<option value="${y}" ${y === taxYear ? 'selected' : ''}>${y}</option>`).join('')}</select></div><div class="grid keep2" style="margin-top:12px"><div><div class="muted">Tax collected</div><div class="stat">${cash(coll)}</div></div><div><div class="muted">Tax paid on materials</div><div class="stat">${cash(spentM)}</div></div>${spentE ? `<div><div class="muted">Tax paid on expenses</div><div class="stat">${cash(spentE)}</div></div>` : ''}<div class="wide"><div class="muted">Difference (collected − paid)</div><div class="stat ${diff < 0 ? 'bad' : ''}">${signedCash(diff)}</div></div></div><p class="hint">Jan 1 – Dec 31, ${taxYear}. Counts every sale, material purchase and expense dated in that year, whether or not the market is completed. If you're registered to collect sales tax, the difference is roughly what you'd pay to your tax agency. A guide only; check with an accountant.</p></div>`;
 }
 // ---- Reports ----
 function discountReport(f) {
@@ -115,7 +115,7 @@ function foldReports() {
         h.setAttribute('role', 'button');
         h.tabIndex = 0;
         h.insertAdjacentHTML('beforeend', '<span class="foldchev" aria-hidden="true">⌄</span>');
-        let folded = key in saved ? saved[key] : key === 'Materials on hand';
+        let folded = key in saved ? saved[key] : key === 'Materials on hand' || key === 'Expenses';
         const set = f => {
             p.classList.toggle('folded', f);
             h.setAttribute('aria-expanded', String(!f));
@@ -160,7 +160,7 @@ function reportSelection() {
     let [a, b] = rangeBounds(reportRange), inRange = completedBetween(a, b).sort((x, y) => (marketTime(y) || 0) - (marketTime(x) || 0)), qs = quickBetween(a, b);
     if (reportMarket !== 'all' && !(reportMarket === 'quick' && qs.length) && !inRange.some(m => m.id === reportMarket))
         reportMarket = 'all';
-    let sel = reportMarket === 'all' ? inRange : reportMarket === 'quick' ? [] : inRange.filter(m => m.id === reportMarket), useQ = reportMarket === 'all' || reportMarket === 'quick', f = marketFigures(sel, useQ ? qs : []);
+    let sel = reportMarket === 'all' ? inRange : reportMarket === 'quick' ? [] : inRange.filter(m => m.id === reportMarket), useQ = reportMarket === 'all' || reportMarket === 'quick', f = marketFigures(sel, useQ ? qs : [], useQ ? looseExpensesBetween(a, b) : []);
     let rangeLabel = (opts.find(o => o[0] === reportRange) || [, ''])[1], marketLabel = reportMarket === 'all' ? 'All markets' : reportMarket === 'quick' ? 'Quick sales, no market' : (inRange.find(m => m.id === reportMarket)?.name || '');
     return { opts, a, b, inRange, qs, sel, useQ, f, rangeLabel: reportRange === 'all' ? 'All time' : rangeLabel, marketLabel };
 }
@@ -218,6 +218,9 @@ function reportCsv(r) {
         return /[",\r\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v;
     }, f2 = n => Number(n).toFixed(2);
     let rows = reportLines(r).map(l => [l.date, l.market, l.order, l.product, l.variation, l.tags, l.qty, f2(l.list), f2(l.sold), f2(l.disc), l.reason, f2(l.tax), f2(l.total), l.pay, l.sq]);
+    let ex = [...(r.f.expenses || [])].sort((a, b) => String(a.date).localeCompare(String(b.date)));
+    if (ex.length)
+        rows.push([], ['Expenses'], ['Date', 'Market', 'Expense', 'Category', `Tax (${cur})`, `Paid (${cur})`, `Counted in profit (${cur})`], ...ex.map(e => [e.date || '', expenseMarketName(e), e.name, e.category || '', f2(e.tax || 0), f2(e.amount), f2(expenseCost(e))]));
     return '﻿' + [head, ...rows].map(r => r.map(q).join(',')).join('\r\n') + '\r\n';
 }
 async function downloadReport() {
@@ -350,7 +353,7 @@ function reportPdf(r) {
         txt(x + 8, y - 39, v, 15, true);
     });
     y -= 64;
-    txt(M, y, `Profit = sales after discounts (${cash(f.revenue)}) - material costs (${cash(f.materials)}) - booth costs (${cash(f.booth)}), before tax.`, 8.5, false, INK2);
+    txt(M, y, `Profit = sales after discounts (${cash(f.revenue)}) - material costs (${cash(f.materials)}) - booth costs (${cash(f.booth)})${f.expenses.length ? ` - other expenses (${cash(f.other)})` : ''}, before tax.`, 8.5, false, INK2);
     y -= 26;
     // By market
     let mrows = r.sel.map(m => {
@@ -425,11 +428,16 @@ function reportPdf(r) {
     let inR = d => {
         let t = Date.parse(d);
         return t >= r.a && t < r.b;
-    }, coll = f.sales.reduce((a, s) => a + num(s.tax), 0), paid = (data.purchases || []).filter(x => inR(x.date)).reduce((a, x) => a + num(x.tax), 0);
+    }, coll = f.sales.reduce((a, s) => a + num(s.tax), 0), paidM = (data.purchases || []).filter(x => inR(x.date)).reduce((a, x) => a + num(x.tax), 0), paidE = f.expenses.reduce((a, e) => a + num(e.tax), 0), paid = paidM + paidE;
+    if (f.expenses.length) {
+        let erows = [...f.expenses].sort((a, b) => String(a.date).localeCompare(String(b.date))).map(e => [e.date || '', e.name, e.category || '', expenseMarketName(e) || 'No market', cash(e.tax), cash(e.amount)]);
+        erows.push(['Total', '', '', '', cash(paidE), cash(f.expenses.reduce((a, e) => a + num(e.amount), 0))]);
+        table('Expenses', [{ t: 'Date', w: .14 }, { t: 'Expense', w: .3 }, { t: 'Category', w: .17 }, { t: 'Market', w: .19 }, { t: 'Tax', w: .1, r: 1 }, { t: 'Paid', w: .1, r: 1 }], erows, { boldLast: true });
+    }
     need(50);
     txt(M, y - 14, 'Sales tax', 13, true);
     y -= 32;
-    txt(M, y, `Collected: ${cash(coll)}      Paid on materials: ${cash(paid)}      Difference: ${signedCash(coll - paid)}`, 9.5);
+    txt(M, y, `Collected: ${cash(coll)}      Paid on materials: ${cash(paidM)}${paidE ? `      Paid on expenses: ${cash(paidE)}` : ''}      Difference: ${signedCash(coll - paid)}`, 9.5);
     y -= 20;
     if (!f.sales.length) {
         need(30);

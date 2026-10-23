@@ -3,7 +3,7 @@
 
 const KEY = 'crochetStudioPrototypeV1';
 const DEFAULT_SETTINGS = { hourly: 15, method: 'labour', multiplier: 3, markup: 50, rounding: 'nearest', autoDeduct: false, taxRate: 13, taxOnPurchases: true, taxOnSales: false, taxInCosts: true };
-function migrateData(d) {
+function migrateData(d, fresh) {
     const n = v => Math.max(0, Number(v) || 0);
     if (!Array.isArray(d.units) || !d.units.length)
         d.units = [{ id: 'g', name: 'grams', short: 'g', builtin: true }, { id: 'pair', name: 'pairs', short: 'pairs', builtin: true }, { id: 'piece', name: 'pieces', short: 'pcs', builtin: true }];
@@ -31,11 +31,41 @@ function migrateData(d) {
         d.purchases = [];
     if (!Array.isArray(d.orders))
         d.orders = [];
+    if (!Array.isArray(d.expenses))
+        d.expenses = [];
     if (!d.settings.currency)
         d.settings.currency = guessCurrency();
+    // Version 24 tax options. New setups: add tax to sales, material prices before tax. Older data keeps how it worked.
+    const st = d.settings;
+    if (!st.productTax)
+        st.productTax = fresh || st.taxOnSales || d.products.some(p => p.taxed === true) ? 'add' : 'none';
+    if (!st.materialTax)
+        st.materialTax = fresh || st.taxOnPurchases !== false ? 'add' : 'includes';
+    if (st.notClaimingTax === undefined)
+        st.notClaimingTax = fresh ? false : st.taxInCosts !== false;
+    for (let x of [...d.products, ...d.materials])
+        delete x.taxed;
+    // US rates differ by state and city, so a new US setup starts with no rate and asks for one.
+    if (fresh && st.currency === 'USD')
+        st.taxRate = null;
     for (let p of d.products)
         if (!Array.isArray(p.tagIds))
             p.tagIds = p.categoryId ? [p.categoryId] : [];
+    // Version 24: one sale format. Sales from before version 18 had no order; give each one its own order.
+    const r2 = v => Math.round(v * 100) / 100, newId = () => Math.random().toString(36).slice(2) + Date.now().toString(36);
+    for (let s of d.sales) {
+        if (s.orderId && d.orders.some(o => o.id === s.orderId))
+            continue;
+        if (s.listPrice == null)
+            s.listPrice = n(s.price);
+        if (s.disc == null)
+            s.disc = 0;
+        if (s.taxed == null)
+            s.taxed = n(s.tax) > 0;
+        let sub = r2(n(s.qty) * n(s.price)), tax = r2(n(s.tax));
+        s.orderId = s.orderId || newId();
+        d.orders.push({ id: s.orderId, marketId: s.marketId || null, date: s.date, full: r2(n(s.qty) * n(s.listPrice)), subtotal: sub, discount: null, tax, total: r2(sub + tax), payment: { method: '' } });
+    }
     return d;
 }
 function normalizeData(d) {
@@ -43,8 +73,9 @@ function normalizeData(d) {
     for (const k of ['materials', 'products', 'sales', 'markets'])
         if (!Array.isArray(d[k]))
             d[k] = [];
+    let fresh = !d.settings || !Object.keys(d.settings).length;
     d.settings = { ...DEFAULT_SETTINGS, ...(d.settings || {}) };
-    migrateData(d);
+    migrateData(d, fresh);
     return d;
 }
 let data = normalizeData(null);
@@ -139,4 +170,4 @@ function byName(a, b) {
     return a.name.localeCompare(b.name);
 }
 // ===== v21: spreadsheet import (beta), feedback, pattern limit =====
-const APP_VERSION = 23, PATTERN_LIMIT = 5, FEEDBACK_EMAIL = 'Aaron.mete.5@hotmail.com';
+const APP_VERSION = 24, PATTERN_LIMIT = 5, FEEDBACK_EMAIL = 'Aaron.mete.5@hotmail.com';

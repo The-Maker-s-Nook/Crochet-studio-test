@@ -7,7 +7,7 @@ function render() {
     let at = activeTab();
     nav.innerHTML = navItems.map(([s, i, n]) => `<button class="${at === s ? 'active' : ''}" ${at === s ? 'aria-current="page"' : ''} onclick="view('${s}')">${ic(i)}${n}</button>`).join('');
     let a = $('app');
-    a.innerHTML = (notice ? `<div id="notice" class="notice">${esc(notice)}</div>` : '') + ({ home: home, products: products, materials: materials, patterns: patterns, markets: markets, reports: reports, settings: settings, productForm: productForm, productDetail: productDetail, materialForm: materialForm, marketForm: marketForm, marketDetail: marketDetail, marketInfo: marketInfo, marketTodo: marketTodo, settingsPricing: settingsPricing, settingsBackup: settingsBackup, settingsAccount: settingsAccount, settingsTax: settingsTax, settingsPayments: settingsPayments, settingsImport: settingsImport, settingsRegion: settingsRegion, settingsGuides: settingsGuides, reportDownload: reportDownload, tagAdd: tagAdd, importReview: importReview, importDone: importDone, settingsFeedback: settingsFeedback, quickSale: quickSale, saleReview: saleReview, marketSales: marketSales, saleEdit: saleEdit, authWelcome: authWelcome, authSignup: authSignup, authSignin: authSignin, authForgot: authForgot, authVerify: authVerify, authNewPassword: authNewPassword, authSetup: authSetup, authSync: authSync, authLinkDone: authLinkDone }[screen] || home)();
+    a.innerHTML = (notice ? `<div id="notice" class="notice">${esc(notice)}</div>` : '') + ({ home: home, products: products, materials: materials, patterns: patterns, markets: markets, reports: reports, settings: settings, settingsFinances: settingsFinances, expenseForm: expenseForm, productForm: productForm, productDetail: productDetail, materialForm: materialForm, marketForm: marketForm, marketDetail: marketDetail, marketInfo: marketInfo, marketTodo: marketTodo, settingsPricing: settingsPricing, settingsBackup: settingsBackup, settingsAccount: settingsAccount, settingsTax: settingsTax, settingsPayments: settingsPayments, settingsImport: settingsImport, settingsRegion: settingsRegion, settingsGuides: settingsGuides, reportDownload: reportDownload, tagAdd: tagAdd, importReview: importReview, importDone: importDone, settingsFeedback: settingsFeedback, quickSale: quickSale, saleReview: saleReview, marketSales: marketSales, saleEdit: saleEdit, authWelcome: authWelcome, authSignup: authSignup, authSignin: authSignin, authForgot: authForgot, authVerify: authVerify, authNewPassword: authNewPassword, authSetup: authSetup, authSync: authSync, authLinkDone: authLinkDone }[screen] || home)();
 }
 // ===== Navigation: back returns to wherever you came from =====
 let navStack = [], skipPop = false;
@@ -80,7 +80,7 @@ function backLabel() {
         return product(st.selected)?.name || 'Product';
     if (st.screen === 'marketDetail')
         return data.markets.find(m => m.id === st.marketSelected)?.name || 'Market';
-    return ({ home: 'Home', products: 'Products', materials: 'Materials', patterns: 'Patterns', markets: 'Markets', reports: 'Reports', settings: 'Settings', marketInfo: 'Market details', marketTodo: 'To-do list', productForm: 'Product', materialForm: 'Material', marketForm: 'New market', settingsPricing: 'Pricing defaults', settingsBackup: 'Backup', settingsAccount: 'Account', settingsTax: 'Tax', settingsPayments: 'Payments', settingsImport: 'Import', settingsRegion: 'Country & currency', settingsGuides: 'What’s new', reportDownload: 'Download', tagAdd: 'Add products', importReview: 'Check import', importDone: 'Import', settingsFeedback: 'Feedback', quickSale: 'Quick sale', saleReview: 'Review sale', marketSales: 'Sales', saleEdit: 'Sale' })[st.screen] || 'Back';
+    return ({ home: 'Home', products: 'Products', materials: 'Materials', patterns: 'Patterns', markets: 'Markets', reports: 'Reports', settings: 'Settings', marketInfo: 'Market details', marketTodo: 'To-do list', productForm: 'Product', materialForm: 'Material', marketForm: 'New market', settingsFinances: 'Finances', expenseForm: 'Expense', settingsPricing: 'Pricing defaults', settingsBackup: 'Backup', settingsAccount: 'Account', settingsTax: 'Tax', settingsPayments: 'Payments', settingsImport: 'Import', settingsRegion: 'Country & currency', settingsGuides: 'What’s new', reportDownload: 'Download', tagAdd: 'Add products', importReview: 'Check import', importDone: 'Import', settingsFeedback: 'Feedback', quickSale: 'Quick sale', saleReview: 'Review sale', marketSales: 'Sales', saleEdit: 'Sale' })[st.screen] || 'Back';
 }
 function backBtn() {
     return `<button class="alt small" onclick="goBack()">← ${esc(backLabel())}</button>`;
@@ -102,7 +102,7 @@ function openMarket(mid, replace) {
         marketSaleDraft = {};
         marketAddOpen = false;
         marketAddSearch = '';
-        marketAddPick = null;
+        marketAddQty = {};
     };
     if (replace) {
         setup();

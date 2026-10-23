@@ -232,3 +232,33 @@ body.viewing nav{z-index:1001}
 .pmark .pdot{width:24px;height:24px;border-radius:50%;background:var(--pink);border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.35)}
 .pmark .plabel{background:var(--pink);color:#fff;font-weight:800;font-size:12px;padding:5px 10px;border-radius:999px;box-shadow:0 2px 8px rgba(0,0,0,.3);white-space:nowrap}
 .pmark.fade{opacity:0}
+
+/* ===== Version 24 ===== */
+/* Add inventory: pick amounts for many products, then add them together */
+.addbar{position:sticky;top:0;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;background:var(--card);padding:10px 0 8px;border-bottom:1.5px solid var(--lav-soft);margin-top:10px}
+.addbar .muted b{color:var(--ink);font-size:15px}
+.addlist{max-height:none}
+.addrow{display:flex;align-items:center;gap:8px;padding:10px 12px;margin:6px 0;border:1.5px solid var(--lav-soft);border-radius:16px;background:var(--card)}
+.addrow.on{border-color:var(--lav-deep);background:var(--lav-soft)}
+.addrow .grow{min-width:0}
+.addrow b{overflow-wrap:anywhere}
+.addqty{min-width:26px;text-align:center;font-variant-numeric:tabular-nums}
+.addrow button[disabled]{opacity:.4}
+/* Label with a ? help button beside it */
+.labelrow{display:flex;align-items:center;gap:4px;margin:13px 0 5px}
+.labelrow label{margin:0}
+.labelrow .helpq{margin-left:2px}
+/* Per-item tax override */
+.taxov{margin-top:10px;padding:10px 12px;border-radius:14px;background:var(--lav-soft)}
+.taxov .grid2{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:8px;margin-top:8px}
+.taxov label{margin:0 0 4px}
+.taxov select,.taxov input[type=number]{background:var(--card)}
+/* Expenses */
+.costs .row{padding:4px 0}
+.costs .row.tot{border-top:1.5px solid var(--lav-soft);margin-top:6px;padding-top:8px}
+.exprow{padding:8px 0;border-bottom:1px solid var(--lav-soft)}
+.exprow .block{display:block;font-size:12px}
+.addexp{margin-top:6px;font-weight:800}
+/* Add a photo menu */
+.photomenu{display:grid;gap:10px;margin-top:14px}
+.photomenu button{justify-content:flex-start;width:100%}

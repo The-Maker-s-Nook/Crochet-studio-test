@@ -3,16 +3,12 @@
 
 function patterns() {
     let list = pdfCache.slice().sort((a, b) => String(b.date).localeCompare(String(a.date)));
-    return `<div class="row"><h2>Pattern Library</h2></div><div class="panel"><h3>Add pattern</h3>${patternUsage()}<div class="actions"><button onclick="patternPick('patternFile')">Choose file (PDF / JPG / PNG)</button><button class="alt" onclick="patternPick('patternCamera')">📷 Camera</button></div><input class="hidden" id="patternFile" type="file" accept="application/pdf,.pdf,image/jpeg,.jpg,.jpeg,image/png,.png" onchange="importPdf(event)"><input class="hidden" id="patternCamera" type="file" accept="image/*" capture="environment" onchange="importPdf(event)"><input class="hidden" id="patternPhotoInput" type="file" accept="image/*" onchange="setPatternPhoto(event)"><p class="hint">${signedIn() ? 'Patterns are saved privately to your account.' : 'Patterns stay private on this device.'} A preview photo is made automatically; tap “Photo” to take or choose your own. Only import patterns you have permission to use.</p></div>${list.map(p => `<div class="panel item"><button class="thumbbtn" onclick="openPattern('${p.id}')" aria-label="Open ${esc(p.name)}">${thumb(p.thumb || '', "")}</button><div class="grow"><div class="item-title" style="word-break:break-word">${esc(p.name)}</div><div class="muted">${(p.mime || '').startsWith('image/') ? 'Image' : 'PDF'} · ${new Date(p.date).toLocaleDateString()}</div><div class="actions"><button class="small" onclick="openPattern('${p.id}')">Open</button><button class="alt small" onclick="pickPatternPhoto('${p.id}')">${ic('camera', 15)} Photo</button><button class="danger small" onclick="removePdf('${p.id}')">Delete</button></div></div></div>`).join('') || '<div class="panel muted">No patterns imported yet.</div>'}`;
+    return `<div class="row"><h2>Pattern Library</h2></div><div class="panel"><h3>Add pattern</h3>${patternUsage()}<div class="actions"><button onclick="patternPick('patternFile')">Choose file (PDF / JPG / PNG)</button><button class="alt" onclick="patternPick('patternCamera')">📷 Camera</button></div><input class="hidden" id="patternFile" type="file" accept="application/pdf,.pdf,image/jpeg,.jpg,.jpeg,image/png,.png" onchange="importPdf(event)"><input class="hidden" id="patternCamera" type="file" accept="image/*" capture="environment" onchange="importPdf(event)"><p class="hint">${signedIn() ? 'Patterns are saved privately to your account.' : 'Patterns stay private on this device.'} A preview photo is made automatically; tap “Photo” to take or choose your own. Only import patterns you have permission to use.</p></div>${list.map(p => `<div class="panel item"><button class="thumbbtn" onclick="openPattern('${p.id}')" aria-label="Open ${esc(p.name)}">${thumb(p.thumb || '', "")}</button><div class="grow"><div class="item-title" style="word-break:break-word">${esc(p.name)}</div><div class="muted">${(p.mime || '').startsWith('image/') ? 'Image' : 'PDF'} · ${new Date(p.date).toLocaleDateString()}</div><div class="actions"><button class="small" onclick="openPattern('${p.id}')">Open</button><button class="alt small" onclick="pickPatternPhoto('${p.id}')">${ic('camera', 15)} Photo</button><button class="danger small" onclick="removePdf('${p.id}')">Delete</button></div></div></div>`).join('') || '<div class="panel muted">No patterns imported yet.</div>'}`;
 }
 let patternPhotoFor = null;
 function pickPatternPhoto(pid) {
     patternPhotoFor = pid;
-    let i = $('patternPhotoInput');
-    if (!i)
-        return;
-    i.value = '';
-    i.click();
+    photoMenu(setPatternPhoto);
 }
 async function setPatternPhoto(e) {
     let f = e.target.files?.[0], pid = patternPhotoFor;

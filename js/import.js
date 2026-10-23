@@ -475,7 +475,7 @@ function applyImport() {
         let c = catFor(m.kind), mid = id();
         if (!data.units.some(u => u.id === m.unit))
             data.units.push(m.unit === 'pair' ? { id: 'pair', name: 'pairs', short: 'pairs', builtin: true } : { id: 'g', name: 'grams', short: 'g', builtin: true });
-        data.materials.push({ id: mid, categoryId: c.id, name: normName(m.name), colour: normName(m.colour || ''), weight: m.weight, unit: m.unit, price: m.price, store: canonStore(m.store || ''), taxed: false, trackStock: false, photo: '', photos: [], stock: 0 });
+        data.materials.push({ id: mid, categoryId: c.id, name: normName(m.name), colour: normName(m.colour || ''), weight: m.weight, unit: m.unit, price: m.price, store: canonStore(m.store || ''), taxOverride: data.settings.materialTax === 'includes' ? null : { on: true, mode: 'includes', rate: taxRate() }, trackStock: false, photo: '', photos: [], stock: 0 });
         tmpIds[m.tmp] = mid;
         rec.materialIds.push(mid);
     }

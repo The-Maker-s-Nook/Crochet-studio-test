@@ -1,4 +1,4 @@
-CROCHET STUDIO - NOTES FOR THE APP OWNER (version 23)
+CROCHET STUDIO - NOTES FOR THE APP OWNER (version 24)
 
 LIVE TEST ADDRESS
    https://crochetstudiotest.netlify.app
@@ -43,17 +43,21 @@ SQUARE CARD PAYMENTS
    Application ID is built into the app. Point of Sale API > Web callback URL
    must match the app's address (now https://crochetstudiotest.netlify.app/).
    If the address changes (own domain, app stores), update the callback URL there.
-   Users turn it on in Settings > Payments and need the Square Point of Sale app.
+   Users turn it on in Settings > Finances > Payments and need the Square Point of Sale app.
 
-TESTER VERSION (23)
+TESTER VERSION (24)
    - Feedback emails go to Aaron.mete.5@hotmail.com (Settings > Send feedback).
      To change it, edit FEEDBACK_EMAIL in js/core.js.
    - Pattern limit is 5 per account while testing (PATTERN_LIMIT in js/core.js).
    - Spreadsheet import is beta. It reads the CrochetWBay pricing spreadsheet
      (.xlsx or .csv). Settings > Import from spreadsheet > Undo removes the last import.
 
-   - Update notes for testers: guides/whats-new-23.pdf and guides/tester-guide.pdf.
+   - Update notes for testers: guides/whats-new-24.pdf and guides/tester-guide.pdf.
      They open from Settings > What's new & tester guide, and a "What's new" message
      shows once after each update. For the next version, add the new PDFs to guides/,
      update GUIDES in js/settings.js and the list in sw.js.
-   - Currency: Settings > Country & currency (CAD / USD). Square charges in it.
+   - Money settings live under Settings > Finances: Tax, Pricing defaults,
+     Country & currency (CAD / USD, Square charges in it) and Payments.
+   - Tax (version 24): Product tax and Material tax options, "Not claiming tax on
+     materials", and Override tax settings on any product, material or expense.
+   - Expenses (version 24): add on a market or in Reports > Expenses; they come off profit.
