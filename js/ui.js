@@ -314,3 +314,78 @@ function photoFrom(src) {
     document.body.appendChild(i);
     i.click();
 }
+
+// ---- Swipe a card left to show Delete; tapping Delete is the confirmation ----
+ICONS.trash = '<path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M6 6l1 14h10l1-14"/><path d="M10 11v6M14 11v6"/>';
+const SWIPE_W = 96;
+let swipeNow = null;
+function swipeWrap(card, delAction, label) {
+    return `<div class="swipe"><button type="button" class="swipedel" tabindex="-1" aria-label="Delete ${esc(label)}" onclick="${delAction}">${ic('trash', 18)} Delete</button>${card}</div>`;
+}
+function closeSwipes(except) {
+    document.querySelectorAll('.swipe.open').forEach(s => {
+        if (s === except)
+            return;
+        s.classList.remove('open');
+        let c = s.querySelector(':scope > .panel');
+        if (c)
+            c.style.transform = '';
+    });
+}
+function swipeDown(e) {
+    if (e.target.closest?.('.swipedel'))
+        return;
+    let card = e.target.closest?.('.swipe > .panel');
+    if (!card || e.button > 0 || e.target.closest('input,select,textarea'))
+        return closeSwipes();
+    let wrap = card.parentElement;
+    closeSwipes(wrap);
+    swipeNow = { card, wrap, id: e.pointerId, x0: e.clientX, y0: e.clientY, base: wrap.classList.contains('open') ? -SWIPE_W : 0, drag: false, off: 0 };
+}
+function swipeMove(e) {
+    let s = swipeNow;
+    if (!s || e.pointerId !== s.id)
+        return;
+    let dx = e.clientX - s.x0, dy = e.clientY - s.y0;
+    if (!s.drag) {
+        if (Math.abs(dy) > 10 && Math.abs(dy) > Math.abs(dx))
+            return (swipeNow = null);
+        if (Math.abs(dx) < 10 || Math.abs(dx) < Math.abs(dy) * 1.2)
+            return;
+        s.drag = true;
+        s.card.style.transition = 'none';
+        try {
+            s.card.setPointerCapture(e.pointerId);
+        }
+        catch {
+        }
+    }
+    s.off = Math.max(-SWIPE_W - 30, Math.min(0, s.base + dx));
+    s.card.style.transform = `translateX(${s.off}px)`;
+}
+function swipeUp(e) {
+    let s = swipeNow;
+    swipeNow = null;
+    if (!s || e.pointerId !== s.id)
+        return;
+    s.card.style.transition = '';
+    if (s.drag) {
+        let open = s.off < -SWIPE_W / 2;
+        s.wrap.classList.toggle('open', open);
+        s.card.style.transform = open ? `translateX(${-SWIPE_W}px)` : '';
+        s.card.dataset.swiped = String(Date.now());
+    }
+    else if (s.base) {
+        // A tap on an open card closes it instead of pressing its buttons.
+        s.wrap.classList.remove('open');
+        s.card.style.transform = '';
+        s.card.dataset.swiped = String(Date.now());
+    }
+}
+function swipeClick(e) {
+    let card = e.target.closest?.('.swipe > .panel');
+    if (card && Date.now() - Number(card.dataset.swiped || 0) < 400) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+}

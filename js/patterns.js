@@ -159,8 +159,14 @@ async function renderViewer() {
                 c.height = Math.floor(vp.height);
                 c.style.width = w + 'px';
                 c.style.height = h + 'px';
-                body.appendChild(c);
+                let box = document.createElement('div');
+                box.className = 'vpagebox';
+                box.style.width = w + 'px';
+                box.style.height = h + 'px';
+                box.appendChild(c);
+                body.appendChild(box);
                 await page.render({ canvasContext: c.getContext('2d'), viewport: vp }).promise;
+                await addPageLinks(page, box, css);
                 page.cleanup();
                 if (token !== viewerToken)
                     return;
@@ -482,4 +488,66 @@ async function savePatternName(pid) {
     catch {
         appAlert('Could not save the new name on this device.');
     }
+}
+
+// ---- Clickable links in PDF patterns (YouTube tutorials, designers' socials, shops) ----
+const URL_RX = /(https?:\/\/[^\s<>"')\]]+|www\.[^\s<>"')\]]+|(?:youtu\.be|youtube\.com|instagram\.com|facebook\.com|tiktok\.com|etsy\.com|ravelry\.com|pinterest\.com)\/[^\s<>"')\]]*)/i;
+function safeLink(u) {
+    u = String(u || '').trim().replace(/[.,;:!?]+$/, '');
+    if (!/^https?:\/\//i.test(u))
+        u = 'https://' + u.replace(/^\/+/, '');
+    try {
+        let x = new URL(u);
+        return /^https?:$/.test(x.protocol) ? x.href : '';
+    }
+    catch {
+        return '';
+    }
+}
+async function addPageLinks(page, box, css) {
+    try {
+        let v = page.getViewport({ scale: css }), boxes = [];
+        const add = (href, x1, y1, x2, y2) => {
+            href = safeLink(href);
+            if (!href)
+                return;
+            let l = Math.min(x1, x2), t = Math.min(y1, y2), w = Math.abs(x2 - x1), h = Math.abs(y2 - y1);
+            if (w < 4 || h < 4 || boxes.some(b => Math.abs(b.l - l) < 6 && Math.abs(b.t - t) < 6))
+                return;
+            boxes.push({ l, t });
+            let a = document.createElement('a');
+            a.className = 'plink';
+            a.href = href;
+            a.target = '_blank';
+            a.rel = 'noopener noreferrer';
+            a.title = href;
+            a.setAttribute('aria-label', 'Open link: ' + href);
+            a.style.cssText = `left:${l}px;top:${t}px;width:${w}px;height:${h}px`;
+            a.addEventListener('click', patLinkClick);
+            box.appendChild(a);
+        };
+        // Links the pattern's author added to the PDF
+        for (let an of await page.getAnnotations({ intent: 'display' }))
+            if (an.subtype === 'Link' && an.url) {
+                let [x1, y1] = v.convertToViewportPoint(an.rect[0], an.rect[1]), [x2, y2] = v.convertToViewportPoint(an.rect[2], an.rect[3]);
+                add(an.url, x1, y1, x2, y2);
+            }
+        // Web addresses typed as plain text
+        let tc = await page.getTextContent();
+        for (let it of tc.items) {
+            let m = typeof it.str === 'string' && it.str.match(URL_RX);
+            if (!m)
+                continue;
+            let tx = pdfjsLib.Util.transform(v.transform, it.transform), fh = Math.hypot(tx[2], tx[3]), x = tx[4], y = tx[5] - fh, w = (it.width || 0) * css;
+            add(m[0], x, y - 2, x + Math.max(w, 30), y + fh + 3);
+        }
+    }
+    catch (e) {
+        console.warn('Pattern links', e);
+    }
+}
+// A tap that just placed the "You stopped here" mark shouldn't also open a link.
+function patLinkClick(e) {
+    if (patArm || Date.now() - patMarkAt < 700)
+        e.preventDefault();
 }

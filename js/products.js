@@ -52,9 +52,67 @@ async function adjust(pid, delta, reason) {
 async function deleteProduct(pid) {
     if (!await appConfirm('Delete this product?'))
         return;
-    data.products = data.products.filter(p => p.id !== pid);
-    save();
+    removeProducts([pid]);
     view('products');
+}
+// Remove products and anything that only made sense with them. Past sales stay in Reports.
+function removeProducts(ids) {
+    ids = new Set(ids);
+    data.products = data.products.filter(p => !ids.has(p.id));
+    for (let m of data.markets)
+        if (!m.completed && m.items)
+            for (let pid of ids)
+                delete m.items[pid];
+    data.reminders = (data.reminders || []).filter(r => !(r.kind === 'product' && ids.has(r.refId)));
+    save();
+}
+// Swipe left on a product card, then tap Delete
+function swipeDeleteProduct(pid) {
+    let p = product(pid);
+    if (!p)
+        return;
+    removeProducts([pid]);
+    render();
+    toast(`${p.name} deleted.`);
+}
+// ---- Delete several products at once (trash button beside + Tag) ----
+let productSelectMode = false, productPicked = new Set();
+function startProductSelect() {
+    productSelectMode = true;
+    productPicked = new Set();
+    render();
+}
+function endProductSelect() {
+    productSelectMode = false;
+    productPicked = new Set();
+    render();
+}
+function togglePickProduct(pid) {
+    productPicked.has(pid) ? productPicked.delete(pid) : productPicked.add(pid);
+    $('productList').innerHTML = productRows();
+    $('pickBar').outerHTML = productPickBar();
+}
+function pickAllProducts() {
+    let shown = data.products.filter(p => productMatches(p, productFilter));
+    productPicked = shown.every(p => productPicked.has(p.id)) ? new Set() : new Set(shown.map(p => p.id));
+    $('productList').innerHTML = productRows();
+    $('pickBar').outerHTML = productPickBar();
+}
+function productPickBar() {
+    let n = productPicked.size;
+    return `<div class="pickbar" id="pickBar"><span class="grow"><b>${n}</b> selected</span><button class="alt small" onclick="pickAllProducts()">Select all</button><button class="danger small" ${n ? '' : 'disabled'} onclick="deletePickedProducts()">${ic('trash', 16)} Delete</button><button class="alt small" onclick="endProductSelect()">Cancel</button></div>`;
+}
+async function deletePickedProducts() {
+    let n = productPicked.size;
+    if (!n)
+        return;
+    if (!await appConfirm(`Delete ${n} product${n > 1 ? 's' : ''}?\n\nThis can't be undone. Past sales of ${n > 1 ? 'them' : 'it'} stay in Reports.`, { ok: `Delete ${n}`, danger: true }))
+        return;
+    removeProducts([...productPicked]);
+    productSelectMode = false;
+    productPicked = new Set();
+    render();
+    toast(`${n} product${n > 1 ? 's' : ''} deleted.`);
 }
 function productForm() {
     let p = product(editing) || {};
@@ -278,7 +336,7 @@ function categoryPicker(selId) {
 // ===== Products page with folders =====
 let productFolderOpen = new Set();
 function products() {
-    return `<div class="row"><h2>Products</h2></div><div class="actions toprow" style="margin:-6px 0 12px"><button onclick="newProduct()">+ Product</button><button class="aqua" onclick="startQuickSale()">Sell</button><button class="alt" onclick="openCategoryModal()">+ Tag</button></div><input placeholder="Search products (name, variation, tag)" aria-label="Search products" value="${esc(productFilter)}" oninput="productFilter=this.value;document.getElementById('productList').innerHTML=productRows()"><select aria-label="Sort products" style="margin-top:10px" onchange="setProductSort(this.value)">${PROD_SORTS.map(([v, l]) => `<option value="${v}" ${productSort === v ? 'selected' : ''}>Sort: ${l}</option>`).join('')}</select><div id="productList" style="margin-top:12px">${productRows()}</div>`;
+    return `<div class="row"><h2>Products</h2></div><div class="actions toprow" style="margin:-6px 0 12px"><button onclick="newProduct()">+ Product</button><button class="aqua" onclick="startQuickSale()">Sell</button><button class="alt" onclick="openCategoryModal()">+ Tag</button><button class="alt iconsq" aria-label="Delete products" title="Delete products" onclick="${productSelectMode ? 'endProductSelect()' : 'startProductSelect()'}">${ic('trash', 18)}</button></div>${productSelectMode ? productPickBar() + '<p class="hint" style="margin:-4px 0 8px">Tap the products to delete, then tap Delete. Open a tag to pick products inside it.</p>' : ''}<input placeholder="Search products (name, variation, tag)" aria-label="Search products" value="${esc(productFilter)}" oninput="productFilter=this.value;document.getElementById('productList').innerHTML=productRows()"><select aria-label="Sort products" style="margin-top:10px" onchange="setProductSort(this.value)">${PROD_SORTS.map(([v, l]) => `<option value="${v}" ${productSort === v ? 'selected' : ''}>Sort: ${l}</option>`).join('')}</select><div id="productList" style="margin-top:12px">${productRows()}</div>`;
 }
 function toggleFolder(cid) {
     productFolderOpen.has(cid) ? productFolderOpen.delete(cid) : productFolderOpen.add(cid);
@@ -323,8 +381,12 @@ function productMatches(p, q) {
     return [p.name, p.variation, ...ptags(p).map(c => c.name)].some(x => String(x || '').toLowerCase().includes(q));
 }
 function productCard(p, inTag) {
+    if (productSelectMode) {
+        let on = productPicked.has(p.id);
+        return `<button type="button" class="panel item pickcard ${on ? 'on' : ''}" aria-pressed="${on}" onclick="togglePickProduct('${p.id}')"><span class="pickbox" aria-hidden="true">${on ? ic('check', 16) : ''}</span>${p.photo ? thumb(p.photo, '') : '<div class="thumb thumb-empty"></div>'}<span class="grow"><span class="item-title">${esc(p.name)}</span><span class="muted block">${cash(p.price)} · ${num(p.stock)} in stock</span></span></button>`;
+    }
     let others = inTag ? ptags(p).filter(c => c.id !== inTag) : [];
-    return `<div class="panel item hasbell">${reminderToggleBtn('product', p.id, p.name, true)}${photoSlot(p.photo || '', "", 'product', p.id, p.name)}<div class="grow"><div class="row titlerow"><div class="item-title">${esc(p.name)}</div>${ptagIds(p).length ? '' : `<button class="alt small addcat" onclick="openAddToCategory('${p.id}')">${ic('tag', 14)} Add tag</button>`}</div><div class="muted">${cash(p.price)} · ${num(p.stock)} in stock</div>${others.length ? `<span class="chip tagchip">Also tagged ${others.map(c => esc(c.name)).join(', ')}</span>` : ''}<div class="actions"><button class="alt small" onclick="quickRemove('${p.id}')" aria-label="Remove one ${esc(p.name)} from stock">−1</button><button class="small" onclick="quickAdd('${p.id}')" aria-label="Add one ${esc(p.name)} to stock">+1</button><button class="alt small" onclick="detail('${p.id}')">Open / adjust</button></div></div></div>`;
+    return swipeWrap(`<div class="panel item hasbell">${reminderToggleBtn('product', p.id, p.name, true)}${photoSlot(p.photo || '', "", 'product', p.id, p.name)}<div class="grow"><div class="row titlerow"><div class="item-title">${esc(p.name)}</div>${ptagIds(p).length ? '' : `<button class="alt small addcat" onclick="openAddToCategory('${p.id}')">${ic('tag', 14)} Add tag</button>`}</div><div class="muted">${cash(p.price)} · ${num(p.stock)} in stock</div>${others.length ? `<span class="chip tagchip">Also tagged ${others.map(c => esc(c.name)).join(', ')}</span>` : ''}<div class="actions"><button class="alt small" onclick="quickRemove('${p.id}')" aria-label="Remove one ${esc(p.name)} from stock">−1</button><button class="small" onclick="quickAdd('${p.id}')" aria-label="Add one ${esc(p.name)} to stock">+1</button><button class="alt small" onclick="detail('${p.id}')">Open / adjust</button></div></div></div>`, `swipeDeleteProduct('${p.id}')`, p.name);
 }
 function productRows() {
     let q = productFilter, match = p => productMatches(p, q), loose = sortProducts(data.products.filter(p => !ptagIds(p).length && match(p))), cats = data.productCategories.slice().sort(byName), folders = '';

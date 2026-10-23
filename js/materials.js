@@ -264,7 +264,7 @@ function materials() {
 }
 function materialCard(m, mode) {
     let c = mcat(m.categoryId), isDef = c?.defaultMaterialId === m.id, full = mode === true || mode === 'full';
-    return `<div class="panel row matcard">${photoSlot(m.photo || m.photos?.[0] || '', "width:52px;height:52px", 'material', m.id, materialLabel(m), true)}<div class="grow"><b>${esc(mode && mode !== 'group' ? materialLabel(m) : (m.colour || 'No variation set'))}</b>${isDef ? ' <span class="chip">Default</span>' : ''}<div class="muted">${full ? esc(c?.name || '') + ' · ' : ''}${m.store && materialSort !== 'store' ? esc(m.store) + ' · ' : ''}${cash(m.price)} / ${num(m.weight)} ${esc(unitShort(m.unit))}${m.trackStock ? ` · ${num(m.stock)} ${esc(unitShort(m.unit))} left` : ''}</div></div>${reminderToggleBtn('material', m.id, materialLabel(m))}<button class="alt small" onclick="editMaterial('${m.id}')">Edit</button></div>`;
+    return swipeWrap(`<div class="panel row matcard">${photoSlot(m.photo || m.photos?.[0] || '', "width:52px;height:52px", 'material', m.id, materialLabel(m), true)}<div class="grow"><b>${esc(mode && mode !== 'group' ? materialLabel(m) : (m.colour || 'No variation set'))}</b>${isDef ? ' <span class="chip">Default</span>' : ''}<div class="muted">${full ? esc(c?.name || '') + ' · ' : ''}${m.store && materialSort !== 'store' ? esc(m.store) + ' · ' : ''}${cash(m.price)} / ${num(m.weight)} ${esc(unitShort(m.unit))}${m.trackStock ? ` · ${num(m.stock)} ${esc(unitShort(m.unit))} left` : ''}</div></div>${reminderToggleBtn('material', m.id, materialLabel(m))}<button class="alt small" onclick="editMaterial('${m.id}')">Edit</button></div>`, `swipeDeleteMaterial('${m.id}')`, materialLabel(m));
 }
 function materialRows() {
     let q = materialSearch.toLowerCase().trim();
@@ -439,16 +439,33 @@ async function saveMaterial(e) {
     goBack();
     toast('Material saved.');
 }
+function removeMaterial(mid) {
+    data.materials = data.materials.filter(m => m.id !== mid);
+    for (let c of data.materialCategories)
+        if (c.defaultMaterialId === mid)
+            c.defaultMaterialId = '';
+    data.reminders = (data.reminders || []).filter(r => !(r.kind === 'material' && r.refId === mid));
+    save();
+}
+// Swipe left on a material card, then tap Delete
+function swipeDeleteMaterial(mid) {
+    let m = material(mid);
+    if (!m)
+        return;
+    if (data.products.some(p => (p.materials || []).some(x => x.materialId === mid))) {
+        closeSwipes();
+        return appAlert(`${materialLabel(m)} is used by a product. Remove it from that product first.`);
+    }
+    removeMaterial(mid);
+    render();
+    toast(`${materialLabel(m)} deleted.`);
+}
 async function deleteMaterial(mid) {
     if (data.products.some(p => (p.materials || []).some(x => x.materialId === mid)))
         return appAlert('This material is used by a product. Remove it from that product first.');
     if (!await appConfirm('Delete this material?'))
         return;
-    data.materials = data.materials.filter(m => m.id !== mid);
-    for (let c of data.materialCategories)
-        if (c.defaultMaterialId === mid)
-            c.defaultMaterialId = '';
-    save();
+    removeMaterial(mid);
     goBack();
 }
 function openQuickMaterial(catId, prefill = '', target = null) {

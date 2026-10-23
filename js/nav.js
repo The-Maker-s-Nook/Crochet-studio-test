@@ -67,6 +67,8 @@ function view(s) {
     screen = s;
     editing = null;
     selected = null;
+    if (s !== 'products')
+        productSelectMode = false;
     render();
     scrollTo(0, 0);
 }

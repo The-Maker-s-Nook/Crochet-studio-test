@@ -90,6 +90,12 @@ function v23AfterRender() {
             openPattern(mem.id, { restore: true, silent: true });
     }
 }
+// Swipe-to-delete on product and material cards
+document.addEventListener('pointerdown', swipeDown, { passive: true });
+document.addEventListener('pointermove', swipeMove, { passive: true });
+document.addEventListener('pointerup', swipeUp);
+document.addEventListener('pointercancel', () => { if (swipeNow) { swipeNow.card.style.transition = ''; swipeNow.card.style.transform = swipeNow.base ? `translateX(${-SWIPE_W}px)` : ''; swipeNow = null; } });
+document.addEventListener('click', swipeClick, true);
 const originalRender = render;
 render = function () {
     document.body.dataset.screen = screen;
