@@ -262,3 +262,21 @@ body.viewing nav{z-index:1001}
 /* Add a photo menu */
 .photomenu{display:grid;gap:10px;margin-top:14px}
 .photomenu button{justify-content:flex-start;width:100%}
+/* Reminders */
+.hdrbtns{display:flex;gap:8px;align-items:center}
+.rembell{position:relative}
+.rembadge{position:absolute;top:2px;right:2px;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--pink);color:#fff;font-size:11px;font-weight:800;line-height:18px;text-align:center;box-sizing:border-box}
+.rembtn{gap:4px}
+.rembtn.on{background:var(--lav-deep);color:#fff;box-shadow:none}
+.remrow{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--lav-soft)}
+.remrow .check{margin:0;align-items:flex-start}
+.remrow .block{display:block;font-size:12px}
+.remrow.done b{text-decoration:line-through;opacity:.6}
+.remrow .iconbtn.small{width:36px;height:36px;background:var(--lav-soft)}
+.addnote{gap:8px;margin-top:10px}
+.addnote input{flex:1;min-width:0}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+/* Two header buttons: keep the title on one line on small phones */
+header .brand{white-space:nowrap;min-width:0}
+@media (max-width:400px){header .brand{font-size:26px;gap:8px}header .brand .badge svg{width:38px;height:38px}.hdrbtns{gap:6px}}
+@media (max-width:350px){header .brand{font-size:22px}}

@@ -17,6 +17,7 @@ const ASSETS = [
   './js/patterns.js',
   './js/markets.js',
   './js/expenses.js',
+  './js/reminders.js',
   './js/checkout.js',
   './js/reports.js',
   './js/settings.js',

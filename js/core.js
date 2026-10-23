@@ -33,6 +33,8 @@ function migrateData(d, fresh) {
         d.orders = [];
     if (!Array.isArray(d.expenses))
         d.expenses = [];
+    if (!Array.isArray(d.reminders))
+        d.reminders = [];
     if (!d.settings.currency)
         d.settings.currency = guessCurrency();
     // Version 24 tax options. New setups: add tax to sales, material prices before tax. Older data keeps how it worked.
