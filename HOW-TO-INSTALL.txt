@@ -46,7 +46,7 @@ SQUARE CARD PAYMENTS
    Users turn it on in Settings > Finances > Payments and need the Square Point of Sale app.
 
 TESTER VERSION (24)
-   - Feedback emails go to Aaron.mete.5@hotmail.com (Settings > Send feedback).
+   - Feedback emails go to support@themakersnook.ca (Settings > Send feedback).
      To change it, edit FEEDBACK_EMAIL in js/core.js.
    - Pattern limit is 5 per account while testing (PATTERN_LIMIT in js/core.js).
    - Spreadsheet import is beta. It reads the CrochetWBay pricing spreadsheet

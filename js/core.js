@@ -172,4 +172,4 @@ function byName(a, b) {
     return a.name.localeCompare(b.name);
 }
 // ===== v21: spreadsheet import (beta), feedback, pattern limit =====
-const APP_VERSION = 24, PATTERN_LIMIT = 5, FEEDBACK_EMAIL = 'Aaron.mete.5@hotmail.com';
+const APP_VERSION = 24, PATTERN_LIMIT = 5, FEEDBACK_EMAIL = 'support@themakersnook.ca';
