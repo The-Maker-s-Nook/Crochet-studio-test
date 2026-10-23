@@ -5,13 +5,13 @@ LIVE TEST ADDRESS
 
 HOW TO UPDATE THE LIVE APP
    1. In the app: Settings > Backup & restore > Download backup (just in case).
-   2. Unzip the new crochet-studio.zip on your computer.
-   3. Netlify > your project > Deploys > drag the whole "crochet-studio" folder
-      onto the drop area at the bottom of that page.
-      (Do NOT use the Netlify Drop page; that makes a new site with a new address.)
-   4. Open the app and tap "Refresh" when "New version ready" appears.
-   Each upload uses about 15 of Netlify's 300 free monthly credits.
-   Always change the version number in sw.js (crochet-studio-v23 -> v24) with every change.
+   2. Claude saves the finished, tested update to the "main" branch on GitHub
+      (github.com/AaronMete/Crochet-studio-test). Netlify publishes it by itself.
+   3. Open the app and tap "Refresh" when "New version ready" appears.
+   Each deploy uses about 15 of Netlify's 300 free monthly credits.
+   Work in progress is kept on other branches, which don't deploy or use credits.
+   Always change the version number in sw.js with every change, and add any new
+   file to the list in sw.js so it works offline.
 
 INSTALLING ON A PHONE OR TABLET
    Android (Chrome): open the address, then tap Install (on the Welcome or Home
@@ -47,13 +47,13 @@ SQUARE CARD PAYMENTS
 
 TESTER VERSION (23)
    - Feedback emails go to Aaron.mete.5@hotmail.com (Settings > Send feedback).
-     To change it, search index.html for FEEDBACK_EMAIL.
-   - Pattern limit is 5 per account while testing (PATTERN_LIMIT in index.html).
+     To change it, edit FEEDBACK_EMAIL in js/core.js.
+   - Pattern limit is 5 per account while testing (PATTERN_LIMIT in js/core.js).
    - Spreadsheet import is beta. It reads the CrochetWBay pricing spreadsheet
      (.xlsx or .csv). Settings > Import from spreadsheet > Undo removes the last import.
 
    - Update notes for testers: guides/whats-new-23.pdf and guides/tester-guide.pdf.
      They open from Settings > What's new & tester guide, and a "What's new" message
      shows once after each update. For the next version, add the new PDFs to guides/,
-     update GUIDES in index.html and the list in sw.js.
+     update GUIDES in js/settings.js and the list in sw.js.
    - Currency: Settings > Country & currency (CAD / USD). Square charges in it.
