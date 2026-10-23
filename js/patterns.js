@@ -3,7 +3,7 @@
 
 function patterns() {
     let list = pdfCache.slice().sort((a, b) => String(b.date).localeCompare(String(a.date)));
-    return `<div class="row"><h2>Pattern Library</h2></div><div class="panel"><h3>Add pattern</h3>${patternUsage()}<div class="actions"><button onclick="patternPick('patternFile')">Choose file (PDF / JPG / PNG)</button><button class="alt" onclick="patternPick('patternCamera')">📷 Camera</button></div><input class="hidden" id="patternFile" type="file" accept="application/pdf,.pdf,image/jpeg,.jpg,.jpeg,image/png,.png" onchange="importPdf(event)"><input class="hidden" id="patternCamera" type="file" accept="image/*" capture="environment" onchange="importPdf(event)"><p class="hint">${signedIn() ? 'Patterns are saved privately to your account.' : 'Patterns stay private on this device.'} A preview photo is made automatically; tap “Photo” to take or choose your own. Only import patterns you have permission to use.</p></div>${list.map(p => `<div class="panel item"><button class="thumbbtn" onclick="openPattern('${p.id}')" aria-label="Open ${esc(p.name)}">${thumb(p.thumb || '', "")}</button><div class="grow"><div class="item-title" style="word-break:break-word">${esc(p.name)}</div><div class="muted">${(p.mime || '').startsWith('image/') ? 'Image' : 'PDF'} · ${new Date(p.date).toLocaleDateString()}</div><div class="actions"><button class="small" onclick="openPattern('${p.id}')">Open</button><button class="alt small" onclick="pickPatternPhoto('${p.id}')">${ic('camera', 15)} Photo</button><button class="danger small" onclick="removePdf('${p.id}')">Delete</button></div></div></div>`).join('') || '<div class="panel muted">No patterns imported yet.</div>'}`;
+    return `<div class="row"><h2>Pattern Library</h2></div><div class="panel"><h3>Add pattern</h3>${patternUsage()}<div class="actions"><button onclick="patternPick('patternFile')">Choose file (PDF / JPG / PNG)</button><button class="alt" onclick="patternPick('patternCamera')">📷 Camera</button></div><input class="hidden" id="patternFile" type="file" accept="application/pdf,.pdf,image/jpeg,.jpg,.jpeg,image/png,.png" onchange="importPdf(event)"><input class="hidden" id="patternCamera" type="file" accept="image/*" capture="environment" onchange="importPdf(event)"><p class="hint">${signedIn() ? 'Patterns are saved privately to your account.' : 'Patterns stay private on this device.'} A preview photo is made automatically; tap “Photo” to take or choose your own. Only import patterns you have permission to use.</p></div>${list.map(p => `<div class="panel item"><button class="thumbbtn" onclick="openPattern('${p.id}')" aria-label="Open ${esc(p.name)}">${thumb(p.thumb || '', "")}</button><div class="grow"><div class="item-title" style="word-break:break-word">${esc(p.name)}</div><div class="muted">${(p.mime || '').startsWith('image/') ? 'Image' : 'PDF'} · ${new Date(p.date).toLocaleDateString()}</div><div class="actions"><button class="small" onclick="openPattern('${p.id}')">Open</button><button class="alt small" onclick="pickPatternPhoto('${p.id}')">${ic('camera', 15)} Photo</button><button class="alt small" onclick="renamePattern('${p.id}')">${ic('pencil', 15)} Rename</button><button class="danger small" onclick="removePdf('${p.id}')">Delete</button></div></div></div>`).join('') || '<div class="panel muted">No patterns imported yet.</div>'}`;
 }
 let patternPhotoFor = null;
 function pickPatternPhoto(pid) {
@@ -116,7 +116,7 @@ async function importPdf(e) {
         appAlert('Could not save the pattern on this device. Your browser may have run out of storage or blocked local files. Try a smaller file or another browser.');
     }
 }
-let viewerItem = null, viewerUrl = '', viewerPdf = null, viewerZoom = 1, viewerToken = 0, pdfjsLib = null;
+let viewerPageUrls = [], viewerItem = null, viewerUrl = '', viewerPdf = null, viewerZoom = 1, viewerToken = 0, pdfjsLib = null;
 const ZOOMS = [.5, .75, 1, 1.25, 1.5, 2, 2.5, 3];
 function isImagePattern(p) {
     return (p.mime || '').startsWith('image/') || /\.(jpe?g|png)$/i.test(p.name || '');
@@ -126,6 +126,8 @@ async function renderViewer() {
     if (!body || !p)
         return;
     let token = ++viewerToken;
+    viewerPageUrls.forEach(u => URL.revokeObjectURL(u));
+    viewerPageUrls = [];
     $('vzoom').textContent = Math.round(viewerZoom * 100) + '%';
     if (isImagePattern(p)) {
         body.innerHTML = `<img src="${viewerUrl}" alt="${esc(p.name)}" style="width:${viewerZoom * 100}%">`;
@@ -138,23 +140,46 @@ async function renderViewer() {
         if (token !== viewerToken)
             return;
         body.innerHTML = '';
-        let dpr = Math.min(window.devicePixelRatio || 1, 3), avail = Math.max(200, body.clientWidth - 16), n = viewerPdf.numPages;
+        // Each page is drawn once, then kept as a picture and the drawing area freed. Phones only allow so much
+        // drawing memory, and long patterns used to run out, leaving blank pages with only their page numbers.
+        let dpr = Math.min(window.devicePixelRatio || 1, 2.5), avail = Math.max(200, body.clientWidth - 16), n = viewerPdf.numPages, maxPx = n > 8 ? 5e6 : 8e6;
         for (let i = 1; i <= n; i++) {
-            let page = await viewerPdf.getPage(i);
-            if (token !== viewerToken)
-                return;
-            let base = page.getViewport({ scale: 1 }), css = avail / base.width * viewerZoom, px = css * dpr;
-            if (base.width * base.height * px * px > 16e6)
-                px = Math.sqrt(16e6 / (base.width * base.height));
-            let vp = page.getViewport({ scale: px }), c = document.createElement('canvas');
-            c.width = Math.floor(vp.width);
-            c.height = Math.floor(vp.height);
-            c.style.width = Math.floor(base.width * css) + 'px';
-            c.style.height = Math.floor(base.height * css) + 'px';
             if (n > 1)
                 body.insertAdjacentHTML('beforeend', `<div class="vpage">Page ${i} of ${n}</div>`);
-            body.appendChild(c);
-            await page.render({ canvasContext: c.getContext('2d'), viewport: vp }).promise;
+            try {
+                let page = await viewerPdf.getPage(i);
+                if (token !== viewerToken)
+                    return;
+                let base = page.getViewport({ scale: 1 }), css = avail / base.width * viewerZoom, px = css * dpr;
+                if (base.width * base.height * px * px > maxPx)
+                    px = Math.sqrt(maxPx / (base.width * base.height));
+                let vp = page.getViewport({ scale: px }), c = document.createElement('canvas'), w = Math.floor(base.width * css), h = Math.floor(base.height * css);
+                c.width = Math.floor(vp.width);
+                c.height = Math.floor(vp.height);
+                c.style.width = w + 'px';
+                c.style.height = h + 'px';
+                body.appendChild(c);
+                await page.render({ canvasContext: c.getContext('2d'), viewport: vp }).promise;
+                page.cleanup();
+                if (token !== viewerToken)
+                    return;
+                let blob = await new Promise(r => c.toBlob(r, 'image/jpeg', 0.92));
+                if (blob) {
+                    let img = new Image();
+                    img.className = 'vimg';
+                    img.alt = `Page ${i}`;
+                    img.style.width = w + 'px';
+                    img.style.height = h + 'px';
+                    img.src = URL.createObjectURL(blob);
+                    viewerPageUrls.push(img.src);
+                    c.replaceWith(img);
+                    c.width = c.height = 0;
+                }
+            }
+            catch (pe) {
+                console.warn('Pattern page', i, pe);
+                body.insertAdjacentHTML('beforeend', `<div class="vmsg small"><p>Page ${i} couldn't be shown here.</p><button class="alt small" onclick="openPatternExternally()">Open in another app</button></div>`);
+            }
         }
     }
     catch (e) {
@@ -183,6 +208,8 @@ function openPatternExternally() {
     }
 }
 function removeViewer() {
+    viewerPageUrls.forEach(u => URL.revokeObjectURL(u));
+    viewerPageUrls = [];
     viewerToken++;
     $('viewer')?.remove();
     document.body.style.overflow = '';
@@ -429,3 +456,29 @@ view = function (s) {
     }
     return _view23(s);
 };
+
+// ---- Rename a pattern (the new name syncs to the account like a new photo does) ----
+function renamePattern(pid) {
+    let p = pdfCache.find(x => x.id === pid);
+    if (!p)
+        return;
+    openModal(`<div class="row"><h2 style="margin:0">Rename pattern</h2>${closeX()}</div><label for="patName">Pattern name</label><input id="patName" value="${esc(p.name)}" maxlength="120" onkeydown="if(event.key==='Enter'){event.preventDefault();savePatternName('${pid}')}"><div class="actions"><button onclick="savePatternName('${pid}')">Save name</button><button class="alt" onclick="closeModal()">Cancel</button></div>`);
+    setTimeout(() => { let i = $('patName'); i?.focus(); i?.select(); }, 50);
+}
+async function savePatternName(pid) {
+    let name = normName($('patName')?.value), p = pdfCache.find(x => x.id === pid);
+    if (!name)
+        return needField('patName', 'Enter a name for this pattern.');
+    if (!p)
+        return closeModal();
+    try {
+        await pdfPut({ ...p, name });
+        await refreshPdfs();
+        closeModal();
+        render();
+        toast('Pattern renamed.');
+    }
+    catch {
+        appAlert('Could not save the new name on this device.');
+    }
+}
