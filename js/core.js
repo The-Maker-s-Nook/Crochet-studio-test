@@ -2,7 +2,7 @@
 // Part of the Crochet Studio app. Files load in the order listed in index.html.
 
 const KEY = 'crochetStudioPrototypeV1';
-const DEFAULT_SETTINGS = { hourly: 15, method: 'labour', multiplier: 3, markup: 50, rounding: 'nearest', autoDeduct: false, taxRate: 13, taxOnPurchases: true, taxOnSales: false, taxInCosts: true };
+const DEFAULT_SETTINGS = { hourly: 15, method: 'labour', multiplier: 3, markup: 50, rounding: 'nearest', autoDeduct: true, taxRate: 13, taxOnPurchases: true, taxOnSales: false, taxInCosts: true };
 function migrateData(d, fresh) {
     const n = v => Math.max(0, Number(v) || 0);
     if (!Array.isArray(d.units) || !d.units.length)

@@ -325,3 +325,37 @@ a.btnlink:active{filter:brightness(.95)}
 .movenote .actions{margin-top:10px}
 .hero+.movenote{margin-top:-32px;position:relative}
 .movenote+.nextcard{margin-top:0}
+/* App-styled drop-downs */
+select.selhide{position:absolute!important;width:1px!important;height:1px!important;opacity:0;pointer-events:none;margin:0!important;padding:0!important;border:0!important}
+button.selbtn{display:flex;align-items:center;gap:10px;width:100%;min-height:46px;padding:9px 14px;border-radius:14px;background:var(--card,#fff);color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--lav-line,#ddd5f2);font-weight:700;font-size:15px;text-align:left}
+button.selbtn .sellabel{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+button.selbtn .selchev{flex-shrink:0;color:var(--ink3,#7a6d93)}
+button.selbtn:active{background:var(--lav-soft,#efedff)}
+.selthumb{width:36px;height:36px;border-radius:9px;object-fit:cover;flex-shrink:0;background:var(--lav-soft,#efedff)}
+.sellist{margin-top:12px;max-height:65vh;overflow:auto}
+.selgroup{font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3,#7a6d93);margin:14px 4px 6px}
+button.selopt{display:flex;align-items:center;gap:12px;width:100%;min-height:48px;padding:8px 12px;margin:4px 0;border-radius:14px;background:transparent;color:var(--ink);box-shadow:none;font-weight:700;text-align:left}
+button.selopt.on{background:var(--lav-soft,#efedff);color:var(--ink)}
+button.selopt:active{background:var(--lav-soft,#efedff)}
+/* Sideways-scrolling rows: fade + arrow when there's more */
+.tabwrap{position:relative;margin-top:12px}
+.tabwrap > .tabs{margin:0;scrollbar-width:none}
+.tabwrap > .tabs::-webkit-scrollbar{display:none}
+.tabwrap::before,.tabwrap::after{content:'';position:absolute;top:0;bottom:0;width:44px;pointer-events:none;opacity:0;transition:opacity .2s;z-index:1}
+.tabwrap::before{left:0;background:linear-gradient(to left,transparent,var(--ground,#F3EEFF) 75%)}
+.tabwrap::after{right:0;background:linear-gradient(to right,transparent,var(--ground,#F3EEFF) 70%);}
+.tabwrap.more-left::before,.tabwrap.more-right::after{opacity:1}
+.tabwrap .morearrow{position:absolute;right:2px;top:50%;transform:translateY(-50%);z-index:2;width:28px;height:28px;border-radius:50%;display:none;align-items:center;justify-content:center;background:var(--card,#fff);color:var(--ink);box-shadow:0 2px 8px rgba(46,31,71,.18);pointer-events:none}
+.tabwrap.more-right .morearrow{display:flex}
+/* Add inventory: the Add all selected button stays put on the right */
+.addbar{flex-wrap:nowrap}
+.addbar #addCount{flex:1;min-width:0}
+.addbar button{flex-shrink:0}
+/* Material reminder bell: the bell changes colour, nothing else moves */
+.rembtn.iconly{width:40px;min-width:40px;padding:0;justify-content:center}
+.rembtn.on{background:var(--lav-deep);color:#fff}
+/* Market page: fold-up details */
+.mkthead .foldbtn{display:inline-flex;align-items:center;gap:4px;min-height:36px;padding:4px 0;margin-top:4px;font-size:14px}
+.mkthead .foldbtn svg{transform:rotate(-90deg);transition:transform .2s}
+.mkthead.mktfolded .foldbtn svg{transform:rotate(90deg)}
+.mktsum{margin:6px 0 0;font-size:14px;font-weight:600}

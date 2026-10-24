@@ -39,8 +39,8 @@ function settingsTax() {
     let s = data.settings, noRate = s.taxRate === null || s.taxRate === undefined || s.taxRate === '';
     return `${backBtn()}<h2 style="margin-top:12px">Tax</h2><div class="panel"><label for="tRate" style="margin-top:0">Sales tax rate (%)</label><input id="tRate" type="number" min="0" max="100" step="0.01" inputmode="decimal" value="${noRate ? '' : num(s.taxRate)}" placeholder="e.g. 13" oninput="refreshTaxExample()"><div class="hint">Use your local sales tax rate, for example 13% in Ontario, 5% GST in Alberta, or your state and local rate added together in the US.</div>
 <div class="labelrow"><label for="tProduct">Product tax</label>${helpBtn('productTax')}</div>${taxSelect('tProduct', PRODUCT_TAX, s.productTax)}
-<div class="labelrow"><label for="tMaterial">Material tax</label>${helpBtn('materialTax')}</div>${taxSelect('tMaterial', MATERIAL_TAX, s.materialTax, 'onchange="refreshTaxExample()"')}
-<div class="labelrow"><label class="check" style="margin:0"><input type="checkbox" id="tNotClaiming" ${s.notClaimingTax ? 'checked' : ''} onchange="refreshTaxExample()"> Not claiming tax on materials</label>${helpBtn('notClaiming')}</div>
+<div class="labelrow"><label for="tMaterial">Material &amp; expense tax</label>${helpBtn('materialTax')}</div>${taxSelect('tMaterial', MATERIAL_TAX, s.materialTax, 'onchange="refreshTaxExample()"')}
+<div class="labelrow"><label class="check" style="margin:0"><input type="checkbox" id="tNotClaiming" ${s.notClaimingTax ? 'checked' : ''} onchange="refreshTaxExample()"> Not claiming tax on materials and expenses</label>${helpBtn('notClaiming')}</div>
 <div id="taxEx">${taxExample()}</div><p class="hint">You can override these for one product, material or expense on its own screen.</p><div class="actions"><button onclick="saveTaxSettings()">Save</button></div></div><p class="hint" style="margin:0 6px">Tax totals are shown in Reports by calendar year. They're a guide only, not tax advice.</p>`;
 }
 // Preview the example with the choices on screen, before saving.

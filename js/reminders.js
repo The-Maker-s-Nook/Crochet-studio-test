@@ -23,12 +23,12 @@ function updateReminderBadge() {
     b.classList.toggle('hidden', !n);
     $('remBtn')?.setAttribute('aria-label', n ? `Reminders, ${n} open` : 'Reminders');
 }
-// corner = a small round bell in the card's top-left corner (product cards)
+// corner = true: a small round bell in the card's top-left corner (product cards); 'icon': bell only, colour shows it's on (material rows)
 function reminderToggleBtn(kind, refId, label, corner) {
     let on = !!reminderFor(kind, refId), what = kind === 'product' ? 'make more' : 'buy more';
-    if (corner)
+    if (corner === true)
         return `<button class="cornerbell ${on ? 'on' : ''}" aria-pressed="${on}" aria-label="${on ? 'On your reminders' : 'Remind me to ' + what}: ${esc(label)}" title="${on ? 'On your reminders (tap to remove)' : 'Remind me to ' + what}" onclick="event.stopPropagation();toggleReminderFor('${kind}','${refId}')">${ic('bell', 15)}</button>`;
-    return `<button class="alt small rembtn ${on ? 'on' : ''}" aria-pressed="${on}" aria-label="${on ? 'On your reminders' : 'Remind me to ' + what}: ${esc(label)}" title="${on ? 'On your reminders (tap to remove)' : 'Remind me to ' + what}" onclick="event.stopPropagation();toggleReminderFor('${kind}','${refId}')">${ic('bell', 16)}${on ? ' On reminders' : ''}</button>`;
+    return `<button class="alt small rembtn ${corner === 'icon' ? 'iconly' : ''} ${on ? 'on' : ''}" aria-pressed="${on}" aria-label="${on ? 'On your reminders' : 'Remind me to ' + what}: ${esc(label)}" title="${on ? 'On your reminders (tap to remove)' : 'Remind me to ' + what}" onclick="event.stopPropagation();toggleReminderFor('${kind}','${refId}')">${ic('bell', 16)}${on && corner !== 'icon' ? ' On reminders' : ''}</button>`;
 }
 function toggleReminderFor(kind, refId) {
     data.reminders ||= [];
