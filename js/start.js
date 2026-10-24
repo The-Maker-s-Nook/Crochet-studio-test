@@ -147,6 +147,10 @@ render = function () {
     }
     myStamp = lsGet('csStamp', '');
     render();
+    // A pattern was open when the app was closed (or the phone restarted the app in the background): open it again.
+    let openPat = lsGet('csPatternOpen', null);
+    if (screen === 'home' && openPat && pdfCache.some(p => p.id === openPat.id))
+        view('patterns');
     setTimeout(checkSquarePending, 1500);
     requestPersistentStorage().then(() => {
         if (screen === 'settingsBackup')

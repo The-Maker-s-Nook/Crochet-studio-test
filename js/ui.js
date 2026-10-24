@@ -466,6 +466,10 @@ function enhanceScrollRow(el) {
     }
     updateScrollHint(el);
 }
+function scrollTabsMore(btn) {
+    let t = btn.parentElement?.querySelector('.tabs');
+    t?.scrollBy({ left: Math.max(120, t.clientWidth * .7), behavior: 'smooth' });
+}
 function enhanceUi() {
     document.querySelectorAll('select.fancy').forEach(enhanceSelect);
     document.querySelectorAll('.tabwrap > .tabs').forEach(enhanceScrollRow);
