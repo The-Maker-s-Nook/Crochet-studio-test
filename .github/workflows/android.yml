@@ -65,8 +65,9 @@ jobs:
       - name: Attach to a release page (easy to download on a phone)
         env:
           GH_TOKEN: ${{ github.token }}
+          CHANGE: ${{ github.event.head_commit.message || 'manual run' }}
         run: |
+          printf 'Test version of the app for Android phones. On your phone, tap the .apk file below to download it, then open it to install.\n\nWhat changed: %s\n' "$(printf '%s' "$CHANGE" | head -n 1)" > notes.txt
           gh release create "android-test-${{ github.run_number }}" "makers-nook-test-${{ github.run_number }}.apk" \
             --target "${{ github.sha }}" --prerelease \
-            --title "Android test build ${{ github.run_number }}" \
-            --notes "Test version of the app for Android phones. On your phone, tap the .apk file below to download it, then open it to install. Built from: ${{ github.event.head_commit.message || 'manual run' }}"
+            --title "Android test build ${{ github.run_number }}" --notes-file notes.txt
