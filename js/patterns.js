@@ -171,6 +171,7 @@ async function renderViewer() {
                 box.style.height = h + 'px';
                 box.appendChild(c);
                 body.appendChild(box);
+                patPageAdded(i - 1);
                 await page.render({ canvasContext: c.getContext('2d'), viewport: vp }).promise;
                 await addPageLinks(page, box, css);
                 page.cleanup();
@@ -293,9 +294,15 @@ async function openPattern(pid, opts = {}) {
             appAlert('Pattern not found.');
         return;
     }
-    let mem = lsGet('csPatternOpen', null), keep = opts.restore && mem?.id === pid, pos = patPos(pid);
-    openViewerItem(p, { pattern: true, zoom: keep ? mem.zoom : pos?.zoom || 1 });
-    lsSet('csPatternOpen', { id: pid, zoom: viewerZoom, top: keep ? num(mem.top) : num(pos?.top), restored: keep || num(pos?.top) > 0 });
+    let pos = patPos(pid);
+    openViewerItem(p, { pattern: true, zoom: pos?.zoom || 1 });
+    patFirst = true;
+    if (pos && pos.page != null && (num(pos.page) > 0 || num(pos.frac) > 0.01))
+        patTarget = { page: num(pos.page), frac: num(pos.frac), tip: true };
+    else if (pos && pos.page == null && num(pos.top) > 0)
+        patTarget = { top: num(pos.top), tip: true }; // saved by an older version
+    patRestoring = !!patTarget;
+    lsSet('csPatternOpen', { id: pid });
 }
 function openViewerItem(p, o = {}) {
     removeViewer();
@@ -321,6 +328,8 @@ function openViewerItem(p, o = {}) {
         let b = $('vbody');
         b.addEventListener('scroll', onPatScroll, { passive: true });
         b.addEventListener('pointerdown', onPatTouch);
+        b.addEventListener('touchmove', patUserScroll, { passive: true });
+        b.addEventListener('wheel', patUserScroll, { passive: true });
     }
     renderViewer();
 }
@@ -331,31 +340,37 @@ renderViewer = async function () {
 };
 const _rmv23 = removeViewer;
 removeViewer = function () {
+    if ($('viewer')?.dataset.pattern)
+        savePatPos();
     _rmv23();
+    patTarget = null;
+    patRestoring = false;
     document.body.classList.remove('viewing');
 };
 const _close23 = closeViewer;
 closeViewer = function () {
+    savePatPos();
     lsSet('csPatternOpen', null);
     _close23();
 };
 const _zoom23 = viewerZoomBy;
 viewerZoomBy = function (d) {
-    let b = $('vbody'), pid = $('viewer')?.dataset.pattern;
-    if (pid && b) {
-        let m = lsGet('csPatternOpen', null) || { id: pid };
-        m.top = b.scrollHeight ? b.scrollTop / b.scrollHeight : 0;
-        lsSet('csPatternOpen', m);
+    // Keep the same spot on the same page when zooming
+    let pid = $('viewer')?.dataset.pattern, pos = pid && !patRestoring ? patPosNow() : null, before = viewerZoom;
+    if (pos) {
+        patTarget = { page: pos.page, frac: pos.frac };
+        patRestoring = true;
     }
     _zoom23(d);
-    if (pid) {
-        let m = lsGet('csPatternOpen', null);
-        if (m) {
-            m.zoom = viewerZoom;
-            lsSet('csPatternOpen', m);
-            setPatPos(pid, num(m.top), viewerZoom);
+    if (viewerZoom === before) {
+        if (pos) {
+            patTarget = null;
+            patRestoring = false;
         }
+        return;
     }
+    if (pid && pos)
+        setPatPos(pid, { page: pos.page, frac: pos.frac, zoom: viewerZoom });
 };
 function patVtip(t, ms) {
     let e = $('vtip');
@@ -380,17 +395,18 @@ function afterViewerRender() {
         img.onload = () => afterViewerRender();
         return;
     }
-    let mem = lsGet('csPatternOpen', null), mark = data.patternMarks?.[pid];
-    if (mem?.id === pid && num(mem.top) > 0)
-        b.scrollTop = num(mem.top) * b.scrollHeight;
-    else if (mark)
-        b.scrollTop = Math.max(0, mark.y * b.scrollHeight - 140);
-    drawPatMark();
-    if (mem?.restored) {
-        mem.restored = false;
-        lsSet('csPatternOpen', mem);
-        patVtip('Opened where you left off', 3500);
+    let mark = data.patternMarks?.[pid], first = patFirst;
+    patFirst = false;
+    if (patRestoring)
+        patRestoreTry(true);
+    else if (first && mark && b.scrollTop < 5) {
+        let at = patMarkSpot(mark);
+        if (at)
+            b.scrollTop = Math.max(0, at.top - 140);
     }
+    patTarget = null;
+    patRestoring = false;
+    drawPatMark();
 }
 function drawPatMark() {
     let b = $('vbody'), pid = $('viewer')?.dataset.pattern;
@@ -403,8 +419,11 @@ function drawPatMark() {
     let e = document.createElement('div');
     e.className = 'pmark';
     e.innerHTML = '<span class="pdot"></span><span class="plabel">You stopped here</span>';
-    e.style.top = (m.y * b.scrollHeight - 14) + 'px';
-    e.style.left = Math.max(4, m.x * b.scrollWidth - 14) + 'px';
+    let at = patMarkSpot(m);
+    if (!at)
+        return;
+    e.style.top = (at.top - 14) + 'px';
+    e.style.left = Math.max(4, at.left - 14) + 'px';
     b.appendChild(e);
     patMarkAt = Date.now();
 }
@@ -434,8 +453,16 @@ function onPatTouch(e) {
     if (!b || !pid)
         return;
     if (patArm) {
-        let r = b.getBoundingClientRect(), x = (e.clientX - r.left + b.scrollLeft) / Math.max(1, b.scrollWidth), y = (e.clientY - r.top + b.scrollTop) / Math.max(1, b.scrollHeight);
-        data.patternMarks = { ...(data.patternMarks || {}), [pid]: { x, y, at: new Date().toISOString() } };
+        let r = b.getBoundingClientRect(), x = (e.clientX - r.left + b.scrollLeft) / Math.max(1, b.scrollWidth), y = (e.clientY - r.top + b.scrollTop) / Math.max(1, b.scrollHeight), mk = { x, y, at: new Date().toISOString() };
+        // Also remember which page and where on it, so the mark stays put at any zoom
+        let pages = patPages(), hit = pages.find(pg => { let pr = pg.getBoundingClientRect(); return e.clientY >= pr.top && e.clientY <= pr.bottom; });
+        if (hit) {
+            let pr = hit.getBoundingClientRect();
+            mk.page = pages.indexOf(hit);
+            mk.px = Math.max(0, Math.min(1, (e.clientX - pr.left) / Math.max(1, pr.width)));
+            mk.py = Math.max(0, Math.min(1, (e.clientY - pr.top) / Math.max(1, pr.height)));
+        }
+        data.patternMarks = { ...(data.patternMarks || {}), [pid]: mk };
         save();
         patArm = false;
         let btn = $('vmarkBtn');
@@ -457,18 +484,11 @@ function onPatScroll() {
         return;
     clearTimeout(onPatScroll.t);
     onPatScroll.t = setTimeout(() => {
-        let m = lsGet('csPatternOpen', null);
-        // Ignore the scroll that happens when the viewer closes or is still drawing pages
-        if (!b.isConnected || $('viewer')?.dataset.pattern !== pid || !b.querySelector('.vpagebox, img'))
+        // Ignore the scroll that happens when the viewer closes
+        if (!b.isConnected || $('viewer')?.dataset.pattern !== pid)
             return;
-        let top = b.scrollHeight ? b.scrollTop / b.scrollHeight : 0;
-        if (m?.id === pid) {
-            m.top = top;
-            m.zoom = viewerZoom;
-            lsSet('csPatternOpen', m);
-        }
-        setPatPos(pid, top, viewerZoom);
-    }, 300);
+        savePatPos();
+    }, 250);
     if (b.querySelector('.pmark') && Date.now() - patMarkAt > 1500)
         clearPatMark();
 }
@@ -784,11 +804,111 @@ function removeLinkPhoto() {
 function patPos(pid) {
     return lsGet('csPatPos', {})?.[pid] || null;
 }
-function setPatPos(pid, top, zoom) {
+// Saved as the page you were on and how far down that page, so it stays right even while pages are still loading or at another zoom
+function setPatPos(pid, v) {
+    if (!pid || !v)
+        return;
     let all = lsGet('csPatPos', {}) || {};
-    all[pid] = { top: Math.max(0, Math.min(1, num(top))), zoom: zoom || 1, at: Date.now() };
+    all[pid] = { page: Math.max(0, Math.floor(num(v.page))), frac: Math.max(0, Math.min(1, num(v.frac))), zoom: v.zoom || 1, at: Date.now() };
     let keys = Object.keys(all);
     if (keys.length > 60)
         keys.sort((a, b) => all[a].at - all[b].at).slice(0, keys.length - 60).forEach(k => delete all[k]);
     lsSet('csPatPos', all);
 }
+
+let patTarget = null, patRestoring = false, patFirst = false;
+function patPages() {
+    let b = $('vbody');
+    if (!b)
+        return [];
+    let boxes = [...b.querySelectorAll('.vpagebox')];
+    return boxes.length ? boxes : [...b.querySelectorAll('img')];
+}
+function patTopOf(el, b) {
+    return el.getBoundingClientRect().top - b.getBoundingClientRect().top + b.scrollTop;
+}
+function patPosNow() {
+    let b = $('vbody'), els = patPages();
+    if (!b || !els.length)
+        return null;
+    let y = b.scrollTop + 10, pg = 0;
+    for (let i = 0; i < els.length; i++) {
+        if (patTopOf(els[i], b) <= y)
+            pg = i;
+        else
+            break;
+    }
+    let e = els[pg], h = Math.max(1, e.getBoundingClientRect().height);
+    return { page: pg, frac: Math.max(0, Math.min(1, (b.scrollTop - patTopOf(e, b)) / h)), zoom: viewerZoom };
+}
+function savePatPos() {
+    let pid = $('viewer')?.dataset.pattern;
+    if (!pid || patRestoring)
+        return;
+    let v = patPosNow();
+    if (v)
+        setPatPos(pid, v);
+}
+// Jump back as soon as the right page is on screen, instead of waiting for every page to finish
+function patRestoreTry(final) {
+    if (!patRestoring || !patTarget)
+        return;
+    let b = $('vbody'), els = patPages();
+    if (!b)
+        return;
+    let want;
+    if (patTarget.top != null) {
+        if (!final)
+            return;
+        want = patTarget.top * b.scrollHeight;
+    }
+    else {
+        if (!final && els.length <= patTarget.page)
+            return;
+        let e = els[Math.min(patTarget.page, els.length - 1)];
+        if (!e)
+            return;
+        want = Math.max(0, patTopOf(e, b) + patTarget.frac * e.getBoundingClientRect().height);
+        if (!final && want > b.scrollHeight - b.clientHeight)
+            return; // wait until enough pages below are placed
+    }
+    b.scrollTop = want;
+    let tip = patTarget.tip;
+    patTarget = null;
+    patRestoring = false;
+    if (tip)
+        patVtip('Opened where you left off', 3000);
+}
+function patPageAdded(i) {
+    if (!$('viewer')?.dataset.pattern)
+        return;
+    patRestoreTry(false);
+    let m = data.patternMarks?.[$('viewer').dataset.pattern];
+    if (m && m.page === i)
+        drawPatMark();
+}
+function patUserScroll() {
+    // The person started scrolling themselves: don't jump them somewhere else
+    if (patRestoring && patPages().length) {
+        patRestoring = false;
+        patTarget = null;
+    }
+}
+function patMarkSpot(m) {
+    let b = $('vbody');
+    if (!b || !m)
+        return null;
+    if (m.page != null) {
+        let e = patPages()[m.page];
+        if (!e)
+            return null;
+        let r = e.getBoundingClientRect(), br = b.getBoundingClientRect();
+        return { top: patTopOf(e, b) + num(m.py) * r.height, left: r.left - br.left + b.scrollLeft + num(m.px) * r.width };
+    }
+    return { top: num(m.y) * b.scrollHeight, left: num(m.x) * b.scrollWidth };
+}
+addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden')
+        savePatPos();
+});
+addEventListener('pagehide', () => savePatPos());
