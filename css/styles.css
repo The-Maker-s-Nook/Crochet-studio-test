@@ -364,3 +364,6 @@ button.selopt:active{background:var(--lav-soft,#efedff)}
 .mkthead .foldbtn svg{transform:rotate(-90deg);transition:transform .2s}
 .mkthead.mktfolded .foldbtn svg{transform:rotate(90deg)}
 .mktsum{margin:6px 0 0;font-size:14px;font-weight:600}
+/* Pattern pages waiting to be drawn */
+#vbody .vpagebox:not(.drawn){background:#fff}
+#vbody .vpagebox:not(.drawn)::before{content:'Loading page…';position:absolute;top:24px;left:0;right:0;text-align:center;color:#9a90ad;font-size:14px;font-weight:700}
