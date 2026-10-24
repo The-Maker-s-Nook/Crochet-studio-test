@@ -31,7 +31,7 @@ function photoUrl(v) {
     let pid = photoIdOf(v), u = photoUrls.get(pid);
     if (u)
         return u;
-    loadPhoto(pid);
+    fetchPhoto(pid);
     return PHOTO_BLANK;
 }
 
@@ -80,7 +80,7 @@ async function loadPhotoCache() {
     }
 }
 // A photo that isn't on this phone yet (made on another device): fetch it from the account.
-async function loadPhoto(pid) {
+async function fetchPhoto(pid) {
     if (!pid || photoLoading.has(pid) || photoMissing.has(pid))
         return;
     photoLoading.add(pid);
@@ -166,14 +166,7 @@ function photoIdsInUse(d = data) {
 }
 
 // ---- Backups: the backup file still holds the photos themselves ----
-function blobToDataUrl(blob) {
-    return new Promise((ok, fail) => {
-        let r = new FileReader();
-        r.onload = () => ok(String(r.result));
-        r.onerror = () => fail(r.error);
-        r.readAsDataURL(blob);
-    });
-}
+// (blobToDataUrl and dataUrlToBlob live in storage.js)
 async function photosForBackup(d = data) {
     let out = {};
     for (let pid of photoIdsInUse(d)) {
