@@ -373,3 +373,6 @@ button.selopt:active{background:var(--lav-soft,#efedff)}
 .sheetpick .sheetopt.on{background:var(--lav-soft,#efedff);box-shadow:inset 0 0 0 2px var(--lav-deep,#8a6fc9)}
 .sheetpick .sheetopt .block{display:block;font-size:12px}
 .sheetpick input[type=radio]{width:22px;height:22px;flex:0 0 22px;margin:0;padding:0;accent-color:var(--lav-deep,#8a6fc9)}
+.sheethelp{margin-top:10px}
+.sheethelp summary{cursor:pointer;font-weight:800;font-size:14px;color:var(--pink-ink,#8E2A4C);min-height:36px;display:flex;align-items:center}
+.sheethelp .tips{margin:6px 0 0}
