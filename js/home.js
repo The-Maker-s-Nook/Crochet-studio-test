@@ -57,7 +57,7 @@ let installPromptEvent = null;
 const isStandalone = () => matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
 const isIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 function installCard() {
-    if (isStandalone())
+    if (isStandalone() || IS_APP)
         return '';
     if (installPromptEvent)
         return `<div class="panel"><h3>Install the app</h3><p class="muted">Add Crochet Studio to your home screen so it opens like a normal app and works without internet.</p><button onclick="installApp()">Install</button></div>`;

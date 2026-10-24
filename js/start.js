@@ -153,7 +153,8 @@ render = function () {
             render();
     });
 })();
-if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+// The store apps update through the app stores, so no service worker there.
+if ('serviceWorker' in navigator && location.protocol.startsWith('http') && !IS_APP) {
     const hadController = !!navigator.serviceWorker.controller;
     navigator.serviceWorker.addEventListener('controllerchange', () => {
         if (!hadController || $('updateBar'))

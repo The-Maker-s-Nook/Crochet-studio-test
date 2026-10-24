@@ -1,0 +1,9 @@
+{
+  "appId": "ca.themakersnook.app",
+  "appName": "Crochet Studio",
+  "webDir": "www",
+  "backgroundColor": "#F3EEFF",
+  "android": {
+    "allowMixedContent": false
+  }
+}
