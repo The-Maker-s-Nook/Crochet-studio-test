@@ -22,7 +22,7 @@ function home() {
     else
         next = `<div class="eyebrow">Next market</div><div style="font-family:var(--display);font-size:20px;margin:6px 0">No markets coming up</div><div class="muted">Plan one to start packing inventory.</div><div class="actions"><button class="aqua" onclick="newMarket()">+ Plan a market</button></div>`;
     let empty = !data.products.length && !data.materials.length;
-    return `<div class="hero"><div class="date">${now.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' })}</div><div class="greet">${greet}<br>${homeMessage()}</div></div><div class="panel nextcard">${next}</div><div class="grid keep2 tiles" style="margin-bottom:14px"><div class="panel tile"><span class="tic pink">${ic('heart', 18)}</span><div class="muted">Finished items</div><div class="stat">${stock}</div></div><div class="panel tile"><span class="tic aqua">${ic('tag', 18)}</span><div class="muted">Stock value</div><div class="stat">${cash(value).replace('.00', '')}</div></div><div class="panel tile"><span class="tic lav">${ic('trend', 18)}</span><div class="muted">Profit this month</div><div class="stat ${profit < 0 ? 'bad' : ''}">${signedCash(profit).replace('.00', '')}</div></div><div class="panel tile" onclick="view('patterns')" style="cursor:pointer"><span class="tic gold">${ic('book', 18)}</span><div class="muted">Patterns</div><div class="stat" id="patternCount">…</div></div></div><div class="quick"><button onclick="newProduct()">+ New product</button><button class="outline" onclick="newMaterial()">+ New material</button></div><button class="aqua quicksell" onclick="startQuickSale()">${ic('tag', 18)} Quick sale</button>${taxRateReminder()}${backupReminder()}${installCard()}${empty ? `<div class="panel"><h3>Getting started</h3><p class="muted">1. Add your yarn and supplies. 2. Create a product with materials, time and a photo. 3. Plan a market and pack inventory. 4. Import patterns and link them to products.</p><p class="hint">${signedIn() ? 'Your data is saved in your account and synced to your other devices.' : 'Your data is saved on this device only. Create a free account in Settings › Account to keep it safe in the cloud, or back it up regularly.'}</p></div>` : ''}`;
+    return `<div class="hero"><div class="date">${now.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' })}</div><div class="greet">${greet}<br>${homeMessage()}</div></div>${moveNotice()}<div class="panel nextcard">${next}</div><div class="grid keep2 tiles" style="margin-bottom:14px"><div class="panel tile"><span class="tic pink">${ic('heart', 18)}</span><div class="muted">Finished items</div><div class="stat">${stock}</div></div><div class="panel tile"><span class="tic aqua">${ic('tag', 18)}</span><div class="muted">Stock value</div><div class="stat">${cash(value).replace('.00', '')}</div></div><div class="panel tile"><span class="tic lav">${ic('trend', 18)}</span><div class="muted">Profit this month</div><div class="stat ${profit < 0 ? 'bad' : ''}">${signedCash(profit).replace('.00', '')}</div></div><div class="panel tile" onclick="view('patterns')" style="cursor:pointer"><span class="tic gold">${ic('book', 18)}</span><div class="muted">Patterns</div><div class="stat" id="patternCount">…</div></div></div><div class="quick"><button onclick="newProduct()">+ New product</button><button class="outline" onclick="newMaterial()">+ New material</button></div><button class="aqua quicksell" onclick="startQuickSale()">${ic('tag', 18)} Quick sale</button>${taxRateReminder()}${backupReminder()}${installCard()}${empty ? `<div class="panel"><h3>Getting started</h3><p class="muted">1. Add your yarn and supplies. 2. Create a product with materials, time and a photo. 3. Plan a market and pack inventory. 4. Import patterns and link them to products.</p><p class="hint">${signedIn() ? 'Your data is saved in your account and synced to your other devices.' : 'Your data is saved on this device only. Create a free account in Settings › Account to keep it safe in the cloud, or back it up regularly.'}</p></div>` : ''}`;
 }
 function quickAdd(pid) {
     adjust(pid, 1, 'production');
@@ -87,4 +87,22 @@ function homeMessage() {
         lsSet('csMsgIdx', homeMsgIdx);
     }
     return esc(HOME_MSGS[homeMsgIdx]);
+}
+
+// ---- Moving from crochetstudiotest.netlify.app to app.themakersnook.ca ----
+// Set MOVE_DATE (YYYY-MM-DD) when version 24 goes live: one week after launch day.
+const NEW_HOME = 'app.themakersnook.ca', MOVE_DATE = '';
+function appHost() {
+    return window.TEST_HOST || location.hostname;
+}
+function moveNotice() {
+    let h = appHost();
+    if (/\.netlify\.app$/.test(h)) {
+        let d = MOVE_DATE ? new Date(MOVE_DATE + 'T12:00:00').toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' }) : '';
+        let how = signedIn() ? 'You’re signed in, so your data comes with you. After the move, open the new address and add it to your home screen again.' : 'Sign in so your data comes with you. No account? Download a backup and restore it at the new address.';
+        return `<div class="panel movenote" role="status"><b>We’re moving to ${NEW_HOME}${d ? ` on ${esc(d)}` : ' soon'}</b><p>${how}</p>${signedIn() ? '' : `<div class="actions"><button onclick="go('settingsAccount')">Sign in</button><button class="alt" onclick="go('settingsBackup')">${ic('download', 15)} Download backup</button></div>`}</div>`;
+    }
+    if (h === NEW_HOME && !signedIn() && !data.products.length && !data.materials.length && !lsGet('csMoveSeen', false))
+        return `<div class="panel movenote" role="status"><div class="row" style="align-items:flex-start"><b>Coming from the old crochetstudiotest address?</b><button class="iconbtn sm" aria-label="Hide this" onclick="lsSet('csMoveSeen', true);render()">${ic('x', 16)}</button></div><p>Sign in to get your data back, or restore the backup you downloaded.</p><div class="actions"><button onclick="go('settingsAccount')">Sign in</button><button class="alt" onclick="go('settingsBackup')">Restore backup</button></div></div>`;
+    return '';
 }
