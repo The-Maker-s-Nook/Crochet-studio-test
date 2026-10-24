@@ -149,15 +149,46 @@ async function renderViewer() {
         body.innerHTML = '';
         // Each page is drawn once, then kept as a picture and the drawing area freed. Phones only allow so much
         // drawing memory, and long patterns used to run out, leaving blank pages with only their page numbers.
-        let dpr = Math.min(window.devicePixelRatio || 1, 2.5), avail = Math.max(200, body.clientWidth - 16), n = viewerPdf.numPages, maxPx = n > 8 ? 5e6 : 8e6;
+        let dpr = Math.min(window.devicePixelRatio || 1, 2.5), avail = Math.max(200, body.clientWidth - 16), n = viewerPdf.numPages, maxPx = n > 8 ? 5e6 : 8e6, slots = [];
+        // 1) Lay out every page's space first (quick: no drawing yet), so the viewer can jump straight to
+        //    where you left off, even on a slow phone with a long pattern.
         for (let i = 1; i <= n; i++) {
             if (n > 1)
                 body.insertAdjacentHTML('beforeend', `<div class="vpage">Page ${i} of ${n}</div>`);
+            let box = document.createElement('div');
+            box.className = 'vpagebox';
+            box.dataset.page = i;
             try {
                 let page = await viewerPdf.getPage(i);
                 if (token !== viewerToken)
                     return;
-                let base = page.getViewport({ scale: 1 }), css = avail / base.width * viewerZoom, px = css * dpr;
+                let base = page.getViewport({ scale: 1 }), css = avail / base.width * viewerZoom;
+                box.style.width = Math.floor(base.width * css) + 'px';
+                box.style.height = Math.floor(base.height * css) + 'px';
+                slots.push({ i, page, base, css, box });
+            }
+            catch (pe) {
+                console.warn('Pattern page', i, pe);
+                box.className = 'vmsg small';
+                box.innerHTML = `<p>Page ${i} couldn't be shown here.</p><button class="alt small" onclick="openPatternExternally()">Open in another app</button>`;
+            }
+            body.appendChild(box);
+        }
+        // Every page's space is placed: jump back now, and show the "You stopped here" mark
+        patRestoreTry(true);
+        drawPatMark();
+        // 2) Draw the pages, always next the one closest to where you're reading.
+        // Each page is drawn once, then kept as a picture and the drawing area freed. Phones only allow so much
+        // drawing memory, and long patterns used to run out, leaving blank pages with only their page numbers.
+        let todo = new Set(slots.map((x, k) => k));
+        while (todo.size) {
+            if (token !== viewerToken || !body.isConnected)
+                return;
+            let here = patPosNow()?.page ?? 0, k = [...todo].reduce((best, x) => Math.abs(slots[x].i - 1 - here) < Math.abs(slots[best].i - 1 - here) ? x : best);
+            todo.delete(k);
+            let { i, page, base, css, box } = slots[k];
+            try {
+                let px = css * dpr;
                 if (base.width * base.height * px * px > maxPx)
                     px = Math.sqrt(maxPx / (base.width * base.height));
                 let vp = page.getViewport({ scale: px }), c = document.createElement('canvas'), w = Math.floor(base.width * css), h = Math.floor(base.height * css);
@@ -165,13 +196,7 @@ async function renderViewer() {
                 c.height = Math.floor(vp.height);
                 c.style.width = w + 'px';
                 c.style.height = h + 'px';
-                let box = document.createElement('div');
-                box.className = 'vpagebox';
-                box.style.width = w + 'px';
-                box.style.height = h + 'px';
                 box.appendChild(c);
-                body.appendChild(box);
-                patPageAdded(i - 1);
                 await page.render({ canvasContext: c.getContext('2d'), viewport: vp }).promise;
                 await addPageLinks(page, box, css);
                 page.cleanup();
@@ -189,10 +214,11 @@ async function renderViewer() {
                     c.replaceWith(img);
                     c.width = c.height = 0;
                 }
+                box.classList.add('drawn');
             }
             catch (pe) {
                 console.warn('Pattern page', i, pe);
-                body.insertAdjacentHTML('beforeend', `<div class="vmsg small"><p>Page ${i} couldn't be shown here.</p><button class="alt small" onclick="openPatternExternally()">Open in another app</button></div>`);
+                box.insertAdjacentHTML('beforeend', `<div class="vmsg small"><p>Page ${i} couldn't be shown here.</p><button class="alt small" onclick="openPatternExternally()">Open in another app</button></div>`);
             }
         }
     }
@@ -335,8 +361,12 @@ function openViewerItem(p, o = {}) {
 }
 const _rv23 = renderViewer;
 renderViewer = async function () {
-    await _rv23();
-    afterViewerRender();
+    // Only the newest drawing may finish the job: an older one still finishing in the background
+    // (pattern closed and reopened quickly) must not cancel the jump back to where you left off.
+    let run = _rv23(), mine = viewerToken;
+    await run;
+    if (mine === viewerToken)
+        afterViewerRender();
 };
 const _rmv23 = removeViewer;
 removeViewer = function () {
