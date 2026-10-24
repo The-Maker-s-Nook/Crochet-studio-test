@@ -92,6 +92,8 @@ nav button svg{display:block}
 .modal-card{width:100%;max-width:470px;margin:6vh auto 24px}
 label.check{display:flex;align-items:center;gap:10px;font-size:15px;color:var(--ink);margin:16px 0 4px}
 .cat-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:0 2px 12px}.cat-head .muted{font-size:13px;font-weight:600}
+.cat-head{margin-top:12px}
+.cat-head button.cat-edit{flex-shrink:0;align-self:flex-start;margin-top:2px;padding:4px 10px;font-size:12px;min-height:28px;gap:4px;display:inline-flex;align-items:center}
 .supsec{padding:4px 0}.supsec .sechead{margin:6px 0 10px}.supsec .sechead h3{font-size:19px}
 .line{padding:10px}.line .unit{font-weight:800;color:var(--ink2);min-width:34px}
 .newunit{background:var(--card2);border:1.5px dashed var(--lav-line);border-radius:16px;padding:4px 12px 12px;margin-top:10px}

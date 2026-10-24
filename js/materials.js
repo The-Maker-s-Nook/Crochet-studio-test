@@ -283,7 +283,7 @@ function materialRows() {
         groups.get(k).items.push(m);
     }
     matGroupInfo = [...groups.values()].sort(byName);
-    let dm = material(c.defaultMaterialId), inCat = data.materials.filter(m => m.categoryId === c.id), head = `<div class="cat-head"><div class="muted">Measured in ${esc(unitName(c.unit))} · ${c.onProducts ? 'on every new product' : 'added to products when needed'}${dm ? `<br>Default: <b>${esc(materialLabel(dm))}</b>` : ''}</div><button class="alt small" onclick="openMatCategoryModal('${c.id}')">Edit category</button></div>`;
+    let dm = material(c.defaultMaterialId), inCat = data.materials.filter(m => m.categoryId === c.id), head = `<div class="cat-head"><div class="muted">Measured in ${esc(unitName(c.unit))} · ${c.onProducts ? 'on every new product' : 'added to products when needed'}${dm ? `<br>Default: <b>${esc(materialLabel(dm))}</b>` : ''}</div><button class="alt small cat-edit" onclick="openMatCategoryModal('${c.id}')" aria-label="Edit category">${ic('pencil', 13)} Edit</button></div>`;
     if (materialSort !== 'type')
         return head + (flatMaterialList(inCat, false) || `<div class="panel muted">No ${esc(c.name.toLowerCase())} saved yet. Tap + Material to add one.</div>`);
     return head + (matGroupInfo.map((g, i) => {
