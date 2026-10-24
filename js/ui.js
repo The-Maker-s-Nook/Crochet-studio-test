@@ -250,8 +250,8 @@ const HELP = {
     deduct: ['Automatic material deduction', 'When this is on, adding finished stock to a product (+1, or + Add quantity) also takes the materials it uses out of your material stock.\n\nExample: a Small bee uses 40 g of yarn, 80 g of stuffing and 1 pair of eyes. Add 2 Small bees and 80 g of yarn, 160 g of stuffing and 2 pairs of eyes are taken out.\n\nOnly materials with “Track remaining stock” turned on are changed.'],
     mult: ['Default material multiplier', 'Only used when the pricing method is Materials × multiplier.\n\nThe suggested price is your material cost times this number. Example: $5 of materials × 3 = $15. Labour isn’t added with this method.'],
     productTax: ['Product tax', 'Choose how sales tax works on the prices you sell at.\n\nAdd tax to sale price: your price is before tax. Tax is added at checkout. A $4.00 item at 10% charges $4.40.\n\nTax already included in sale price: your price already has tax in it. Checkout charges your price and shows the tax inside it. A $4.40 item at 10% shows $4.00 + $0.40 tax = $4.40.\n\nNeither: no tax is added or tracked on your sales. Choose this if you don’t charge sales tax. Reports won’t show sales tax collected.'],
-    materialTax: ['Material tax', 'Choose how tax works on the material prices you enter.\n\nInputted pricing includes tax: the prices you typed in already have tax in them (like a receipt total). The app works out the tax part for you.\n\nAdd tax to inputted pricing: the prices you typed in are before tax (like a shelf price). The app adds tax on top.\n\nNeither: you don’t pay tax on materials, or you don’t want to track it. Reports won’t show tax paid on materials.\n\nSuggested prices and markup use your material cost before tax, so you’re never charging markup on tax.'],
-    notClaiming: ['Not claiming tax on materials', 'Tick this if you can’t get back the tax you pay on materials (for example, you’re not registered to collect sales tax, or you don’t claim it at tax time).\n\nWhen ticked, the tax you paid counts as part of your material cost, so suggested prices and markup cover it. When unticked, the app treats that tax as money you’ll get back and leaves it out of your costs.\n\nEither way, Reports still show how much tax you paid on materials.'],
+    materialTax: ['Material & expense tax', 'Choose how tax works on the prices you enter for materials and expenses (gas, displays, fees...). Any material or expense can use its own setting with Override tax settings.\n\nInputted pricing includes tax: the prices you typed in already have tax in them (like a receipt total). The app works out the tax part for you.\n\nAdd tax to inputted pricing: the prices you typed in are before tax (like a shelf price). The app adds tax on top.\n\nNeither: you don’t pay tax on materials and expenses, or you don’t want to track it. Reports won’t show tax paid on them.\n\nSuggested prices and markup use your material cost before tax, so you’re never charging markup on tax.'],
+    notClaiming: ['Not claiming tax on materials and expenses', 'Tick this if you can’t get back the tax you pay on materials and expenses (for example, you’re not registered to collect sales tax, or you don’t claim it at tax time).\n\nWhen ticked, the tax you paid counts as part of your costs: material costs (so suggested prices and markup cover it) and expenses (so profit counts it). When unticked, the app treats that tax as money you’ll get back and leaves it out of your costs.\n\nEither way, Reports still show how much tax you paid on materials and expenses.'],
     taxOverride: ['Override tax settings', 'Tick this to give just this item its own tax option and rate, for example tax-free yarn, something bought in another province or state, or a product you price differently.\n\nWhatever you choose here is used for this item only. Changing the main Tax settings later won’t change it.'],
     markup: ['Default markup', 'Only used when the pricing method is Materials with markup + labour.\n\nThe suggested price is your material cost plus this percentage, plus your hourly labour. Example: $5 of materials with a 50% markup = $7.50, then labour is added.']
 };
@@ -391,3 +391,93 @@ function swipeClick(e) {
         e.stopPropagation();
     }
 }
+
+ICONS.chevr = '<path d="m9 6 6 6-6 6"/>';
+// ---- App-styled drop-downs: <select class="fancy"> opens a sheet in the app's look instead of the phone's system list ----
+let fancySel = null;
+const CHEV = '<svg class="selchev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>';
+function fancyTitle(sel) {
+    let lab = sel.id && document.querySelector(`label[for="${sel.id}"]`);
+    return (lab?.textContent || sel.getAttribute('aria-label') || 'Choose').replace(/\s*\(optional\)\s*/i, '').trim();
+}
+function syncFancy(sel) {
+    let b = sel.nextElementSibling;
+    if (!b?.classList.contains('selbtn'))
+        return;
+    let o = sel.options[sel.selectedIndex], txt = o ? o.textContent : '', th = o?.dataset.thumb || '';
+    if (b.dataset.txt === txt + '|' + th.length)
+        return;
+    b.dataset.txt = txt + '|' + th.length;
+    b.innerHTML = `${th ? `<img class="selthumb" src="${th}" alt="">` : ''}<span class="sellabel">${esc(txt)}</span>${CHEV}`;
+    b.setAttribute('aria-label', fancyTitle(sel) + ': ' + txt);
+}
+function enhanceSelect(sel) {
+    if (sel.dataset.fancy)
+        return syncFancy(sel);
+    sel.dataset.fancy = '1';
+    let b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'selbtn';
+    b.setAttribute('aria-haspopup', 'dialog');
+    b.style.cssText = sel.style.cssText;
+    b.addEventListener('click', () => openFancy(sel));
+    sel.after(b);
+    sel.classList.add('selhide');
+    sel.tabIndex = -1;
+    sel.setAttribute('aria-hidden', 'true');
+    syncFancy(sel);
+}
+function openFancy(sel) {
+    fancySel = sel;
+    let i = -1, row = o => {
+        i++;
+        let on = i === sel.selectedIndex, th = o.dataset.thumb;
+        return `<button type="button" class="selopt ${on ? 'on' : ''}" ${o.disabled ? 'disabled' : ''} aria-pressed="${on}" onclick="pickFancy(${i})">${th !== undefined ? (th ? `<img class="selthumb" src="${th}" alt="">` : '<span class="selthumb none" aria-hidden="true"></span>') : ''}<span class="grow">${esc(o.textContent)}</span>${on ? ic('check', 18) : ''}</button>`;
+    };
+    let body = [...sel.children].map(c => c.tagName === 'OPTGROUP' ? `<div class="selgroup">${esc(c.label)}</div>${[...c.children].map(row).join('')}` : row(c)).join('');
+    openModal(`<div class="row"><h2 style="margin:0">${esc(fancyTitle(sel))}</h2>${closeX()}</div><div class="sellist">${body}</div>`);
+    setTimeout(() => document.querySelector('.sellist .selopt.on')?.scrollIntoView({ block: 'center' }), 30);
+}
+function pickFancy(i) {
+    let sel = fancySel;
+    fancySel = null;
+    closeModal();
+    if (!sel || !sel.isConnected)
+        return;
+    if (sel.selectedIndex !== i) {
+        sel.selectedIndex = i;
+        syncFancy(sel);
+        sel.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+}
+// ---- "More to see" hint on rows that scroll sideways (material categories) ----
+function updateScrollHint(el) {
+    let w = el.parentElement;
+    if (!w?.classList.contains('tabwrap'))
+        return;
+    w.classList.toggle('more-right', el.scrollLeft + el.clientWidth < el.scrollWidth - 4);
+    w.classList.toggle('more-left', el.scrollLeft > 4);
+}
+function enhanceScrollRow(el) {
+    if (!el.dataset.hint) {
+        el.dataset.hint = '1';
+        el.addEventListener('scroll', () => updateScrollHint(el), { passive: true });
+        el.querySelector('button:not(.alt)')?.scrollIntoView({ block: 'nearest', inline: 'center' });
+    }
+    updateScrollHint(el);
+}
+function enhanceUi() {
+    document.querySelectorAll('select.fancy').forEach(enhanceSelect);
+    document.querySelectorAll('.tabwrap > .tabs').forEach(enhanceScrollRow);
+}
+let enhanceQueued = false;
+new MutationObserver(() => {
+    if (enhanceQueued)
+        return;
+    enhanceQueued = true;
+    requestAnimationFrame(() => {
+        enhanceQueued = false;
+        enhanceUi();
+    });
+}).observe(document.body, { childList: true, subtree: true });
+addEventListener('resize', () => document.querySelectorAll('.tabwrap > .tabs').forEach(updateScrollHint));

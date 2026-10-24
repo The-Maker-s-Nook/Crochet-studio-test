@@ -4,9 +4,9 @@
 function patterns() {
     let list = pdfCache.slice().sort((a, b) => String(b.date).localeCompare(String(a.date))), f = patternTagFilter && patternTag(patternTagFilter) ? patternTagFilter : '';
     let has = x => !f || patternTagIds(x.id).includes(f), files = list.filter(has), links = (data.patternLinks || []).filter(has).sort(byName);
-    let add = `<div class="panel"><h3>Add pattern</h3>${patternUsage()}<div class="actions"><button onclick="patternPick('patternFile')">Choose file (PDF / JPG / PNG)</button><button class="alt" onclick="patternPick('patternCamera')">📷 Camera</button><button class="alt" onclick="editPatternLink()">${ic('link', 15)} Link</button></div><input class="hidden" id="patternFile" type="file" accept="application/pdf,.pdf,image/jpeg,.jpg,.jpeg,image/png,.png" onchange="importPdf(event)"><input class="hidden" id="patternCamera" type="file" accept="image/*" capture="environment" onchange="importPdf(event)"><p class="hint">${signedIn() ? 'Patterns are saved privately to your account.' : 'Patterns stay private on this device.'} A preview photo is made automatically; tap “Photo” to take or choose your own. Use <b>Link</b> to save a pattern that’s online, like an Instagram post (links don’t count toward the limit). Only import patterns you have permission to use.</p></div>`;
+    let add = `<div class="panel"><h3>Add pattern</h3>${patternUsage()}<div class="actions"><button onclick="patternPick('patternFile')">Choose file (PDF / JPG / PNG)</button><button class="alt" onclick="patternPick('patternCamera')">📷 Camera</button><button class="alt" onclick="editPatternLink()">+ Link</button></div><input class="hidden" id="patternFile" type="file" accept="application/pdf,.pdf,image/jpeg,.jpg,.jpeg,image/png,.png" onchange="importPdf(event)"><input class="hidden" id="patternCamera" type="file" accept="image/*" capture="environment" onchange="importPdf(event)"><p class="hint">${signedIn() ? 'Patterns are saved privately to your account.' : 'Patterns stay private on this device.'} A preview photo is made automatically; tap “Photo” to take or choose your own. Use <b>Link</b> to save a pattern that’s online, like an Instagram post (links don’t count toward the limit). Only import patterns you have permission to use.</p></div>`;
     let tags = `<div class="chips pattags" role="group" aria-label="Show patterns with tag"><button type="button" class="chipbtn ${f ? '' : 'on'}" aria-pressed="${!f}" onclick="filterPatternTag('')">All</button>${(data.patternTags || []).slice().sort(byName).map(t => `<button type="button" class="chipbtn ${f === t.id ? 'on' : ''}" aria-pressed="${f === t.id}" onclick="filterPatternTag('${t.id}')">${esc(t.name)}</button>`).join('')}<button type="button" class="chipbtn newtag" onclick="editPatternTag()">+ Tag</button>${f ? `<button type="button" class="linkbtn" onclick="editPatternTag('${f}')">Edit tag</button>` : ''}</div>`;
-    let linkPanel = links.length ? `<details class="panel patlinks" ${lsGet('csLinksOpen', false) ? 'open' : ''} ontoggle="lsSet('csLinksOpen', this.open)"><summary><b>${ic('link', 16)} Links</b> <span class="muted">${links.length}</span></summary>${links.map(patternLinkRow).join('')}</details>` : '';
+    let linkPanel = links.length ? `<details class="panel patlinks" ${lsGet('csLinksOpen', false) ? 'open' : ''} ontoggle="lsSet('csLinksOpen', this.open)"><summary><b>Links</b> <span class="muted">${links.length}</span></summary>${links.map(patternLinkRow).join('')}</details>` : '';
     let cards = files.map(p => `<div class="panel item"><button class="thumbbtn" onclick="openPattern('${p.id}')" aria-label="Open ${esc(p.name)}">${thumb(p.thumb || '', "")}</button><div class="grow"><div class="item-title" style="word-break:break-word">${esc(p.name)}</div><div class="muted">${(p.mime || '').startsWith('image/') ? 'Image' : 'PDF'} · ${new Date(p.date).toLocaleDateString()}</div>${patternTagChips(p.id)}<div class="actions"><button class="small" onclick="openPattern('${p.id}')">Open</button><button class="alt small" onclick="pickPatternPhoto('${p.id}')">${ic('camera', 15)} Photo</button><button class="alt small" onclick="renamePattern('${p.id}')">${ic('pencil', 15)} Rename</button><button class="alt small" onclick="patternTagsModal('${p.id}')">${ic('tag', 15)} Tags</button><button class="danger small" onclick="removePdf('${p.id}')">Delete</button></div></div></div>`).join('');
     let empty = !list.length && !(data.patternLinks || []).length ? '<div class="panel muted">No patterns added yet.</div>' : !cards && !linkPanel ? '<div class="panel muted">No patterns with this tag yet. Tap <b>Tags</b> on a pattern or edit a link to add it.</div>' : '';
     return `<div class="row"><h2>Pattern Library</h2></div>${add}${tags}${linkPanel}${cards}${empty}`;
@@ -258,8 +258,10 @@ function fillPatternOptions() {
         return;
     let p = product(editing);
     let links = (data.patternLinks || []).slice().sort(byName);
-    e.innerHTML = '<option value="">No pattern</option>' + (links.length ? '<optgroup label="Files">' : '') + pdfCache.map(x => `<option value="${x.id}">${esc(x.name)}</option>`).join('') + (links.length ? '</optgroup><optgroup label="Links">' + links.map(x => `<option value="${x.id}">🔗 ${esc(x.name)}</option>`).join('') + '</optgroup>' : '');
+    let files = pdfCache.map(x => `<option value="${x.id}" data-thumb="${esc(x.thumb || '')}">${esc(x.name)}</option>`).join(''), linkOpts = links.map(x => `<option value="${x.id}" data-thumb="${esc(x.photo || '')}">${esc(x.name)}</option>`).join('');
+    e.innerHTML = '<option value="">No pattern</option>' + (files && linkOpts ? `<optgroup label="Files">${files}</optgroup><optgroup label="Links">${linkOpts}</optgroup>` : files + linkOpts);
     e.value = p?.patternId || '';
+    syncFancy(e);
 }
 // ---- Pattern limit (test version) ----
 async function patternLimitReached() {
@@ -291,9 +293,9 @@ async function openPattern(pid, opts = {}) {
             appAlert('Pattern not found.');
         return;
     }
-    let mem = lsGet('csPatternOpen', null), keep = opts.restore && mem?.id === pid;
-    openViewerItem(p, { pattern: true, zoom: keep ? mem.zoom : 1 });
-    lsSet('csPatternOpen', { id: pid, zoom: viewerZoom, top: keep ? num(mem.top) : 0, restored: !!keep });
+    let mem = lsGet('csPatternOpen', null), keep = opts.restore && mem?.id === pid, pos = patPos(pid);
+    openViewerItem(p, { pattern: true, zoom: keep ? mem.zoom : pos?.zoom || 1 });
+    lsSet('csPatternOpen', { id: pid, zoom: viewerZoom, top: keep ? num(mem.top) : num(pos?.top), restored: keep || num(pos?.top) > 0 });
 }
 function openViewerItem(p, o = {}) {
     removeViewer();
@@ -351,6 +353,7 @@ viewerZoomBy = function (d) {
         if (m) {
             m.zoom = viewerZoom;
             lsSet('csPatternOpen', m);
+            setPatPos(pid, num(m.top), viewerZoom);
         }
     }
 };
@@ -455,11 +458,16 @@ function onPatScroll() {
     clearTimeout(onPatScroll.t);
     onPatScroll.t = setTimeout(() => {
         let m = lsGet('csPatternOpen', null);
+        // Ignore the scroll that happens when the viewer closes or is still drawing pages
+        if (!b.isConnected || $('viewer')?.dataset.pattern !== pid || !b.querySelector('.vpagebox, img'))
+            return;
+        let top = b.scrollHeight ? b.scrollTop / b.scrollHeight : 0;
         if (m?.id === pid) {
-            m.top = b.scrollHeight ? b.scrollTop / b.scrollHeight : 0;
+            m.top = top;
             m.zoom = viewerZoom;
             lsSet('csPatternOpen', m);
         }
+        setPatPos(pid, top, viewerZoom);
     }, 300);
     if (b.querySelector('.pmark') && Date.now() - patMarkAt > 1500)
         clearPatMark();
@@ -616,7 +624,7 @@ function productPatternBtn(p) {
     if (!p.patternId)
         return '';
     if (patternLink(p.patternId))
-        return `<a class="btnlink alt" href="${esc(safeLink(patternLink(p.patternId).url) || '#')}" target="_blank" rel="noopener noreferrer">${ic('link', 15)} Open pattern link</a>`;
+        return `<a class="btnlink alt" href="${esc(safeLink(patternLink(p.patternId).url) || '#')}" target="_blank" rel="noopener noreferrer">Open pattern link</a>`;
     return `<button class="alt" onclick="openPattern('${p.patternId}')">Open pattern</button>`;
 }
 function linkTagChipsHtml() {
@@ -770,4 +778,17 @@ function linkPhotoFrom(src) {
 function removeLinkPhoto() {
     linkPhotoDraft = '';
     hideLinkPhotoMenu();
+}
+
+// ---- Each pattern remembers where you were reading (scroll and zoom), even after closing it or the app ----
+function patPos(pid) {
+    return lsGet('csPatPos', {})?.[pid] || null;
+}
+function setPatPos(pid, top, zoom) {
+    let all = lsGet('csPatPos', {}) || {};
+    all[pid] = { top: Math.max(0, Math.min(1, num(top))), zoom: zoom || 1, at: Date.now() };
+    let keys = Object.keys(all);
+    if (keys.length > 60)
+        keys.sort((a, b) => all[a].at - all[b].at).slice(0, keys.length - 60).forEach(k => delete all[k]);
+    lsSet('csPatPos', all);
 }
