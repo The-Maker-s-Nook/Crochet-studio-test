@@ -111,7 +111,9 @@ const save = () => {
 function flushSave() {
     clearTimeout(saveTimer);
     saveTimer = null;
-    saveQueue = saveQueue.then(() => idbSet('app', 'data', data)).then(() => {
+    // Photos are kept as their own files; the data only holds short references (js/photos.js)
+    externalizePhotos(data);
+    saveQueue = saveQueue.then(photosWritten).then(() => idbSet('app', 'data', data)).then(() => {
         saveErrorShown = false;
     }).catch(e => {
         console.error(e);

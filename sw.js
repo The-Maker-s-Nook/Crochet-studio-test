@@ -11,6 +11,7 @@ const ASSETS = [
   './js/ui.js',
   './js/nav.js',
   './js/storage.js',
+  './js/photos.js',
   './js/home.js',
   './js/products.js',
   './js/materials.js',

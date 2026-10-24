@@ -132,6 +132,11 @@ render = function () {
     }
     dataLoaded = true;
     delete data.settings.theme;
+    // Photos: show them straight away, and move any still stored inside the data out to their own files (js/photos.js)
+    await loadPhotoCache();
+    if (externalizePhotos(data))
+        flushSave();
+    setTimeout(() => cleanupLocalPhotos().catch(() => {}), 20000);
     await refreshPdfs();
     try {
         await authBoot();

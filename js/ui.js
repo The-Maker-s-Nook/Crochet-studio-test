@@ -2,7 +2,7 @@
 // Part of the Crochet Studio app. Files load in the order listed in index.html.
 
 function thumb(src, style = '') {
-    return src ? `<img class="thumb" src="${src}" alt="" style="${style}">` : `<div class="thumb thumb-empty" style="${style}" aria-hidden="true"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="8"/><path d="M6 7c4 2 6 6 6 13M18 7c-4 2-6 6-6 13M4.5 12h15"/></svg></div>`;
+    return src ? `<img class="thumb" src="${photoUrl(src)}" alt="" style="${style}">` : `<div class="thumb thumb-empty" style="${style}" aria-hidden="true"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="8"/><path d="M6 7c4 2 6 6 6 13M18 7c-4 2-6 6-6 13M4.5 12h15"/></svg></div>`;
 }
 const combos = {};
 function comboField(o) {
@@ -27,7 +27,7 @@ function comboOpen(fid) {
         q = '';
     o.items = comboMatches(o, q);
     let exact = o.items.some(it => it.label.toLowerCase() === q.toLowerCase());
-    let html = o.items.map((it, i) => `<button type="button" role="option" onmousedown="event.preventDefault()" onclick="comboPick('${fid}',${i})">${it.photo ? `<img src="${it.photo}" alt="">` : ''}<span class="grow"><span class="combo-main">${esc(it.label)}</span>${it.sub ? `<span class="combo-sub">${esc(it.sub)}</span>` : ''}</span></button>`).join('');
+    let html = o.items.map((it, i) => `<button type="button" role="option" onmousedown="event.preventDefault()" onclick="comboPick('${fid}',${i})">${it.photo ? `<img src="${photoUrl(it.photo)}" alt="">` : ''}<span class="grow"><span class="combo-main">${esc(it.label)}</span>${it.sub ? `<span class="combo-sub">${esc(it.sub)}</span>` : ''}</span></button>`).join('');
     if (o.onNew && q && !exact)
         html += `<button type="button" class="combo-new" onmousedown="event.preventDefault()" onclick="comboNew('${fid}')">+ Add “${esc(q)}” as new</button>`;
     if (!html && o.emptyText && document.activeElement === inp)
@@ -74,7 +74,7 @@ function comboKey(e, fid) {
 }
 function photoGallery(kind) {
     let pics = kind === 'product' ? productPhotos : kind === 'material' ? materialPhotos : quickPhotos;
-    return `<div class="photo-grid">${pics.map((src, i) => `<div class="photo-card"><img src="${src}" alt="Photo ${i + 1}"><div class="actions"><button type="button" class="alt small" onclick="coverPhoto('${kind}',${i})">${i === 0 ? 'Cover ✓' : 'Make cover'}</button><button type="button" class="danger small" onclick="removePhoto('${kind}',${i})">Delete</button></div></div>`).join('')}</div>`;
+    return `<div class="photo-grid">${pics.map((src, i) => `<div class="photo-card"><img src="${photoUrl(src)}" alt="Photo ${i + 1}"><div class="actions"><button type="button" class="alt small" onclick="coverPhoto('${kind}',${i})">${i === 0 ? 'Cover ✓' : 'Make cover'}</button><button type="button" class="danger small" onclick="removePhoto('${kind}',${i})">Delete</button></div></div>`).join('')}</div>`;
 }
 function photoArray(kind) {
     return kind === 'product' ? productPhotos : kind === 'material' ? materialPhotos : quickPhotos;

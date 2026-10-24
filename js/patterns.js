@@ -285,7 +285,7 @@ function fillPatternOptions() {
         return;
     let p = product(editing);
     let links = (data.patternLinks || []).slice().sort(byName);
-    let files = pdfCache.map(x => `<option value="${x.id}" data-thumb="${esc(x.thumb || '')}">${esc(x.name)}</option>`).join(''), linkOpts = links.map(x => `<option value="${x.id}" data-thumb="${esc(x.photo || '')}">${esc(x.name)}</option>`).join('');
+    let files = pdfCache.map(x => `<option value="${x.id}" data-thumb="${esc(x.thumb || '')}">${esc(x.name)}</option>`).join(''), linkOpts = links.map(x => `<option value="${x.id}" data-thumb="${esc(photoUrl(x.photo || ''))}">${esc(x.name)}</option>`).join('');
     e.innerHTML = '<option value="">No pattern</option>' + (files && linkOpts ? `<optgroup label="Files">${files}</optgroup><optgroup label="Links">${linkOpts}</optgroup>` : files + linkOpts);
     e.value = p?.patternId || '';
     syncFancy(e);
