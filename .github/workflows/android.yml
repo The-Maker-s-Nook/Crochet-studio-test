@@ -1,11 +1,15 @@
 # Builds the Android test app (APK) on GitHub whenever the app-wrap branch changes.
-# The APK appears under this run's "Artifacts" as makers-nook-android-test.
+# Each build is attached to a GitHub release named "Android test build N" (open it on an Android phone and tap the .apk),
+# and also kept under this run's "Artifacts".
 name: Android test app
 
 on:
   push:
     branches: [app-wrap]
   workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   apk:
@@ -57,3 +61,12 @@ jobs:
           name: makers-nook-android-test
           path: makers-nook-test-*.apk
           retention-days: 30
+
+      - name: Attach to a release page (easy to download on a phone)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "android-test-${{ github.run_number }}" "makers-nook-test-${{ github.run_number }}.apk" \
+            --target "${{ github.sha }}" --prerelease \
+            --title "Android test build ${{ github.run_number }}" \
+            --notes "Test version of the app for Android phones. On your phone, tap the .apk file below to download it, then open it to install. Built from: ${{ github.event.head_commit.message || 'manual run' }}"
