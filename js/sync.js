@@ -263,12 +263,15 @@ async function pushAll(onProgress) {
         saveSyncMeta();
         onProgress?.(++i, up.length);
     }
+    // Photos go up once each as files (js/photos.js); the data row only carries their references
+    await pushPhotos();
     let at = new Date().toISOString();
     await cloudPut({ ...data, _patterns: local.filter(p => syncMeta.pats[p.id] === 1).map(patMeta) }, at);
     syncMeta.lastServerAt = at;
     if (syncMeta.dirtyAt === startedAt)
         syncMeta.dirty = false;
     saveSyncMeta();
+    cleanupPhotos().catch(e => console.warn('Photo cleanup', e));
 }
 async function pullApply(row, onProgress) {
     row = row || await cloudGet();
@@ -280,7 +283,9 @@ async function pullApply(row, onProgress) {
     applyingRemote = true;
     try {
         data = normalizeData(d);
-        await (saveQueue = saveQueue.then(() => idbSet('app', 'data', data)));
+        // Data saved by an older version may still hold photos as text: move them out, then send the lighter data back
+        let movedPhotos = externalizePhotos(data);
+        await (saveQueue = saveQueue.then(photosWritten).then(() => idbSet('app', 'data', data)));
         let local = await pdfAll(), byId = Object.fromEntries(local.map(p => [p.id, p])), cloudIds = new Set(pats.map(p => p.id));
         for (let p of local)
             if (!cloudIds.has(p.id) && syncMeta.pats[p.id] === 1) {
@@ -298,7 +303,7 @@ async function pullApply(row, onProgress) {
         syncMeta.retry = pats.filter(m => !byId[m.id]);
         syncMeta.lastServerAt = row.updated_at;
         syncMeta.dirty = false;
-        if (local.some(p => !cloudIds.has(p.id) && !syncMeta.pats[p.id])) {
+        if (movedPhotos || local.some(p => !cloudIds.has(p.id) && !syncMeta.pats[p.id])) {
             syncMeta.dirty = true;
             syncMeta.dirtyAt = new Date().toISOString();
         }
@@ -310,6 +315,8 @@ async function pullApply(row, onProgress) {
     await refreshPdfs();
     onProgress?.(0, syncMeta.retry.length);
     await retryDownloads(onProgress);
+    // Photos made on another device: bring them to this phone so they show offline too
+    await fetchMissingPhotos().catch(e => console.warn('Photos', e));
     softRender();
 }
 async function retryDownloads(onProgress) {
@@ -412,6 +419,7 @@ async function clearLocal() {
         await idbDel('app', 'data');
         for (let p of await pdfAll())
             await _pdfDelete(p.id);
+        await photoClearLocal();
     }
     finally {
         applyingRemote = false;
@@ -501,6 +509,7 @@ async function startDownload(row) {
     try {
         for (let p of await pdfAll())
             await _pdfDelete(p.id);
+        await photoClearLocal();
     }
     finally {
         applyingRemote = false;
@@ -781,6 +790,7 @@ async function deleteAccount() {
         flash('Deleting your account…');
         let uid = session.user.id;
         await fileDel(await fileListAll());
+        await fileDel(await photoListCloud());
         await sbFetch(`/rest/v1/app_data?user_id=eq.${uid}`, { method: 'DELETE' });
         await sbFetch('/rest/v1/rpc/delete_user', { method: 'POST', body: {} });
         await clearLocal();

@@ -1,15 +1,18 @@
 // Saving on the phone (IndexedDB), pattern file storage, backups and restore
 // Part of the Crochet Studio app. Files load in the order listed in index.html.
 
-// PDFs are kept in IndexedDB, separate from small localStorage records.
+// PDFs and photos are kept in IndexedDB, separate from small localStorage records.
 let dbPromise = new Promise((resolve, reject) => {
-    let r = indexedDB.open('crochetStudioPDFs', 2);
+    let r = indexedDB.open('crochetStudioPDFs', 3);
     r.onupgradeneeded = () => {
         let db = r.result;
         if (!db.objectStoreNames.contains('pdfs'))
             db.createObjectStore('pdfs', { keyPath: 'id' });
         if (!db.objectStoreNames.contains('app'))
             db.createObjectStore('app');
+        // Product, material and link photos (js/photos.js)
+        if (!db.objectStoreNames.contains('photos'))
+            db.createObjectStore('photos');
     };
     r.onsuccess = () => resolve(r.result);
     r.onerror = () => reject(r.error);
@@ -143,7 +146,7 @@ async function exportData(share) {
         let patterns = await pdfAll();
         let stamp = new Date();
         data.lastBackup = stamp.toISOString();
-        let backup = { app: 'Crochet Studio', backupVersion: 2, exported: stamp.toISOString(), data, patterns: await Promise.all(patterns.map(async (p) => ({ id: p.id, name: p.name, date: p.date, mime: p.mime, thumb: p.thumb || '', thumbCustom: !!p.thumbCustom, dataUrl: await blobToDataUrl(p.blob) }))) };
+        let backup = { app: 'Crochet Studio', backupVersion: 3, exported: stamp.toISOString(), data, photos: await photosForBackup(), patterns: await Promise.all(patterns.map(async (p) => ({ id: p.id, name: p.name, date: p.date, mime: p.mime, thumb: p.thumb || '', thumbCustom: !!p.thumbCustom, dataUrl: await blobToDataUrl(p.blob) }))) };
         let name = 'crochet-studio-backup-' + stamp.toISOString().slice(0, 10) + '.json';
         let file = new File([JSON.stringify(backup)], name, { type: 'application/json' });
         if (share && canShareFiles()) {
@@ -193,8 +196,11 @@ async function importData(e) {
     if (!await appConfirm(`Restore this backup?\n\n${summary}\n\n${signedIn() ? 'This replaces everything in the app and in your account, on all your devices.' : 'This replaces everything currently in the app.'}`))
         return;
     try {
+        // Version 3 backups carry photos separately; older ones have them inside the data (moved out on save)
+        await restorePhotosFromBackup(parsed.photos);
         data = normalizeData(d);
-        await (saveQueue = saveQueue.then(() => idbSet('app', 'data', data)));
+        externalizePhotos(data);
+        await (saveQueue = saveQueue.then(photosWritten).then(() => idbSet('app', 'data', data)));
         if (parsed.patterns) {
             for (let p of await pdfAll())
                 await pdfDelete(p.id);
@@ -240,5 +246,6 @@ async function resetData() {
     }
     for (let p of await pdfAll())
         await pdfDelete(p.id);
+    await photoClearLocal();
     location.reload();
 }
