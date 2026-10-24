@@ -169,7 +169,7 @@ function mapCols(row, spec) {
 const isAny = (...a) => h => a.includes(h), starts = (...a) => h => a.some(x => h.startsWith(x));
 const PRODUCT_COLS = { name: isAny('product', 'products', 'productname', 'item', 'itemname', 'name'), variation: isAny('variation', 'colour', 'color', 'colourway'), yarnG: starts('totalyarnused', 'yarnused', 'gramsofyarn', 'yarngrams', 'yarng'), yarn: isAny('yarn', 'typeofyarn', 'yarntype', 'yarnname'), fill: h => (h.includes('polyfil') || h.includes('stuffing') || h.includes('fiberfill')) && !h.startsWith('cost'), eyes: isAny('eyesused', 'eyes', 'eye', 'safetyeyes', 'typeofeye'), hook: starts('hook'), time: isAny('timetomake', 'time', 'hours', 'timehours', 'maketime'), units: starts('units', 'unit'), price: isAny('saleprice', 'price', 'sellingprice', 'retailprice'), qty: isAny('quantity', 'currentquantity', 'qty', 'stock', 'instock', 'onhand') };
 function analyzeSpreadsheet(sheets, fileName) {
-    let plan = { file: fileName, yarns: [], eyes: [], stuffing: [], products: [], skipped: [], warnings: [], hourly: null, sheetsUsed: [], dupSheets: 0 };
+    let plan = { file: fileName, yarns: [], eyes: [], stuffing: [], products: [], skipped: [], warnings: [], hourly: null, sheetsUsed: [], dupSheets: 0, occ: {}, stockSheets: [] };
     const skip = (sheet, row, reason) => plan.skipped.push({ sheet, row, reason });
     const warn = (sheet, row, text) => plan.warnings.push({ sheet, row, text });
     for (let { name: sn, rows } of sheets) {
@@ -249,6 +249,10 @@ function analyzeSpreadsheet(sheets, fileName) {
             if (c.name === undefined || (c.price === undefined && c.yarnG === undefined && c.time === undefined))
                 continue;
             plan.sheetsUsed.push(sn);
+            // Pages with a stock column can be picked as "current stock" (people often copy a page for each market)
+            let sheetInfo = c.qty !== undefined ? { name: sn, products: 0 } : null;
+            if (sheetInfo)
+                plan.stockSheets.push(sheetInfo);
             for (let r = pr + 1; r < rows.length; r++) {
                 let row = rows[r];
                 if (!row)
@@ -261,14 +265,22 @@ function analyzeSpreadsheet(sheets, fileName) {
                 }
                 if (/^total/i.test(nm))
                     continue;
-                let key = nm.toLowerCase() + '|' + cellText(row[c.variation]).toLowerCase(), seen = plan.products.find(p => p.key === key);
-                if (seen) {
-                    plan.dupSheets++;
-                    continue;
-                }
+                let key = nm.toLowerCase() + '|' + cellText(row[c.variation]).toLowerCase();
+                if (plan.occ[key]?.some(o => o.sheet === sn))
+                    continue; // listed twice on the same page
                 let rawPrice = row[c.price], price = cellNum(rawPrice), time = cellNum(row[c.time]), unitTxt = hnorm(row[c.units]), qty = cellNum(row[c.qty]);
                 let hours = time > 0 ? (unitTxt.startsWith('m') ? time / 60 : time) : 0;
-                plan.products.push({ key, sheet: sn, row: r + 1, name: nm, variation: cellText(row[c.variation]), yarn: cellText(row[c.yarn]), yarnG: cellNum(row[c.yarnG]), fillG: cellNum(row[c.fill]), eyes: cellText(row[c.eyes]), hook: cellText(row[c.hook]).replace(/\s*mm$/i, ''), hours: Math.round(hours * 1000) / 1000, price: price >= 0 ? Math.round(price * 100) / 100 : null, priceText: cellText(rawPrice), qty: qty > 0 ? Math.floor(qty) : 0 });
+                let item = ({ key, sheet: sn, row: r + 1, name: nm, variation: cellText(row[c.variation]), yarn: cellText(row[c.yarn]), yarnG: cellNum(row[c.yarnG]), fillG: cellNum(row[c.fill]), eyes: cellText(row[c.eyes]), hook: cellText(row[c.hook]).replace(/\s*mm$/i, ''), hours: Math.round(hours * 1000) / 1000, price: price >= 0 ? Math.round(price * 100) / 100 : null, priceText: cellText(rawPrice), qty: qty > 0 ? Math.floor(qty) : 0 });
+                // The same product on several pages counts once; which page's copy is used is decided in pickStockPage
+                if (!plan.occ[key]) {
+                    plan.occ[key] = [];
+                    plan.products.push(item);
+                }
+                else
+                    plan.dupSheets++;
+                plan.occ[key].push(item);
+                if (sheetInfo)
+                    sheetInfo.products++;
             }
         }
     }
@@ -285,8 +297,31 @@ function analyzeSpreadsheet(sheets, fileName) {
             return true;
         });
     }
-    resolvePlan(plan);
+    plan.baseSkipped = plan.skipped.slice();
+    plan.baseWarnings = plan.warnings.slice();
+    plan.stockSheets = plan.stockSheets.filter(x => x.products);
+    // Newest page with stock is the default (copied pages are usually added after the older ones)
+    pickStockPage(plan, plan.stockSheets.length ? plan.stockSheets[plan.stockSheets.length - 1].name : null);
     return plan;
+}
+// For a product on several pages: use its row on the chosen page; if it isn't there, its newest page.
+function pickStockPage(plan, sheet) {
+    plan.stockSheet = sheet;
+    plan.products = plan.products.map(p => {
+        let all = plan.occ[p.key] || [p];
+        return all.find(o => o.sheet === sheet) || all[all.length - 1];
+    });
+    plan.skipped = plan.baseSkipped.slice();
+    plan.warnings = plan.baseWarnings.slice();
+    resolvePlan(plan);
+}
+function chooseStockPage(sheet) {
+    if (!importPlan)
+        return;
+    pickStockPage(importPlan, sheet);
+    let y = scrollY;
+    render();
+    scrollTo(0, y);
 }
 // "10mm glitter eyes" -> {name:'Glitter eyes', colour:'10 mm'}; names with no size stay as they are
 function splitEye(raw) {
@@ -442,6 +477,7 @@ function importReview() {
     let examples = items.slice(0, 5).join('');
     return `${backBtn()}<h2 style="margin-top:12px">Check before adding</h2><div class="muted" style="font-weight:700;margin:-8px 0 12px">${esc(p.file)}</div>
   <div class="grid keep2"><div class="panel" style="margin:0"><div class="muted">New products</div><div class="stat">${np.length}</div></div><div class="panel" style="margin:0"><div class="muted">New materials</div><div class="stat">${nm.length}</div></div></div>
+  ${importStockPicker(p)}
   ${np.length + nm.length ? `<div class="panel" style="margin-top:12px"><h3>A few examples</h3>${examples}${total > 5 ? `<button class="linkbtn" onclick="importShowAll()">See all ${total}</button><div id="importAll" class="hidden">${items.slice(5).join('')}</div>` : ''}</div>` : ''}
   ${p.reused || p.inApp ? `<div class="tip" style="margin-top:12px">${p.inApp ? `${p.inApp} product${p.inApp === 1 ? ' is' : 's are'} already in your app and will be left as ${p.inApp === 1 ? 'it is' : 'they are'}. ` : ''}${p.reused ? `${p.reused} material${p.reused === 1 ? ' is' : 's are'} already saved, so ${p.reused === 1 ? 'it' : 'they'}’ll be reused.` : ''}</div>` : ''}
   ${p.wageChange ? `<div class="panel" style="margin-top:12px"><label class="check" style="margin:0"><input type="checkbox" id="importWage" ${importUseWage ? 'checked' : ''} onchange="importUseWage=this.checked"> Set my hourly wage to ${cash(p.hourly)} (from the spreadsheet; now ${cash(data.settings.hourly)})</label></div>` : ''}
@@ -449,6 +485,15 @@ function importReview() {
   ${p.skipped.length ? `<div class="tip warn" style="margin-top:12px"><b>${p.skipped.length} row${p.skipped.length === 1 ? '' : 's'} skipped</b>${p.skipped.slice(0, 8).map(s => `<div class="iline">${rowRef(s)}: ${esc(s.reason)}</div>`).join('')}${p.skipped.length > 8 ? `<div class="iline">…and ${p.skipped.length - 8} more</div>` : ''}</div>` : ''}
   <div class="actions" style="margin-top:16px"><button onclick="applyImport()">Add ${total} item${total === 1 ? '' : 's'}</button><button class="alt" onclick="importPlan=null;goBack()">Cancel</button></div>
   <p class="hint">Prices are brought in as they are in your spreadsheet (yarn cost includes the shipping per ball). Photos aren’t in spreadsheets, so add them after.</p>`;
+}
+// Products on more than one page: say they're combined, and let them pick which page has today's stock.
+function importStockPicker(p) {
+    if (!p.dupSheets)
+        return '';
+    let combined = `<p class="muted" style="margin:0 0 10px">${p.dupSheets} repeat${p.dupSheets === 1 ? '' : 's'} of the same product on other pages ${p.dupSheets === 1 ? 'was' : 'were'} combined, so nothing is added twice.</p>`;
+    if (p.stockSheets.length < 2)
+        return `<div class="panel" style="margin-top:12px"><h3>Products on more than one page</h3>${combined}</div>`;
+    return `<div class="panel" style="margin-top:12px"><h3>Which page has your current stock?</h3>${combined}<fieldset class="sheetpick"><legend class="sr-only">Page with your current stock</legend>${p.stockSheets.map(x => `<label class="check sheetopt ${x.name === p.stockSheet ? 'on' : ''}"><input type="radio" name="stockSheet" ${x.name === p.stockSheet ? 'checked' : ''} onchange="chooseStockPage(${esc(JSON.stringify(x.name))})"><span class="grow"><b>${esc(x.name)}</b><span class="muted block">${x.products} product${x.products === 1 ? '' : 's'}</span></span></label>`).join('')}</fieldset><p class="hint">Stock and prices come from this page. A product that isn't on it uses the newest page it's on.</p></div>`;
 }
 function importShowAll() {
     $('importAll')?.classList.remove('hidden');

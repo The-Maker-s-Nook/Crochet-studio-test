@@ -367,3 +367,9 @@ button.selopt:active{background:var(--lav-soft,#efedff)}
 /* Pattern pages waiting to be drawn */
 #vbody .vpagebox:not(.drawn){background:#fff}
 #vbody .vpagebox:not(.drawn)::before{content:'Loading page…';position:absolute;top:24px;left:0;right:0;text-align:center;color:#9a90ad;font-size:14px;font-weight:700}
+/* Import: pick the page with current stock */
+.sheetpick{border:0;margin:0;padding:0;max-height:320px;overflow:auto}
+.sheetpick .sheetopt{margin:6px 0;padding:10px 12px;border-radius:14px;box-shadow:inset 0 0 0 1.5px var(--lav-line,#ddd5f2);align-items:center}
+.sheetpick .sheetopt.on{background:var(--lav-soft,#efedff);box-shadow:inset 0 0 0 2px var(--lav-deep,#8a6fc9)}
+.sheetpick .sheetopt .block{display:block;font-size:12px}
+.sheetpick input[type=radio]{width:22px;height:22px;flex:0 0 22px;margin:0;padding:0;accent-color:var(--lav-deep,#8a6fc9)}
