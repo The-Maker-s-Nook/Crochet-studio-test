@@ -2,7 +2,7 @@
 // Part of the Crochet Studio app. Files load in the order listed in index.html.
 
 const KEY = 'crochetStudioPrototypeV1';
-const DEFAULT_SETTINGS = { hourly: 15, method: 'labour', multiplier: 3, markup: 50, rounding: 'nearest', autoDeduct: true, taxRate: 13, taxOnPurchases: true, taxOnSales: false, taxInCosts: true };
+const DEFAULT_SETTINGS = { hourly: 15, method: 'labour', multiplier: 3, markup: 50, rounding: 'nearest', taxRate: 13, taxOnPurchases: true, taxOnSales: false, taxInCosts: true };
 function migrateData(d, fresh) {
     const n = v => Math.max(0, Number(v) || 0);
     if (!Array.isArray(d.units) || !d.units.length)
@@ -33,6 +33,11 @@ function migrateData(d, fresh) {
         d.orders = [];
     if (!Array.isArray(d.expenses))
         d.expenses = [];
+    if (!Array.isArray(d.expenseCats))
+        d.expenseCats = [];
+    for (let e of d.expenses)
+        if (e.category === 'Fees')
+            e.category = 'Fees & subscriptions';
     if (!Array.isArray(d.reminders))
         d.reminders = [];
     if (!Array.isArray(d.patternLinks))
@@ -74,7 +79,30 @@ function migrateData(d, fresh) {
         s.orderId = s.orderId || newId();
         d.orders.push({ id: s.orderId, marketId: s.marketId || null, date: s.date, full: r2(n(s.qty) * n(s.listPrice)), subtotal: sub, discount: null, tax, total: r2(sub + tax), payment: { method: '' } });
     }
+    migrateStock(d, fresh);
     return d;
+}
+// Version 24: material stock settings (see js/stock.js). Older data: "Track remaining stock" per material
+// and "Automatically deduct" become one setting, with overrides for materials that worked differently.
+function migrateStock(d, fresh) {
+    let st = d.settings;
+    for (let c of d.materialCategories)
+        if (c.packWord === undefined)
+            c.packWord = { cat_yarn: 'skein', cat_eyes: 'pack', cat_stuffing: 'bag' }[c.id] || 'pack';
+    if (!st.materialStock) {
+        let tracked = d.materials.filter(m => m.trackStock);
+        st.materialStock = fresh ? 'auto' : !tracked.length ? 'pricing' : st.autoDeduct !== false ? 'auto' : 'manual';
+        if (st.materialStock !== 'pricing')
+            for (let m of d.materials)
+                if (!m.trackStock && !m.stockOverride)
+                    m.stockOverride = { on: true, mode: 'pricing' };
+        for (let m of d.materials)
+            if (!m.trackStock)
+                m.stock = null;
+    }
+    for (let m of d.materials)
+        delete m.trackStock;
+    delete st.autoDeduct;
 }
 function normalizeData(d) {
     d = d && typeof d === 'object' ? d : {};

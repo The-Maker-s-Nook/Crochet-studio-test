@@ -12,8 +12,14 @@ that testers use at https://crochetstudiotest.netlify.app
   - `ui.js` – shared screen pieces: pop-ups, notices, search boxes, photos, help buttons
   - `nav.js` – moving between screens, bottom menu, back button, drawing the current screen
   - `storage.js` – saving on the phone, pattern file storage, backups and restore
-  - `photos.js` – product, material and pattern-link photos, kept as separate image files (see "How data is stored")
-  - `home.js`, `products.js`, `materials.js`, `patterns.js`, `markets.js`, `expenses.js`, `reminders.js`, `checkout.js`, `reports.js`, `settings.js`, `import.js` – one file per area of the app
+  - `photos.js` – product, material, pattern-link and receipt photos (and receipt PDFs), kept as separate files (see "How data is stored")
+  - `xlsx.js` – makes zip folders and Excel workbooks with no extra libraries (used by report downloads and year-end receipts)
+  - `home.js`, `products.js`, `materials.js`, `patterns.js`, `markets.js`, `reminders.js`, `checkout.js`, `settings.js`, `import.js` – one file per area of the app
+  - `stock.js` – material stock settings (Pricing only / manual / automatic), per-material overrides, the −1/+1 package buttons, "What do you buy it in?" words, taking materials out when products are made
+  - `expenses.js` – expense and receipt categories and how each counts in profit and tax, the market Costs box
+  - `receipts.js` – Receipts list, add/edit form, details, Home "Snap receipt" button and card
+  - `yearend.js` – year-end receipts: reminders, the zip folder of last year's photos, clearing photos
+  - `reports.js` – Reports screen (Overview, Markets, Stock, Expenses & tax tabs); `report-files.js` – the PDF and Excel downloads
   - `sync.js` – accounts and cloud sync (Supabase); `account-screens.js` – sign-in and Account screens
   - `start.js` – starts the app: global listeners, loading data, offline support
 - `sw.js` – lets the app work offline; bump the version number in it with every update, and list any new file
@@ -31,6 +37,12 @@ that testers use at https://crochetstudiotest.netlify.app
 - **Photos**: IndexedDB store `photos`; with an account, Supabase Storage `user-files/<user id>/photos/`.
   The app data only holds a short reference (`ph:<photo id>`), so saving and syncing stay small and fast.
   Older data held photos as `data:image/...` text; `photos.js` moves those out automatically.
+- **Receipts** are expenses in `data.expenses` (store, date, category, before tax, tax, total, paid with, market, notes).
+  Their photo or PDF is kept like any other photo (a `ph:` reference). After the year-end save and clear, the photo is
+  removed and the receipt gets `photoOff: true`. Yarn, Supplies and Booth fees receipts are proof only (not taken off profit again).
+- **Material stock**: `data.settings.materialStock` is `pricing`, `manual` or `auto`; a material can override it with
+  `stockOverride: { on, mode }`. `stock` is the amount left in the material's unit; blank (`null`) means not counted yet.
+  Each material category has a `packWord` (skein, bag, pack...).
 - **Backups** (Settings › Backup): one JSON file with the data, the photos and the pattern files.
 - Small per-device settings (open pattern, reading spot, folded panels) use `localStorage` (keys start with `cs`).
 

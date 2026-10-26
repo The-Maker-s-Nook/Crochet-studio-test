@@ -1,4 +1,4 @@
-// Photos for products, materials and pattern links.
+// Photos for products, materials, pattern links and receipts (receipt PDFs are kept the same way).
 // Part of the Crochet Studio app. Files load in the order listed in index.html.
 //
 // Each photo is an image file of its own: on the phone in IndexedDB (store "photos"), and with an account
@@ -126,8 +126,15 @@ function photoRefFor(dataUrl) {
     photoRefOf.set(dataUrl, ref);
     return ref;
 }
+// A file that isn't a photo (a receipt PDF): stored the same way, with its own reference.
+function fileRefFor(blob) {
+    let pid = id();
+    photoRemember(pid, blob);
+    photoUnsaved.set(pid, blob);
+    return PHOTO_REF + pid;
+}
 function photoOwners(d) {
-    return [...(d?.products || []), ...(d?.materials || []), ...(d?.patternLinks || [])];
+    return [...(d?.products || []), ...(d?.materials || []), ...(d?.patternLinks || []), ...(d?.expenses || [])];
 }
 function externalizePhotos(d) {
     let changed = false, fix = v => {
@@ -180,7 +187,7 @@ async function photosForBackup(d = data) {
 }
 async function restorePhotosFromBackup(photos) {
     for (let [pid, dataUrl] of Object.entries(photos || {}))
-        if (typeof dataUrl === 'string' && dataUrl.startsWith('data:image')) {
+        if (typeof dataUrl === 'string' && (dataUrl.startsWith('data:image') || dataUrl.startsWith('data:application/pdf'))) {
             let blob = dataUrlToBlob(dataUrl);
             await photoPutLocal(pid, blob);
             photoRemember(pid, blob);
@@ -248,7 +255,7 @@ async function cleanupLocalPhotos() {
 // Photos in a form that hasn't been saved yet must not be tidied away.
 function photoUrlsInDrafts() {
     let s = new Set();
-    for (let v of [...(typeof productPhotos !== 'undefined' ? productPhotos : []), ...(typeof materialPhotos !== 'undefined' ? materialPhotos : []), ...(typeof quickPhotos !== 'undefined' ? quickPhotos : [])]) {
+    for (let v of [...(typeof productPhotos !== 'undefined' ? productPhotos : []), ...(typeof materialPhotos !== 'undefined' ? materialPhotos : []), ...(typeof quickPhotos !== 'undefined' ? quickPhotos : []), typeof receiptDraft !== 'undefined' ? receiptDraft?.photo : '']) {
         let pid = photoIdOf(v);
         if (pid)
             s.add(pid);

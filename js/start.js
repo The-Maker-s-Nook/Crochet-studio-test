@@ -80,8 +80,6 @@ addEventListener('popstate', () => {
         lsSet('csPatternOpen', null);
 }, true);
 function v23AfterRender() {
-    if (screen === 'reports')
-        foldReports();
     if (screen === 'home')
         maybeWhatsNew();
     if (screen === 'patterns' && !$('viewer')) {

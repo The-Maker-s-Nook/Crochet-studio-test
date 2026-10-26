@@ -150,6 +150,41 @@ function appDialog({ title = '', message = '', ok = 'OK', cancel = null, danger 
         setTimeout(() => o.querySelector('button[data-v="1"]')?.focus(), 30);
     });
 }
+// A pop-up with several choices. buttons: [[value, label, class]]. Resolves to the value (null if closed).
+function appChoice(message, buttons, title = '') {
+    return new Promise(res => {
+        dlgDone?.(false);
+        let o = document.createElement('div');
+        o.id = 'appDialog';
+        o.className = 'modal dialog';
+        o.innerHTML = `<div class="panel modal-card dialog-card" role="alertdialog" aria-modal="true" aria-describedby="dlgMsg">${title ? `<h3>${esc(title)}</h3>` : ''}<p id="dlgMsg" class="dlg-msg">${esc(message)}</p><div class="actions dlg-actions">${buttons.map(([v, l, c]) => `<button class="${c || ''}" data-c="${esc(v)}">${esc(l)}</button>`).join('')}</div></div>`;
+        const key = e => {
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                finish(null);
+            }
+        };
+        const finish = v => {
+            if (dlgDone !== finish)
+                return;
+            dlgDone = null;
+            document.removeEventListener('keydown', key, true);
+            o.remove();
+            res(v);
+        };
+        dlgDone = finish;
+        o.addEventListener('click', e => {
+            let b = e.target.closest('button[data-c]');
+            if (b)
+                finish(b.dataset.c);
+            else if (e.target === o)
+                finish(null);
+        });
+        document.addEventListener('keydown', key, true);
+        document.body.appendChild(o);
+        setTimeout(() => o.querySelector('.dlg-actions button:last-child')?.focus(), 30);
+    });
+}
 function needField(fid, msg) {
     let e = $(fid);
     if (e) {
@@ -247,7 +282,8 @@ function slotPhotoChosen(e) {
     }, t.kind === 'product' ? 600 : 480);
 }
 const HELP = {
-    deduct: ['Automatic material deduction', 'When this is on, adding finished stock to a product (+1, or + Add quantity) also takes the materials it uses out of your material stock.\n\nExample: a Small bee uses 40 g of yarn, 80 g of stuffing and 1 pair of eyes. Add 2 Small bees and 80 g of yarn, 160 g of stuffing and 2 pairs of eyes are taken out.\n\nOnly materials with “Track remaining stock” turned on are changed.'],
+    stockModes: ['Material stock', 'Pricing only: materials are only used to work out your suggested prices. No stock is counted.\n\nPricing and manual stock: each material shows how much is left, with −1 and +1 buttons. One tap is one full skein, bag or pack. You keep it up to date yourself.\n\nPricing and automatic stock: the same, and adding finished products (+1, or + Add quantity) also takes the materials they use out of your stock.\n\nExample: a Small bee uses 40 g of yarn, 80 g of stuffing and 1 pair of eyes. Add 2 Small bees and 80 g of yarn, 160 g of stuffing and 2 pairs of eyes are taken out.'],
+    stockOverride: ['Override stock setting', 'Tick this to give just this material its own stock setting, for example to count your yarn but not your stuffing.'],
     mult: ['Default material multiplier', 'Only used when the pricing method is Materials × multiplier.\n\nThe suggested price is your material cost times this number. Example: $5 of materials × 3 = $15. Labour isn’t added with this method.'],
     productTax: ['Product tax', 'Choose how sales tax works on the prices you sell at.\n\nAdd tax to sale price: your price is before tax. Tax is added at checkout. A $4.00 item at 10% charges $4.40.\n\nTax already included in sale price: your price already has tax in it. Checkout charges your price and shows the tax inside it. A $4.40 item at 10% shows $4.00 + $0.40 tax = $4.40.\n\nNeither: no tax is added or tracked on your sales. Choose this if you don’t charge sales tax. Reports won’t show sales tax collected.'],
     materialTax: ['Material & expense tax', 'Choose how tax works on the prices you enter for materials and expenses (gas, displays, fees...). Any material or expense can use its own setting with Override tax settings.\n\nInputted pricing includes tax: the prices you typed in already have tax in them (like a receipt total). The app works out the tax part for you.\n\nAdd tax to inputted pricing: the prices you typed in are before tax (like a shelf price). The app adds tax on top.\n\nNeither: you don’t pay tax on materials and expenses, or you don’t want to track it. Reports won’t show tax paid on them.\n\nSuggested prices and markup use your material cost before tax, so you’re never charging markup on tax.'],
@@ -466,9 +502,34 @@ function enhanceScrollRow(el) {
     }
     updateScrollHint(el);
 }
-function scrollTabsMore(btn) {
+// A sideways-scrolling row of buttons with arrows on both ends when there's more to see.
+function tabRow(inner, label = 'categories') {
+    return `<div class="tabwrap"><div class="tabs">${inner}</div><button type="button" class="morearrow left" aria-label="Show earlier ${label}" onclick="scrollTabsMore(this,-1)">${ic('back', 16)}</button><button type="button" class="morearrow right" aria-label="Show more ${label}" onclick="scrollTabsMore(this,1)">${ic('chevr', 16)}</button></div>`;
+}
+// Moves along at most three buttons per tap, so long lists don't skip past anything.
+function scrollTabsMore(btn, dir = 1) {
     let t = btn.parentElement?.querySelector('.tabs');
-    t?.scrollBy({ left: Math.max(120, t.clientWidth * .7), behavior: 'smooth' });
+    if (!t)
+        return;
+    let bs = [...t.querySelectorAll('button')], pad = 50, view = t.clientWidth, x = t.scrollLeft, target;
+    if (dir > 0) {
+        let i = bs.findIndex(b => b.offsetLeft + b.offsetWidth > x + view - pad);
+        if (i < 0)
+            return;
+        let last = bs[Math.min(i + 2, bs.length - 1)];
+        target = last.offsetLeft + last.offsetWidth - view + pad;
+    }
+    else {
+        let j = -1;
+        bs.forEach((b, k) => {
+            if (b.offsetLeft < x + pad)
+                j = k;
+        });
+        if (j < 0)
+            return;
+        target = bs[Math.max(j - 2, 0)].offsetLeft - pad;
+    }
+    t.scrollTo({ left: Math.max(0, Math.min(target, t.scrollWidth - view)), behavior: 'smooth' });
 }
 function enhanceUi() {
     document.querySelectorAll('select.fancy').forEach(enhanceSelect);

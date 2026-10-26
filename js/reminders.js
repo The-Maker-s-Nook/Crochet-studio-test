@@ -83,7 +83,7 @@ function reminderRow(r) {
     else if (r.kind === 'material') {
         let m = material(r.refId);
         title = materialLabel(m);
-        sub = `Buy more${m.trackStock ? ` · ${num(m.stock)} ${unitShort(m.unit)} left` : ''}${m.store ? ' · ' + m.store : ''}`;
+        sub = `Buy more${stockCounts(m) && stockKnown(m) ? ' · ' + stockLine(m) : ''}${m.store ? ' · ' + m.store : ''}`;
         open = `editMaterial('${m.id}')`;
     }
     else {
