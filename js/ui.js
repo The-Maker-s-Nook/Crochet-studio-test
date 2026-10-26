@@ -97,22 +97,55 @@ function stepNumber(field, delta) {
     let e = $(field);
     e.value = Math.max(0, Math.floor(num(e.value) + delta));
 }
+// ---- Photo compression: every photo is shrunk to the size it's shown at and saved as a small JPEG ----
+// max = longest side in pixels; budget = most bytes a photo may take (quality steps down, then size, until it fits).
+const PHOTO_BUDGET = { 480: 70e3, 600: 90e3, 1400: 320e3, 2400: 900e3 };
+async function compressImage(file, max = 480, budget) {
+    budget ||= PHOTO_BUDGET[max] || max * max * .35;
+    let img;
+    try {
+        img = await createImageBitmap(file, { imageOrientation: 'from-image' });
+    }
+    catch {
+        img = await new Promise((res, rej) => {
+            let i = new Image(), u = URL.createObjectURL(file);
+            i.onload = () => {
+                URL.revokeObjectURL(u);
+                res(i);
+            };
+            i.onerror = () => {
+                URL.revokeObjectURL(u);
+                rej(new Error('This photo couldn’t be opened. Try a JPG or PNG.'));
+            };
+            i.src = u;
+        });
+    }
+    let w0 = img.width, h0 = img.height, scale = Math.min(1, max / Math.max(w0, h0)), blob = null;
+    for (let round = 0; round < 4; round++) {
+        let c = document.createElement('canvas');
+        c.width = Math.max(1, Math.round(w0 * scale));
+        c.height = Math.max(1, Math.round(h0 * scale));
+        let g = c.getContext('2d');
+        g.fillStyle = '#fff'; // see-through PNGs get a white background instead of black
+        g.fillRect(0, 0, c.width, c.height);
+        g.drawImage(img, 0, 0, c.width, c.height);
+        for (let q of [.82, .72, .62, .52]) {
+            blob = await new Promise(r => c.toBlob(r, 'image/jpeg', q));
+            if (blob && blob.size <= budget)
+                break;
+        }
+        c.width = c.height = 0;
+        if (blob && blob.size <= budget)
+            break;
+        scale *= .8;
+    }
+    img.close?.();
+    return blob;
+}
 function resizePhoto(file, done, max = 480) {
     if (!file)
         return;
-    let reader = new FileReader();
-    reader.onload = () => {
-        let img = new Image();
-        img.onload = () => {
-            let c = document.createElement('canvas'), scale = Math.min(1, max / Math.max(img.width, img.height));
-            c.width = Math.max(1, Math.round(img.width * scale));
-            c.height = Math.max(1, Math.round(img.height * scale));
-            c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
-            done(c.toDataURL('image/jpeg', .65));
-        };
-        img.src = reader.result;
-    };
-    reader.readAsDataURL(file);
+    compressImage(file, max).then(b => b && blobToDataUrl(b)).then(u => u && done(u)).catch(e => appAlert(e?.message || 'This photo couldn’t be added.'));
 }
 // ===== Styled pop-ups (replace the phone's plain alert / confirm boxes) =====
 let dlgDone = null;

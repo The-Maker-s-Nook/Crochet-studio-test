@@ -114,7 +114,16 @@ async function importPdf(e) {
     if (!valid)
         return appAlert('Choose a PDF, JPG or PNG file.');
     try {
-        await pdfPut({ id: id(), name: f.name, date: new Date().toISOString(), mime: f.type || (name.endsWith('.pdf') ? 'application/pdf' : 'image/jpeg'), blob: f });
+        let blob = f, mime = f.type || (name.endsWith('.pdf') ? 'application/pdf' : 'image/jpeg');
+        // Big pattern photos are shrunk (still sharp enough to read) so they take less space and sync faster
+        if (mime.startsWith('image/') && f.size > 1.2e6) {
+            let small = await compressImage(f, 2400).catch(() => null);
+            if (small && small.size < f.size) {
+                blob = small;
+                mime = 'image/jpeg';
+            }
+        }
+        await pdfPut({ id: id(), name: f.name, date: new Date().toISOString(), mime, blob });
         await refreshPdfs();
         toast('Pattern imported.');
     }
@@ -236,6 +245,41 @@ function viewerZoomBy(d) {
     viewerZoom = ZOOMS[i];
     renderViewer();
 }
+// Two-finger pinch to zoom (patterns and guides). While pinching the page is stretched to follow the fingers;
+// on letting go it's redrawn sharp at the nearest zoom step, keeping your place.
+function viewerPinch(b) {
+    if (!b)
+        return;
+    let start = 0, scale = 1;
+    const dist = t => Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
+    b.addEventListener('touchstart', e => {
+        if (e.touches.length !== 2)
+            return;
+        start = dist(e.touches);
+        scale = 1;
+        let r = b.getBoundingClientRect(), mx = (e.touches[0].clientX + e.touches[1].clientX) / 2 - r.left, my = (e.touches[0].clientY + e.touches[1].clientY) / 2 - r.top;
+        b.style.transformOrigin = `${mx + b.scrollLeft}px ${my + b.scrollTop}px`;
+    }, { passive: true });
+    b.addEventListener('touchmove', e => {
+        if (!start || e.touches.length !== 2)
+            return;
+        e.preventDefault();
+        scale = Math.max(ZOOMS[0] / viewerZoom, Math.min(ZOOMS[ZOOMS.length - 1] / viewerZoom, dist(e.touches) / start));
+        b.style.transform = `scale(${scale})`;
+    }, { passive: false });
+    const end = e => {
+        if (!start || e.touches.length >= 2)
+            return;
+        start = 0;
+        b.style.transform = '';
+        b.style.transformOrigin = '';
+        let want = viewerZoom * scale, near = ZOOMS.reduce((a, z) => Math.abs(Math.log(z / want)) < Math.abs(Math.log(a / want)) ? z : a, ZOOMS[0]), d = ZOOMS.indexOf(near) - Math.max(0, ZOOMS.indexOf(viewerZoom));
+        if (d)
+            viewerZoomBy(d);
+    };
+    b.addEventListener('touchend', end);
+    b.addEventListener('touchcancel', end);
+}
 function openPatternExternally() {
     if (!viewerUrl)
         return;
@@ -343,6 +387,7 @@ function openViewerItem(p, o = {}) {
         ov.dataset.pattern = p.id;
     ov.innerHTML = `<div class="vbar"><b>${esc(p.name)}</b>${o.pattern ? `<button class="small vmarkbtn" id="vmarkBtn" aria-pressed="false" onclick="armPatternMark()">${ic('tag', 15)} Mark</button>` : ''}<button class="alt small" onclick="viewerZoomBy(-1)" aria-label="Zoom out">−</button><span id="vzoom">100%</span><button class="alt small" onclick="viewerZoomBy(1)" aria-label="Zoom in">+</button><button class="small" onclick="closeViewer()" aria-label="Close">✕</button></div>${o.pattern ? '<div id="vtip" class="vtip hidden"></div>' : ''}<div id="vbody"><div class="vmsg muted">Opening…</div></div>`;
     document.body.appendChild(ov);
+    viewerPinch($('vbody'));
     document.body.classList.add('viewing');
     document.body.style.overflow = 'hidden';
     try {
