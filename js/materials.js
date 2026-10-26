@@ -6,12 +6,6 @@ function drawMaterialRows() {
     if (e)
         e.innerHTML = materialRows();
 }
-function stockHelp() {
-    appAlert('When enabled, the app tracks how much of this material remains. You can add purchased packages to stock. If automatic deductions are also enabled in Settings, making finished products reduces the tracked stock. This is optional.');
-}
-function stockHelpButton() {
-    return `<button type="button" class="alt small" style="border-radius:50%;padding:2px 8px;margin-left:5px" title="What does tracking remaining stock mean?" onclick="stockHelp()">?</button>`;
-}
 function materialLabel(m) {
     return m ? normName(m.name) + (m.colour ? ' — ' + normName(m.colour) : '') : '';
 }
@@ -84,9 +78,7 @@ function unitChanged(sid) {
         el.dataset.prev = el.value;
         $(sid + 'New')?.classList.add('hidden');
         if (sid === 'munit') {
-            let d = $('mstockDisplay');
-            if (d)
-                d.textContent = num(material(editing)?.stock) + ' ' + unitShort(el.value);
+            matWordLabels();
         }
     }
 }
@@ -150,7 +142,7 @@ let matCatFromForm = false;
 function openMatCategoryModal(cid, fromForm) {
     matCatFromForm = !!fromForm;
     let c = mcat(cid), count = c ? data.materials.filter(m => m.categoryId === c.id).length : 0;
-    openModal(`<div class="row"><h2 style="margin:0">${c ? 'Edit' : 'New'} material category</h2>${closeX()}</div><label for="mcName">Category name</label><input id="mcName" value="${esc(c?.name || '')}" placeholder="e.g. Beads, Fabric, Buttons"><label for="mcUnit">Usually measured in</label>${unitSelect('mcUnit', c?.unit || 'g')}${unitNewBox('mcUnit')}<label class="check"><input type="checkbox" id="mcOn" ${!c || c.onProducts ? 'checked' : ''}> Show on every new product</label><p class="hint">Turn this off for things you only use sometimes. You can still add it to any product with the buttons under “Need something else?”.</p><div class="actions"><button onclick="saveMatCategory('${c?.id || ''}')">Save</button>${c ? `<button class="danger" onclick="deleteMatCategory('${c.id}')">Delete</button>` : ''}</div>${c && count ? `<p class="hint">${count} material${count > 1 ? 's' : ''} in this category. Renaming keeps them all.</p>` : ''}`);
+    openModal(`<div class="row"><h2 style="margin:0">${c ? 'Edit' : 'New'} material category</h2>${closeX()}</div><label for="mcName">Category name</label><input id="mcName" value="${esc(c?.name || '')}" placeholder="e.g. Beads, Fabric, Buttons"><label for="mcUnit">Usually measured in</label>${unitSelect('mcUnit', c?.unit || 'g')}${unitNewBox('mcUnit')}${packWordField(c)}<label class="check"><input type="checkbox" id="mcOn" ${!c || c.onProducts ? 'checked' : ''}> Show on every new product</label><p class="hint">Turn this off for things you only use sometimes. You can still add it to any product with the buttons under “Need something else?”.</p><div class="actions"><button onclick="saveMatCategory('${c?.id || ''}')">Save</button>${c ? `<button class="danger" onclick="deleteMatCategory('${c.id}')">Delete</button>` : ''}</div>${c && count ? `<p class="hint">${count} material${count > 1 ? 's' : ''} in this category. Renaming keeps them all.</p>` : ''}`);
     setTimeout(() => {
         if (!c)
             $('mcName')?.focus();
@@ -167,9 +159,9 @@ function saveMatCategory(cid) {
         return appAlert(`You already have a “${dup.name}” category.`);
     let c = mcat(cid);
     if (c)
-        Object.assign(c, { name, unit, onProducts: $('mcOn').checked });
+        Object.assign(c, { name, unit, packWord: normName($('mcWord').value), onProducts: $('mcOn').checked });
     else {
-        c = { id: 'mc_' + id(), name, unit, onProducts: $('mcOn').checked };
+        c = { id: 'mc_' + id(), name, unit, packWord: normName($('mcWord').value), onProducts: $('mcOn').checked };
         data.materialCategories.push(c);
     }
     save();
@@ -260,11 +252,11 @@ function materials() {
     let cats = data.materialCategories;
     if (!cats.some(c => c.id === materialCatId))
         materialCatId = cats[0]?.id;
-    return `<div class="row"><h2>Materials</h2></div><div class="actions toprow" style="margin:-6px 0 12px"><button onclick="newMaterial('${materialCatId || ''}')">+ Material</button><button class="alt" onclick="openMatCategoryModal()">+ Category</button><button class="alt" onclick="openUnitsModal()">Units</button></div><input id="materialSearch" placeholder="Search materials (type, variation, store)" value="${esc(materialSearch)}" oninput="materialSearch=this.value;drawMaterialRows()"><label for="matSort" class="sr">Sort materials</label><select id="matSort" class="fancy" style="margin-top:10px" onchange="materialSort=this.value;drawMaterialRows()">${MAT_SORTS.map(([v, l]) => `<option value="${v}" ${materialSort === v ? 'selected' : ''}>${l}</option>`).join('')}</select><div class="tabwrap"><div class="tabs">${cats.map(x => `<button class="${x.id === materialCatId ? '' : 'alt'} small" onclick="materialCatId='${x.id}';render()">${esc(x.name)}</button>`).join('')}</div><button type="button" class="morearrow" aria-label="Show more categories" onclick="scrollTabsMore(this)">${ic('chevr', 16)}</button></div><div id="materialRows">${materialRows()}</div>`;
+    return `<div class="row"><h2>Materials</h2></div><div class="actions toprow" style="margin:-6px 0 12px"><button onclick="newMaterial('${materialCatId || ''}')">+ Material</button><button class="alt" onclick="openMatCategoryModal()">+ Category</button><button class="alt" onclick="openUnitsModal()">Units</button></div><input id="materialSearch" placeholder="Search materials (type, variation, store)" value="${esc(materialSearch)}" oninput="materialSearch=this.value;drawMaterialRows()"><label for="matSort" class="sr">Sort materials</label><select id="matSort" class="fancy" style="margin-top:10px" onchange="materialSort=this.value;drawMaterialRows()">${MAT_SORTS.map(([v, l]) => `<option value="${v}" ${materialSort === v ? 'selected' : ''}>${l}</option>`).join('')}</select>${tabRow(cats.map(x => `<button class="${x.id === materialCatId ? '' : 'alt'} small" onclick="materialCatId='${x.id}';render()">${esc(x.name)}</button>`).join(''))}<div id="materialRows">${materialRows()}</div>`;
 }
 function materialCard(m, mode) {
     let c = mcat(m.categoryId), isDef = c?.defaultMaterialId === m.id, full = mode === true || mode === 'full';
-    return swipeWrap(`<div class="panel row matcard">${photoSlot(m.photo || m.photos?.[0] || '', "width:52px;height:52px", 'material', m.id, materialLabel(m), true)}<div class="grow"><b>${esc(mode && mode !== 'group' ? materialLabel(m) : (m.colour || 'No variation set'))}</b>${isDef ? ' <span class="chip">Default</span>' : ''}<div class="muted">${full ? esc(c?.name || '') + ' · ' : ''}${m.store && materialSort !== 'store' ? esc(m.store) + ' · ' : ''}${cash(m.price)} / ${num(m.weight)} ${esc(unitShort(m.unit))}${m.trackStock ? ` · ${num(m.stock)} ${esc(unitShort(m.unit))} left` : ''}</div></div>${reminderToggleBtn('material', m.id, materialLabel(m), 'icon')}<button class="alt small" onclick="editMaterial('${m.id}')">Edit</button></div>`, `swipeDeleteMaterial('${m.id}')`, materialLabel(m));
+    return swipeWrap(`<div class="panel row matcard">${photoSlot(m.photo || m.photos?.[0] || '', "width:52px;height:52px", 'material', m.id, materialLabel(m), true)}<div class="grow"><b>${esc(mode && mode !== 'group' ? materialLabel(m) : (m.colour || 'No variation set'))}</b>${isDef ? ' <span class="chip">Default</span>' : ''}<div class="muted">${full ? esc(c?.name || '') + ' · ' : ''}${m.store && materialSort !== 'store' ? esc(m.store) + ' · ' : ''}${cash(m.price)} / ${num(m.weight)} ${esc(unitShort(m.unit))}</div></div>${reminderToggleBtn('material', m.id, materialLabel(m), 'icon')}<button class="alt small" onclick="editMaterial('${m.id}')">Edit</button>${materialStockRow(m)}</div>`, `swipeDeleteMaterial('${m.id}')`, materialLabel(m));
 }
 function materialRows() {
     let q = materialSearch.toLowerCase().trim();
@@ -378,7 +370,18 @@ function editMaterial(mid) {
 }
 function materialForm() {
     let m = material(editing) || {}, catId = m.categoryId || materialPreset?.catId || data.materialCategories[0]?.id, c = mcat(catId), presetName = m.name || materialPreset?.name || '', sib = !editing && presetName ? data.materials.find(x => x.categoryId === catId && normName(x.name).toLowerCase() === presetName.toLowerCase()) : null, unit = m.unit || sib?.unit || c?.unit || 'g';
-    return `${backBtn()}<div class="panel" style="margin-top:12px"><h2>${editing ? 'Edit' : 'Add'} material</h2><form novalidate onsubmit="saveMaterial(event)"><label for="mcat">Category</label><select id="mcat" onchange="materialCatChanged()">${data.materialCategories.map(x => `<option value="${x.id}" ${x.id === catId ? 'selected' : ''}>${esc(x.name)}</option>`).join('')}</select>${suggestionInputs('m', presetName, m.colour || '')}<div class="two"><div><label for="mweight">Package size</label><input id="mweight" type="number" min="0.001" step="any" required value="${m.weight ?? sib?.weight ?? (unit === 'g' ? 100 : 1)}"></div><div><label for="munit">Unit</label>${unitSelect('munit', unit)}</div></div>${unitNewBox('munit')}<label for="mprice">Price paid per package ($)</label><input id="mprice" type="number" min="0" step="0.01" inputmode="decimal" required value="${m.price ?? sib?.price ?? ''}">${taxOverrideField('m', { taxOverride: m.taxOverride ?? sib?.taxOverride }, 'material')}<label for="mstore">Where purchased (optional)</label>${storeField('mstore', m.store ?? sib?.store ?? '')}<label class="check"><input id="mtrack" type="checkbox" ${(m.trackStock ?? sib?.trackStock) ? 'checked' : ''}> Track remaining stock ${stockHelpButton()}</label><div class="hint">Optional: when on, the app tracks how much of this material is left. Making finished products only deducts it if automatic deductions are on in Settings.</div><div class="panel" style="background:var(--card2);margin-top:12px;box-shadow:none"><div class="muted">Current remaining stock</div><div class="big" id="mstockDisplay">${num(m.stock)} ${esc(unitShort(unit))}</div><div class="hint">Changes when you add packages below or when tracked materials are used.</div></div><label for="mpackages">Packages purchased / add to stock</label><div class="row" style="justify-content:flex-start"><button type="button" class="alt" onclick="stepNumber('mpackages',-1)" aria-label="One fewer">−</button><input id="mpackages" type="number" min="0" step="1" value="${editing ? 0 : 1}" style="width:90px;text-align:center"><button type="button" class="alt" onclick="stepNumber('mpackages',1)" aria-label="One more">+</button></div><div class="hint">One package holds the package size above. For an existing material, enter how many new packages to add.</div><label>Material photo (optional)</label><div class="actions"><button type="button" class="alt small" onclick="photoMenu(e=>loadMaterialPhoto(e,false),true)">📷 Add photo</button></div><div id="materialPhotoPreview">${photoGallery("material")}</div><label class="check"><input type="checkbox" id="mdefault" ${editing && c?.defaultMaterialId === m.id ? 'checked' : ''}> <span>Make this the default <span id="mdefaultCat">${esc((c?.name || 'material').toLowerCase())}</span></span></label><div class="hint">The default is filled in for you whenever you create a new product.</div><div class="actions"><button type="submit">Save material</button>${editing ? `<button type="button" class="danger" onclick="deleteMaterial('${editing}')">Delete</button>` : ''}</div></form></div>`;
+    return `${backBtn()}<div class="panel" style="margin-top:12px"><h2>${editing ? 'Edit' : 'Add'} material</h2><form novalidate onsubmit="saveMaterial(event)"><label for="mcat">Category</label><select id="mcat" onchange="materialCatChanged()">${data.materialCategories.map(x => `<option value="${x.id}" ${x.id === catId ? 'selected' : ''}>${esc(x.name)}</option>`).join('')}</select>${suggestionInputs('m', presetName, m.colour || '')}<div class="two"><div><label for="mweight" id="mweightLbl">${esc(unitPerWord(unit, packWord({ categoryId: catId })))}</label><input id="mweight" type="number" min="0.001" step="any" required value="${m.weight ?? sib?.weight ?? (unit === 'g' ? 100 : 1)}"></div><div><label for="munit">Unit</label>${unitSelect('munit', unit)}</div></div>${unitNewBox('munit')}<label for="mprice" id="mpriceLbl">Price paid per ${esc(packWord({ categoryId: catId }))} ($)</label><input id="mprice" type="number" min="0" step="0.01" inputmode="decimal" required value="${m.price ?? sib?.price ?? ''}">${taxOverrideField('m', { taxOverride: m.taxOverride ?? sib?.taxOverride }, 'material')}<label for="mstore">Where purchased (optional)</label>${storeField('mstore', m.store ?? sib?.store ?? '')}${stockOverrideField('m', { stockOverride: m.stockOverride ?? sib?.stockOverride })}<div id="mStockPanel" class="panel ${formStockCounts({ stockOverride: m.stockOverride ?? sib?.stockOverride }) ? '' : 'hidden'}" style="background:var(--card2);margin-top:12px;box-shadow:none"><div class="muted">How much you have</div><div class="big" id="mstockDisplay">${editing ? esc(stockLine(m)) : 'Not counted yet'}</div><div class="hint">Changes when you add ${esc(plural(packWord({ categoryId: catId }), 2))} below, use the −1 / +1 buttons, or make products.</div></div><label for="mpackages"><span id="mpackWordLbl">${esc(plural(packWord({ categoryId: catId }), 2)).replace(/^./, x => x.toUpperCase())}</span> bought (adds to stock)</label><div class="row" style="justify-content:flex-start"><button type="button" class="alt" onclick="stepNumber('mpackages',-1)" aria-label="One fewer">−</button><input id="mpackages" type="number" min="0" step="1" value="${editing ? 0 : 1}" style="width:90px;text-align:center"><button type="button" class="alt" onclick="stepNumber('mpackages',1)" aria-label="One more">+</button></div><div class="hint">For an existing material, enter how many new ones to add.</div><label>Material photo (optional)</label><div class="actions"><button type="button" class="alt small" onclick="photoMenu(e=>loadMaterialPhoto(e,false),true)">📷 Add photo</button></div><div id="materialPhotoPreview">${photoGallery("material")}</div><label class="check"><input type="checkbox" id="mdefault" ${editing && c?.defaultMaterialId === m.id ? 'checked' : ''}> <span>Make this the default <span id="mdefaultCat">${esc((c?.name || 'material').toLowerCase())}</span></span></label><div class="hint">The default is filled in for you whenever you create a new product.</div><div class="actions"><button type="submit">Save material</button>${editing ? `<button type="button" class="danger" onclick="deleteMaterial('${editing}')">Delete</button>` : ''}</div></form></div>`;
+}
+// Material form: "Grams per skein", "Skeins bought" follow the category and unit.
+function matWordLabels() {
+    let w = packWord({ categoryId: $('mcat')?.value }), l = $('mweightLbl'), b = $('mpackWordLbl');
+    if (l)
+        l.textContent = unitPerWord($('munit')?.value, w);
+    if (b)
+        b.textContent = plural(w, 2).replace(/^./, x => x.toUpperCase());
+    let pl = $('mpriceLbl');
+    if (pl)
+        pl.textContent = `Price paid per ${w} ($)`;
 }
 function materialCatChanged() {
     comboClose('mname');
@@ -386,6 +389,7 @@ function materialCatChanged() {
     let dc = $('mdefaultCat');
     if (dc)
         dc.textContent = (mcat($('mcat').value)?.name || 'material').toLowerCase();
+    matWordLabels();
     if (editing)
         return;
     let c = mcat($('mcat').value), u = $('munit');
@@ -393,6 +397,7 @@ function materialCatChanged() {
         u.value = c.unit;
         u.dataset.prev = c.unit;
     }
+    matWordLabels();
 }
 async function saveMaterial(e) {
     e.preventDefault();
@@ -415,14 +420,15 @@ async function saveMaterial(e) {
             return appAlert(`You already have ${label} saved. Change the type or variation, or edit the saved one instead.`);
         if (!await appConfirm(`You already have ${label} saved.\n\nAdd ${packs} package${packs > 1 ? 's' : ''} to its stock instead of saving it twice?`))
             return;
-        dup.stock = num(dup.stock) + packs * num(dup.weight);
+        if (packs > 0)
+            dup.stock = num(dup.stock) + packs * num(dup.weight);
         logPurchase(dup, packs, num($('mprice').value));
         matGroupOpen.add(gkey(catId, name));
         save();
         goBack();
         return toast(`Added to ${label}.`);
     }
-    let m = { id: editing || id(), categoryId: catId, name, colour, weight, unit, price: num($('mprice').value), store: canonStore($('mstore').value), taxOverride: readTaxOverride('m'), trackStock: $('mtrack').checked, photo: materialPhotos[0] || '', photos: [...materialPhotos], stock: (editing ? num(material(editing)?.stock) : 0) + packs * weight };
+    let m = { id: editing || id(), categoryId: catId, name, colour, weight, unit, price: num($('mprice').value), store: canonStore($('mstore').value), taxOverride: readTaxOverride('m'), stockOverride: readStockOverride('m'), photo: materialPhotos[0] || '', photos: [...materialPhotos], stock: addPacks(editing ? material(editing)?.stock : null, packs, weight) };
     if (editing)
         Object.assign(material(editing), m);
     else
@@ -476,7 +482,7 @@ function openQuickMaterial(catId, prefill = '', target = null) {
     let c = mcat(catId), unit = c?.unit || 'g', o = document.createElement('div');
     o.id = 'quickOverlay';
     o.className = 'modal';
-    o.innerHTML = `<div class="panel modal-card" role="dialog" aria-modal="true"><div class="row"><h2 style="margin:0">New ${esc((c?.name || 'material').toLowerCase())}</h2><button class="iconbtn" aria-label="Close" onclick="closeQuickMaterial()">${ic('x', 18)}</button></div>${suggestionInputs('q', prefill)}<div class="two"><div><label for="qweight">Package size</label><input id="qweight" type="number" min="0.001" step="any" value="${unit === 'g' ? 100 : 1}"></div><div><label for="qunit">Unit</label>${unitSelect('qunit', unit)}</div></div>${unitNewBox('qunit')}<label for="qprice">Package price ($)</label><input id="qprice" type="number" min="0" step="0.01" inputmode="decimal">${taxOverrideField('q', null, 'material')}<label for="qstore">Where purchased (optional)</label>${storeField('qstore', '')}<label for="qpackages">Packages purchased</label><div class="row" style="justify-content:flex-start"><button class="alt" onclick="stepNumber('qpackages',-1)" aria-label="One fewer">−</button><input id="qpackages" type="number" min="0" step="1" value="1" style="width:90px;text-align:center"><button class="alt" onclick="stepNumber('qpackages',1)" aria-label="One more">+</button></div><label class="check"><input id="qtrack" type="checkbox"> Track remaining stock ${stockHelpButton()}</label><label class="check"><input id="qdefault" type="checkbox" ${c && !material(c.defaultMaterialId) ? '' : ''}> Make this the default ${esc((c?.name || 'material').toLowerCase())}</label><label>Photo (optional)</label><div class="actions"><button class="alt small" onclick="photoMenu(e=>loadMaterialPhoto(e,true),true)">📷 Add photo</button></div><div id="quickPhotoPreview"></div><div class="actions"><button onclick="saveQuickMaterial()">Save and select</button><button class="alt" onclick="closeQuickMaterial()">Cancel</button></div></div>`;
+    o.innerHTML = `<div class="panel modal-card" role="dialog" aria-modal="true"><div class="row"><h2 style="margin:0">New ${esc((c?.name || 'material').toLowerCase())}</h2><button class="iconbtn" aria-label="Close" onclick="closeQuickMaterial()">${ic('x', 18)}</button></div>${suggestionInputs('q', prefill)}<div class="two"><div><label for="qweight">Package size</label><input id="qweight" type="number" min="0.001" step="any" value="${unit === 'g' ? 100 : 1}"></div><div><label for="qunit">Unit</label>${unitSelect('qunit', unit)}</div></div>${unitNewBox('qunit')}<label for="qprice">Package price ($)</label><input id="qprice" type="number" min="0" step="0.01" inputmode="decimal">${taxOverrideField('q', null, 'material')}<label for="qstore">Where purchased (optional)</label>${storeField('qstore', '')}<label for="qpackages">Packages purchased</label><div class="row" style="justify-content:flex-start"><button class="alt" onclick="stepNumber('qpackages',-1)" aria-label="One fewer">−</button><input id="qpackages" type="number" min="0" step="1" value="1" style="width:90px;text-align:center"><button class="alt" onclick="stepNumber('qpackages',1)" aria-label="One more">+</button></div><label class="check"><input id="qdefault" type="checkbox" ${c && !material(c.defaultMaterialId) ? '' : ''}> Make this the default ${esc((c?.name || 'material').toLowerCase())}</label><label>Photo (optional)</label><div class="actions"><button class="alt small" onclick="photoMenu(e=>loadMaterialPhoto(e,true),true)">📷 Add photo</button></div><div id="quickPhotoPreview"></div><div class="actions"><button onclick="saveQuickMaterial()">Save and select</button><button class="alt" onclick="closeQuickMaterial()">Cancel</button></div></div>`;
     document.body.appendChild(o);
     if (prefill)
         setTimeout(() => fillFromSibling('q'), 0);
@@ -499,12 +505,12 @@ async function saveQuickMaterial() {
     if (dup) {
         if (!await appConfirm(`You already have ${label} saved.\n\nUse that one${packs ? ` and add ${packs} package${packs > 1 ? 's' : ''} to its stock` : ''}?`))
             return;
-        dup.stock = num(dup.stock) + packs * num(dup.weight);
+        dup.stock = addPacks(dup.stock, packs, dup.weight);
         logPurchase(dup, packs, price);
         m = dup;
     }
     else {
-        m = { id: id(), categoryId: cid, name, colour, weight, unit, price, store: canonStore($('qstore').value), taxOverride: readTaxOverride('q'), trackStock: $('qtrack').checked, stock: packs * weight, photo: quickPhotos[0] || '', photos: [...quickPhotos] };
+        m = { id: id(), categoryId: cid, name, colour, weight, unit, price, store: canonStore($('qstore').value), taxOverride: readTaxOverride('q'), stock: addPacks(null, packs, weight), photo: quickPhotos[0] || '', photos: [...quickPhotos] };
         data.materials.push(m);
         logPurchase(m, packs);
     }

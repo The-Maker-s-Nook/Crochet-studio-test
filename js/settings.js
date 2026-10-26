@@ -15,19 +15,22 @@ function settings() {
 }
 function settingsPricing() {
     let s = data.settings;
-    return `${backBtn()}<h2 style="margin-top:12px">Pricing defaults</h2><div class="panel"><label>Hourly labour rate ($)</label><input id="shourly" type="number" min="0" step="any" value="${s.hourly}"><label>Default pricing method</label><select id="smethod"><option value="labour">Materials + hourly labour</option><option value="multiply">Materials × multiplier</option><option value="markup">Materials with markup + labour</option></select><label>Default material multiplier ${helpBtn('mult')}</label><input id="smultiplier" type="number" min="0" step="any" value="${s.multiplier}"><label>Default markup (%) ${helpBtn('markup')}</label><input id="smarkup" type="number" min="0" step="any" value="${s.markup}"><label>Suggested price rounding</label><select id="srounding"><option value="nearest">Nearest $1</option><option value="up1">Round up to $1</option><option value="up5">Round up to $5</option></select><label class="check"><input type="checkbox" id="sdeduct" ${s.autoDeduct ? 'checked' : ''}> Automatically deduct tracked materials when finished stock is added ${helpBtn('deduct')}</label><div class="actions"><button onclick="saveSettings()">Save settings</button></div></div>`;
+    return `${backBtn()}<h2 style="margin-top:12px">Pricing defaults</h2><div class="panel"><label>Hourly labour rate ($)</label><input id="shourly" type="number" min="0" step="any" value="${s.hourly}"><label>Default pricing method</label><select id="smethod"><option value="labour">Materials + hourly labour</option><option value="multiply">Materials × multiplier</option><option value="markup">Materials with markup + labour</option></select><label>Default material multiplier ${helpBtn('mult')}</label><input id="smultiplier" type="number" min="0" step="any" value="${s.multiplier}"><label>Default markup (%) ${helpBtn('markup')}</label><input id="smarkup" type="number" min="0" step="any" value="${s.markup}"><label>Suggested price rounding</label><select id="srounding"><option value="nearest">Nearest $1</option><option value="up1">Round up to $1</option><option value="up5">Round up to $5</option></select>${stockSettingField()}<div class="actions"><button onclick="saveSettings()">Save settings</button></div></div>`;
 }
 function settingsBackup() {
     return `${backBtn()}<h2 style="margin-top:12px">Backup & restore</h2><div class="panel"><p class="muted">${signedIn() ? 'Your data is saved in your account and synced to your devices. A backup file is an extra copy you keep yourself. It holds' : 'Everything is saved on this device only. A backup file holds'} your products, materials, photos, markets, sales and patterns. Keep a copy somewhere safe, such as Google Drive or email.</p><div class="muted">Last backup: <b>${data.lastBackup ? new Date(data.lastBackup).toLocaleString() : 'never'}</b></div><div class="actions"><button onclick="exportData(false)">⬇ Download backup</button>${canShareFiles() ? '<button class="alt" onclick="exportData(true)">↗ Share backup</button>' : ''}<button class="alt" onclick="$('importFile').click()">⬆ Restore from backup</button></div><input class="hidden" id="importFile" type="file" accept=".json,application/json" onchange="importData(event)"><p class="hint">${signedIn() ? 'Restoring replaces everything in the app, and in your account on all your devices, with the backup.' : 'Restoring replaces everything currently in the app with the backup.'}</p>${storagePersisted === false ? '<p class="hint">Your browser has not promised to keep this data permanently. Installing the app to your home screen usually fixes this. Back up regularly either way.</p>' : ''}</div>`;
 }
 function saveAccountName() {
+    let before = data.settings.userName || '';
     data.settings.userName = normName($('aName').value);
+    if ($('aBiz'))
+        data.settings.businessName = normName($('aBiz').value);
     save();
     render();
-    flash(data.settings.userName ? `Hi, ${data.settings.userName}!` : 'Name removed.');
+    flash(data.settings.userName !== before ? (data.settings.userName ? `Hi, ${data.settings.userName}!` : 'Name removed.') : 'Saved.');
 }
 function saveSettings() {
-    data.settings = { ...data.settings, hourly: num($('shourly').value), method: $('smethod').value, multiplier: num($('smultiplier').value), markup: num($('smarkup').value), rounding: $('srounding').value, autoDeduct: $('sdeduct').checked };
+    data.settings = { ...data.settings, hourly: num($('shourly').value), method: $('smethod').value, multiplier: num($('smultiplier').value), markup: num($('smarkup').value), rounding: $('srounding').value, materialStock: $('sstock').value };
     save();
     goBack();
     toast('Pricing defaults saved.');
@@ -158,6 +161,6 @@ function maybeWhatsNew() {
     setTimeout(() => {
         if ($('appDialog') || document.querySelector('.modal'))
             return;
-        openModal(`<span class="pill ok">Updated to version ${APP_VERSION}</span><h2 style="margin:10px 0 8px">What's new</h2><ul class="tips"><li>Simpler tax settings in Settings › Finances (please check them once)</li><li>Extra expenses like gas and displays, counted in profit</li><li>Reminders: tap the bell to remember to make or buy more</li><li>Quicker packing, swipe left to delete, and a fold-up market page</li><li>Pattern links and tags, tappable links in PDFs, and patterns reopen where you left off</li></ul><div class="tip" style="margin-top:12px">The Tester guide was updated too. Find both any time in Settings › What's new &amp; tester guide.</div><div class="actions"><button onclick="closeModal();openGuide('whats')">Read the full update notes</button><button class="alt" onclick="closeModal()">Got it</button></div>`);
+        openModal(`<span class="pill ok">Updated to version ${APP_VERSION}</span><h2 style="margin:10px 0 8px">What's new</h2><ul class="tips"><li>Simpler tax settings in Settings › Finances (please check them once)</li><li>Snap receipts from Home, with year-end saving of receipt photos</li><li>New Reports tabs, and PDF or Excel downloads of everything</li><li>Simpler material stock: one setting, and −1 / +1 skein buttons</li><li>Reminders: tap the bell to remember to make or buy more</li><li>Quicker packing, swipe left to delete, and a fold-up market page</li><li>Pattern links and tags, tappable links in PDFs, and patterns reopen where you left off</li></ul><div class="tip" style="margin-top:12px">The Tester guide was updated too. Find both any time in Settings › What's new &amp; tester guide.</div><div class="actions"><button onclick="closeModal();openGuide('whats')">Read the full update notes</button><button class="alt" onclick="closeModal()">Got it</button></div>`);
     }, 600);
 }
