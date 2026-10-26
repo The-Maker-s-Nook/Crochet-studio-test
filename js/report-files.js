@@ -90,7 +90,7 @@ async function reportXlsx(r) {
     es.name = 'Expenses & receipts';
     es.rows.push([], ['How each category counts'], ...Object.entries(P.byCat).sort((a, b) => b[1].total - a[1].total).map(([k, o]) => [k, `${o.n} receipt${o.n === 1 ? '' : 's'}`, '', '', '', '', '', xm(o.total), o.kind === 'material' ? 'Proof only (already in material costs)' : o.kind === 'proof' ? 'Proof only (booth cost comes from the market)' : 'Other expense, taken off profit']));
     sheets.push(es);
-    sheets.push({ name: 'Sales tax', cols: [44, 16], rows: [[{ v: `Sales tax · ${r.rangeLabel}`, s: 't' }], [], ['Tax collected on sales', xm(P.tax.coll)], ['Tax paid on materials', xm(P.tax.paidM)], ['Tax paid on expenses (not yarn or supplies)', xm(P.tax.paidE)], [xb('Difference (collected − paid)'), xbm(P.tax.diff)], [], ['Yarn and supply receipts aren’t added again, since that tax is already in tax paid on materials.'], ['A guide only; check with an accountant.']] });
+    sheets.push({ name: 'Sales tax', cols: [44, 16], rows: [[{ v: `Sales tax · ${r.rangeLabel}`, s: 't' }], [], ['Tax collected on sales', xm(P.tax.coll)], ['Tax paid on materials', xm(P.tax.paidM)], ['Tax paid on expenses (not supplies)', xm(P.tax.paidE)], [xb('Difference (collected − paid)'), xbm(P.tax.diff)], [], ['Supply receipts aren’t added again, since that tax is already in tax paid on materials.'], ['A guide only; check with an accountant.']] });
     if (P.md.tracked)
         sheets.push({ name: 'Materials on hand', cols: [30, 16], rows: [[{ v: 'Materials on hand (today)', s: 't' }], [], ['Category', `Value (${cur})`].map(xh), ...P.md.rows.map(([n, v]) => [n, xm(v)]), [xb('Total'), xbm(P.md.total)], [], [`Based on ${P.md.tracked} material${P.md.tracked === 1 ? '' : 's'} you’re counting. Not affected by the time frame.`]] });
     return makeXlsx(sheets);
@@ -320,8 +320,8 @@ function reportPdf(r) {
     let crows = Object.entries(P.byCat).sort((a, b) => b[1].total - a[1].total).map(([k, o]) => [k, String(o.n), o.kind === 'other' ? 'Taken off profit' : o.kind === 'material' ? 'Proof only (in material costs)' : 'Proof only (booth from market)', cash(o.total)]);
     if (crows.length)
         table('By category', [{ t: 'Category', w: .32 }, { t: 'Receipts', w: .12, r: 1 }, { t: 'How it counts', w: .36 }, { t: 'Total', w: .2, r: 1 }], crows);
-    table('Profit after expenses', [{ t: '', w: .7 }, { t: '', w: .3, r: 1 }], [['Profit from markets and quick sales', money(round2(f.revenue - f.materials - f.booth))], ['Other expenses (all but yarn, supplies and booth fees)', '-' + cash(f.other)], [{ t: 'Profit after expenses', b: 1 }, { ...money(f.profit), b: 1 }]]);
-    table('Sales tax', [{ t: '', w: .7 }, { t: '', w: .3, r: 1 }], [['Tax collected on sales', cash(P.tax.coll)], ['Tax paid on materials', '-' + cash(P.tax.paidM)], ['Tax paid on expenses (not yarn or supplies)', '-' + cash(P.tax.paidE)], [{ t: 'Difference (collected - paid)', b: 1 }, { t: signedCash(P.tax.diff), b: 1 }]]);
+    table('Profit after expenses', [{ t: '', w: .7 }, { t: '', w: .3, r: 1 }], [['Profit from markets and quick sales', money(round2(f.revenue - f.materials - f.booth))], ['Other expenses (all but supplies and booth fees)', '-' + cash(f.other)], [{ t: 'Profit after expenses', b: 1 }, { ...money(f.profit), b: 1 }]]);
+    table('Sales tax', [{ t: '', w: .7 }, { t: '', w: .3, r: 1 }], [['Tax collected on sales', cash(P.tax.coll)], ['Tax paid on materials', '-' + cash(P.tax.paidM)], ['Tax paid on expenses (not supplies)', '-' + cash(P.tax.paidE)], [{ t: 'Difference (collected - paid)', b: 1 }, { t: signedCash(P.tax.diff), b: 1 }]]);
     note('Sales tax counts sales, material purchases and receipts dated in this time frame. A guide only, not tax advice; check with an accountant.');
     pages.push(ops);
     // Footers + assemble

@@ -122,7 +122,7 @@ function formStockCounts(m) {
 // ---- Settings › Pricing defaults ----
 function stockSettingField() {
     let cur = data.settings.materialStock || 'auto';
-    return `<div class="labelrow"><label for="sstock">Material stock</label>${helpBtn('stockModes')}</div><select id="sstock" class="fancy">${STOCK_MODES.map(([v, l, d]) => `<option value="${v}" ${cur === v ? 'selected' : ''}>${esc(l)}. ${esc(d)}</option>`).join('')}</select><div class="hint">Materials can override this on their own Edit screen.</div>`;
+    return `<div class="labelrow"><label for="sstock">Material stock</label>${helpBtn('stockModes')}</div><select id="sstock" class="fancy">${STOCK_MODES.map(([v, l]) => `<option value="${v}" ${cur === v ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select><div class="hint">Tap ? to see what each one does. A material can override this on its Edit screen.</div>`;
 }
 
 // ---- Category form: "What do you buy it in?" ----

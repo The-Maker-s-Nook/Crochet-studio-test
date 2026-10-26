@@ -122,7 +122,7 @@ function receiptDetail() {
         return `${backBtn()}<div class="panel muted" style="margin-top:12px">This receipt was deleted.</div>`;
     let pic = r.photo ? (r.isPdf ? `<div class="drop"><span class="thumb rthumb" style="width:80px;height:80px">${ic('pdf', 34)}</span><b>${esc(r.fileName || 'Receipt.pdf')}</b><button class="small alt" onclick="openReceiptPdf('${r.id}')">Open PDF</button></div>` : `<img class="rphoto" src="${photoUrl(r.photo)}" alt="Receipt photo, tap to zoom" onclick="viewReceiptPhoto('${r.id}')">`) : r.photoOff ? `<div class="drop"><span class="thumb rthumb">${ic('receipt', 24)}</span><b>Photo saved off the app</b><span class="muted">It’s in the receipts folder you saved at the end of the year.</span></div>` : `<div class="drop"><span class="thumb rthumb">${ic('camera', 24)}</span><b>No photo yet</b><span class="muted">Add one so you have proof for taxes.</span><button class="small" onclick="addReceiptPhoto('${r.id}')">${ic('camera', 16)} Add photo</button></div>`;
     let kind = expenseKind(r);
-    return `${backBtn()}<h2 style="margin-top:12px">${esc(r.name)}</h2>${pic}<div class="panel" style="margin-top:14px"><div class="kv"><span>Date</span><b>${rDate(r.date)}</b></div><div class="kv"><span>Category</span><b>${catPill(r.category) || '—'}</b></div><div class="kv"><span>Before tax</span><b>${cash(r.pre ?? r.amount)}</b></div><div class="kv"><span>Tax</span><b>${cash(r.tax)}</b></div><div class="kv"><span>Total</span><b class="kvbig">${cash(r.amount)}</b></div>${r.pay ? `<div class="kv"><span>Paid with</span><b>${esc((RECEIPT_PAY.find(x => x[0] === r.pay) || [, r.pay])[1])}</b></div>` : ''}${r.marketId || r.fromMarket ? `<div class="kv"><span>Market</span><b style="text-align:right">${esc(expenseMarketName(r))}</b></div>` : ''}<p class="hint">${kind === 'material' ? 'Kept as proof. Yarn and supply costs already count in Material costs on each sale, so this isn’t taken off profit again.' : kind === 'proof' ? 'Kept as proof of the booth fee. The booth cost still comes from the market.' : 'Counted in Reports as an Other expense, taken off profit before tax.'}</p></div>${r.notes ? `<div class="panel"><h3>Notes</h3><p style="margin:0;white-space:pre-wrap">${esc(r.notes)}</p></div>` : ''}<div class="actions"><button class="alt grow" onclick="editExpense('${r.id}')">Edit</button><button class="danger grow" onclick="deleteExpense('${r.id}')">Delete</button></div>`;
+    return `${backBtn()}<h2 style="margin-top:12px">${esc(r.name)}</h2>${pic}<div class="panel" style="margin-top:14px"><div class="kv"><span>Date</span><b>${rDate(r.date)}</b></div><div class="kv"><span>Category</span><b>${catPill(r.category) || '—'}</b></div><div class="kv"><span>Before tax</span><b>${cash(r.pre ?? r.amount)}</b></div><div class="kv"><span>Tax</span><b>${cash(r.tax)}</b></div><div class="kv"><span>Total</span><b class="kvbig">${cash(r.amount)}</b></div>${r.pay ? `<div class="kv"><span>Paid with</span><b>${esc((RECEIPT_PAY.find(x => x[0] === r.pay) || [, r.pay])[1])}</b></div>` : ''}${r.marketId || r.fromMarket ? `<div class="kv"><span>Market</span><b style="text-align:right">${esc(expenseMarketName(r))}</b></div>` : ''}<p class="hint">${kind === 'material' ? 'Kept as proof. Supply costs already count in Material costs on each sale, so this isn’t taken off profit again.' : kind === 'proof' ? 'Kept as proof of the booth fee. The booth cost still comes from the market.' : 'Counted in Reports as an Other expense, taken off profit before tax.'}</p></div>${r.notes ? `<div class="panel"><h3>Notes</h3><p style="margin:0;white-space:pre-wrap">${esc(r.notes)}</p></div>` : ''}<div class="actions"><button class="alt grow" onclick="editExpense('${r.id}')">Edit</button><button class="danger grow" onclick="deleteExpense('${r.id}')">Delete</button></div>`;
 }
 function viewReceiptPhoto(rid) {
     let r = (data.expenses || []).find(x => x.id === rid);
@@ -132,9 +132,39 @@ function viewReceiptPhoto(rid) {
     v.className = 'rviewer';
     v.setAttribute('role', 'dialog');
     v.setAttribute('aria-label', 'Receipt photo');
-    v.innerHTML = `<div class="rvbar"><b>${esc(r.name)} · ${rDate(r.date)}</b><button class="iconbtn" aria-label="Close" onclick="this.closest('.rviewer').remove()">${ic('x', 20)}</button></div><div class="rvimg"><img src="${photoUrl(r.photo)}" alt="Receipt photo" onclick="this.classList.toggle('zoom')"></div><p class="rvhint">Tap the photo to zoom in or out.</p>`;
+    v.innerHTML = `<div class="rvbar"><b>${esc(r.name)} · ${rDate(r.date)}</b><button class="iconbtn" aria-label="Close" onclick="this.closest('.rviewer').remove()">${ic('x', 20)}</button></div><div class="rvimg"><img src="${photoUrl(r.photo)}" alt="Receipt photo"></div><p class="rvhint">Pinch, or tap the photo, to zoom in or out.</p>`;
     document.body.appendChild(v);
     v.querySelector('button').focus();
+    // Pinch with two fingers to zoom the photo (100% to 400%)
+    let box = v.querySelector('.rvimg'), img = box.querySelector('img'), z = 1, start = 0, z0 = 1;
+    const dist = t => Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
+    box.addEventListener('touchstart', e => {
+        if (e.touches.length === 2) {
+            start = dist(e.touches);
+            z0 = z;
+        }
+    }, { passive: true });
+    box.addEventListener('touchmove', e => {
+        if (!start || e.touches.length !== 2)
+            return;
+        e.preventDefault();
+        let cx = box.scrollLeft + box.clientWidth / 2, cy = box.scrollTop + box.clientHeight / 2, old = z;
+        z = Math.max(1, Math.min(4, z0 * dist(e.touches) / start));
+        img.classList.remove('zoom');
+        img.style.width = z * 100 + '%';
+        img.style.maxWidth = 'none';
+        box.scrollLeft = cx * z / old - box.clientWidth / 2;
+        box.scrollTop = cy * z / old - box.clientHeight / 2;
+    }, { passive: false });
+    box.addEventListener('touchend', e => {
+        if (e.touches.length < 2)
+            start = 0;
+    });
+    img.onclick = () => {
+        z = z > 1 ? 1 : 2.5;
+        img.style.width = z * 100 + '%';
+        img.style.maxWidth = 'none';
+    };
 }
 function openReceiptPdf(rid) {
     let r = (data.expenses || []).find(x => x.id === rid), u = r && photoUrl(r.photo);
@@ -171,7 +201,11 @@ function expenseForm() {
     if (!d)
         return `${backBtn()}`;
     let rate = taxRate(), mk = [...data.markets].sort((a, b) => String(marketSortDate(b)).localeCompare(String(marketSortDate(a))));
-    return `${backBtn()}<h2 style="margin-top:12px">${d.id ? 'Edit receipt' : 'Add a receipt'}</h2><div class="drop" id="rDrop">${receiptDropInner()}</div><div class="panel" style="margin-top:14px"><label for="rStore" style="margin-top:0">Store or what it was for</label>${comboField({ id: 'rStore', value: d.name, placeholder: 'e.g. Michaels, Canada Post, gas', autocap: true, source: () => receiptStores().map(x => ({ label: x })) })}<label for="rDate">Date</label><input id="rDate" type="date" value="${esc(d.date)}"><div class="labelrow"><span class="lbl">Category</span><button type="button" class="linkbtn" onclick="openReceiptCats()">Edit categories</button></div><div class="chips" id="rCats">${receiptCatChips()}</div><p class="hint" id="rCatHint">${receiptCatHint(d.category)}</p><div class="grid keep2"><div><label for="rPre">Before tax ($)</label><input id="rPre" type="number" min="0" step="0.01" inputmode="decimal" placeholder="0.00" value="${d.pre === '' ? '' : num(d.pre)}" oninput="receiptTotal()"></div><div><label for="rTax">Tax ($)</label><input id="rTax" type="number" min="0" step="0.01" inputmode="decimal" placeholder="0.00" value="${d.tax === '' ? '' : num(d.tax)}" oninput="receiptTotal()"></div></div><div class="actions" style="margin-top:8px">${rate ? `<button type="button" class="small alt" onclick="$('rTax').value=round2(num($('rPre').value)*${num(rate)}/100).toFixed(2);receiptTotal()">Add ${num(rate)}% tax</button>` : ''}<button type="button" class="small alt" onclick="$('rTax').value='0.00';receiptTotal()">No tax</button></div><div class="totalbox"><span class="muted" style="font-weight:800">Total</span><b id="rTotal">${cash(num(d.pre) + num(d.tax))}</b></div><label>Paid with</label><div class="seg" id="rPay">${RECEIPT_PAY.map(([v, l]) => `<button type="button" class="${d.pay === v ? 'on' : ''}" aria-pressed="${d.pay === v}" onclick="receiptDraft.pay='${v}';document.querySelectorAll('#rPay button').forEach(b=>{b.classList.toggle('on',b===this);b.setAttribute('aria-pressed',b===this)})">${l}</button>`).join('')}</div><label for="rMarket">For a market? <span class="muted">(optional)</span></label><select id="rMarket" class="fancy"><option value="">Not for a specific market</option>${mk.map(m => `<option value="${m.id}" ${d.marketId === m.id ? 'selected' : ''}>${esc(m.name)}${marketSortDate(m) ? ' · ' + esc(new Date(marketSortDate(m) + 'T12:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric' })) : ''}</option>`).join('')}</select><label for="rNotes">Notes <span class="muted">(optional)</span></label><textarea id="rNotes" rows="2" placeholder="e.g. Yarn for the Christmas gnome order">${esc(d.notes || '')}</textarea></div><div class="actions"><button class="grow" onclick="saveExpense()">${d.id ? 'Save changes' : 'Save receipt'}</button>${d.id ? `<button class="danger" onclick="deleteExpense('${d.id}')">Delete</button>` : ''}</div>`;
+    return `${backBtn()}<h2 style="margin-top:12px">${d.id ? 'Edit receipt' : 'Add a receipt'}</h2><div class="drop" id="rDrop">${receiptDropInner()}</div><div class="panel" style="margin-top:14px"><label for="rStore" style="margin-top:0">Store or what it was for</label>${comboField({ id: 'rStore', value: d.name, placeholder: 'e.g. Michaels, Canada Post, gas', autocap: true, emptyText: 'Stores you type are saved here, so next time you can pick them.', source: () => receiptStores().map(x => ({ label: x, sub: receiptStoreSub(x) })), onCommit: txt => {
+            let k = normName(txt).toLowerCase(), hit = receiptStores().find(x => x.toLowerCase() === k);
+            if (hit && $('rStore'))
+                $('rStore').value = hit;
+        } })}<label for="rDate">Date</label><input id="rDate" type="date" value="${esc(d.date)}"><div class="labelrow"><span class="lbl">Category</span><button type="button" class="linkbtn" onclick="openReceiptCats()">Edit categories</button></div><div class="chips" id="rCats">${receiptCatChips()}</div><p class="hint" id="rCatHint">${receiptCatHint(d.category)}</p><div class="grid keep2"><div><label for="rPre">Before tax ($)</label><input id="rPre" type="number" min="0" step="0.01" inputmode="decimal" placeholder="0.00" value="${d.pre === '' ? '' : num(d.pre)}" oninput="receiptTotal()"></div><div><label for="rTax">Tax ($)</label><input id="rTax" type="number" min="0" step="0.01" inputmode="decimal" placeholder="0.00" value="${d.tax === '' ? '' : num(d.tax)}" oninput="receiptTotal()"></div></div><div class="actions" style="margin-top:8px">${rate ? `<button type="button" class="small alt" onclick="$('rTax').value=round2(num($('rPre').value)*${num(rate)}/100).toFixed(2);receiptTotal()">Add ${num(rate)}% tax</button>` : ''}<button type="button" class="small alt" onclick="$('rTax').value='0.00';receiptTotal()">No tax</button></div><div class="totalbox"><span class="muted" style="font-weight:800">Total</span><b id="rTotal">${cash(num(d.pre) + num(d.tax))}</b></div><label>Paid with</label><div class="seg" id="rPay">${RECEIPT_PAY.map(([v, l]) => `<button type="button" class="${d.pay === v ? 'on' : ''}" aria-pressed="${d.pay === v}" onclick="receiptDraft.pay='${v}';document.querySelectorAll('#rPay button').forEach(b=>{b.classList.toggle('on',b===this);b.setAttribute('aria-pressed',b===this)})">${l}</button>`).join('')}</div><label for="rMarket">For a market? <span class="muted">(optional)</span></label><select id="rMarket" class="fancy"><option value="">Not for a specific market</option>${mk.map(m => `<option value="${m.id}" ${d.marketId === m.id ? 'selected' : ''}>${esc(m.name)}${marketSortDate(m) ? ' · ' + esc(new Date(marketSortDate(m) + 'T12:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric' })) : ''}</option>`).join('')}</select><label for="rNotes">Notes <span class="muted">(optional)</span></label><textarea id="rNotes" rows="2" placeholder="e.g. For the Christmas gnome order">${esc(d.notes || '')}</textarea></div><div class="actions"><button class="grow" onclick="saveExpense()">${d.id ? 'Save changes' : 'Save receipt'}</button>${d.id ? `<button class="danger" onclick="deleteExpense('${d.id}')">Delete</button>` : ''}</div>`;
 }
 function receiptDropInner() {
     let d = receiptDraft;
@@ -230,6 +264,10 @@ function receiptStores() {
     }
     return [...seen.values()];
 }
+function receiptStoreSub(x) {
+    let k = x.toLowerCase(), n = receiptsAll().filter(r => normName(r.name).toLowerCase() === k).length, m = data.materials.filter(m => normName(m.store).toLowerCase() === k).length;
+    return [n ? `${n} receipt${n === 1 ? '' : 's'}` : '', m ? `${m} material${m === 1 ? '' : 's'}` : ''].filter(Boolean).join(' · ');
+}
 function receiptCatChips() {
     let cur = receiptDraft?.category || '';
     return expenseCats().map(c => `<button type="button" class="chipbtn ${cur === c ? 'on' : ''}" aria-pressed="${cur === c}" data-cat="${esc(c)}" onclick="pickReceiptCat(this.dataset.cat)">${esc(c)}</button>`).join('') + `<button type="button" class="chipbtn addchip" onclick="addReceiptCat()">+ New category</button>`;
@@ -241,7 +279,7 @@ function pickReceiptCat(c) {
 }
 function receiptCatHint(c) {
     let k = expenseKind({ category: c });
-    return !c ? 'Pick one so Reports can group your spending.' : k === 'material' ? 'Kept as proof. Yarn and supply costs already count in Material costs on each sale, so this isn’t taken off profit again.' : k === 'proof' ? 'Kept as proof of the booth fee. The booth cost still comes from the market.' : 'Counted as an Other expense, taken off profit before tax.';
+    return !c ? 'Pick one so Reports can group your spending.' : k === 'material' ? 'Kept as proof. Supply costs already count in Material costs on each sale, so this isn’t taken off profit again.' : k === 'proof' ? 'Kept as proof of the booth fee. The booth cost still comes from the market.' : 'Counted as an Other expense, taken off profit before tax.';
 }
 async function addReceiptCat() {
     openModal(`<div class="row"><h2 style="margin:0">New category</h2>${closeX()}</div><label for="rcName">Category name</label><input id="rcName" placeholder="e.g. Classes, Printing" autocapitalize="words" onkeydown="if(event.key==='Enter')saveReceiptCat()"><p class="hint">New categories count as Other expenses, taken off profit before tax.</p><div class="actions"><button onclick="saveReceiptCat()">Add category</button></div>`);

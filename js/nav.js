@@ -53,6 +53,11 @@ function restoreNav(st) {
 }
 function view(s) {
     closeOverlays();
+    // Leaving Materials or Products folds their open groups back up
+    if (s !== screen || s !== 'materials')
+        matGroupOpen.clear();
+    if (s !== screen || s !== 'products')
+        productFolderOpen.clear();
     if (navStack.length) {
         let n = navStack.length;
         navStack = [];

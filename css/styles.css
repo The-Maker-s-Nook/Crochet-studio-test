@@ -458,3 +458,5 @@ button.linkcard b{font-family:var(--display);font-weight:400;font-size:18px;line
 .filters>div{min-width:0}.filters .selbtn{width:100%;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .filters .sellabel{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .rphoto{max-height:65vh;object-fit:contain}
+#vbody{touch-action:pan-x pan-y}
+#app .grid+.panel,#app .grid+.section-label{margin-top:14px}
