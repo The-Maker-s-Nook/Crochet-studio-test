@@ -66,6 +66,17 @@ function openReceipt(rid) {
         receiptOpen = rid;
     });
 }
+// While testing, each account can keep up to RECEIPT_LIMIT receipt photos (core.js), to stay within free storage.
+// Receipts without a photo can always be added.
+function receiptPhotoCount(exceptId) {
+    return (data.expenses || []).filter(r => r.photo && r.id !== exceptId).length;
+}
+function receiptPhotoLimitReached(exceptId) {
+    if (receiptPhotoCount(exceptId) < RECEIPT_LIMIT)
+        return false;
+    appDialog({ title: `You’ve reached ${RECEIPT_LIMIT} receipt photos`, message: `During testing, each account can keep up to ${RECEIPT_LIMIT} receipt photos so we stay within our free storage. You can still save receipts without a photo.\n\nTo add a photo here, delete the photo from a receipt you don’t need, or delete that receipt.`, ok: 'OK' });
+    return true;
+}
 function newExpense(mid, src) {
     if (yearEndBlocked())
         return yearEndBlockedNotice();
@@ -95,7 +106,7 @@ function receiptsFiltered() {
 function receipts() {
     let list = receiptsAll().filter(r => receiptInRange(r)), spent = round2(list.reduce((a, r) => a + num(r.amount), 0)), tax = round2(list.reduce((a, r) => a + num(r.tax), 0)), need = list.filter(receiptNeedsPhoto).length, label = { month: 'this month', last: 'last month', year: 'this year', all: 'all time' }[receiptRange];
     let used = new Set(receiptsAll().map(r => r.category).filter(Boolean)), cats = expenseCats().filter(c => used.has(c));
-    return `${backBtn()}<h2 style="margin-top:12px">Receipts</h2>${yearEndReceiptsNote()}<div class="seg" role="group" aria-label="Time frame" style="margin-bottom:14px">${[['month', 'This month'], ['last', 'Last month'], ['year', 'This year'], ['all', 'All']].map(([v, l]) => `<button class="${receiptRange === v ? 'on' : ''}" aria-pressed="${receiptRange === v}" onclick="receiptRange='${v}';render()">${l}</button>`).join('')}</div><div class="quick"><button onclick="snapReceipt()">${ic('camera', 18)} Snap receipt</button><button class="alt" onclick="newExpense(null,'files')">${ic('upload', 18)} Upload file</button></div><div class="grid keep2 tiles" style="margin-bottom:14px"><div class="panel tile"><span class="tic pink">${ic('wallet', 18)}</span><div class="muted">Spent ${label}</div><div class="stat">${cash(spent)}</div></div><div class="panel tile"><span class="tic aqua">${ic('percent', 18)}</span><div class="muted">Tax paid</div><div class="stat">${cash(tax)}</div></div><div class="panel tile"><span class="tic lav">${ic('receipt', 18)}</span><div class="muted">Receipts</div><div class="stat">${list.length}</div></div><button class="panel tile tilebtn ${receiptOnly === 'nophoto' ? 'on' : ''}" aria-pressed="${receiptOnly === 'nophoto'}" onclick="receiptOnly=receiptOnly==='nophoto'?'':'nophoto';render()"><span class="tic gold">${ic('flag', 18)}</span><span class="muted">Need a photo</span><span class="stat">${need}</span></button></div>${receiptOnly ? `<div class="row entry" style="margin:0 0 12px"><span class="muted" style="font-weight:800">Showing receipts without a photo</span><button class="small alt" onclick="receiptOnly='';render()">Show all</button></div>` : ''}<label for="rq" class="sr">Search receipts and expenses</label><div class="searchbox">${ic('search', 18)}<input id="rq" type="search" placeholder="Search store, category, market or note" value="${esc(receiptQ)}" oninput="receiptQ=this.value;drawReceiptRows()"></div>${cats.length > 1 ? tabRow([['all', 'All'], ...cats.map(c => [c, c])].map(([v, l]) => `<button class="small ${receiptCat === v ? '' : 'alt'}" onclick="receiptCat='${esc(v).replace(/'/g, '&#39;')}';render()">${esc(l)}</button>`).join('')) : ''}<div id="receiptRows">${receiptRows()}</div>`;
+    return `${backBtn()}<h2 style="margin-top:12px">Receipts</h2><p class="hint" style="margin:-8px 4px 12px">${receiptPhotoCount()} of ${RECEIPT_LIMIT} receipt photos used while testing. Receipts without a photo don’t count.</p>${yearEndReceiptsNote()}<div class="seg" role="group" aria-label="Time frame" style="margin-bottom:14px">${[['month', 'This month'], ['last', 'Last month'], ['year', 'This year'], ['all', 'All']].map(([v, l]) => `<button class="${receiptRange === v ? 'on' : ''}" aria-pressed="${receiptRange === v}" onclick="receiptRange='${v}';render()">${l}</button>`).join('')}</div><div class="quick"><button onclick="snapReceipt()">${ic('camera', 18)} Snap receipt</button><button class="alt" onclick="newExpense(null,'files')">${ic('upload', 18)} Upload file</button></div><div class="grid keep2 tiles" style="margin-bottom:14px"><div class="panel tile"><span class="tic pink">${ic('wallet', 18)}</span><div class="muted">Spent ${label}</div><div class="stat">${cash(spent)}</div></div><div class="panel tile"><span class="tic aqua">${ic('percent', 18)}</span><div class="muted">Tax paid</div><div class="stat">${cash(tax)}</div></div><div class="panel tile"><span class="tic lav">${ic('receipt', 18)}</span><div class="muted">Receipts</div><div class="stat">${list.length}</div></div><button class="panel tile tilebtn ${receiptOnly === 'nophoto' ? 'on' : ''}" aria-pressed="${receiptOnly === 'nophoto'}" onclick="receiptOnly=receiptOnly==='nophoto'?'':'nophoto';render()"><span class="tic gold">${ic('flag', 18)}</span><span class="muted">Need a photo</span><span class="stat">${need}</span></button></div>${receiptOnly ? `<div class="row entry" style="margin:0 0 12px"><span class="muted" style="font-weight:800">Showing receipts without a photo</span><button class="small alt" onclick="receiptOnly='';render()">Show all</button></div>` : ''}<label for="rq" class="sr">Search receipts and expenses</label><div class="searchbox">${ic('search', 18)}<input id="rq" type="search" placeholder="Search store, category, market or note" value="${esc(receiptQ)}" oninput="receiptQ=this.value;drawReceiptRows()"></div>${cats.length > 1 ? tabRow([['all', 'All'], ...cats.map(c => [c, c])].map(([v, l]) => `<button class="small ${receiptCat === v ? '' : 'alt'}" onclick="receiptCat='${esc(v).replace(/'/g, '&#39;')}';render()">${esc(l)}</button>`).join('')) : ''}<div id="receiptRows">${receiptRows()}</div>`;
 }
 function drawReceiptRows() {
     let e = $('receiptRows');
@@ -181,6 +192,8 @@ function openReceiptPdf(rid) {
 }
 // The tappable photo spot on a receipt with no photo
 function addReceiptPhoto(rid) {
+    if (receiptPhotoLimitReached(rid))
+        return;
     photoMenu(e => {
         let f = e.target.files?.[0], r = (data.expenses || []).find(x => x.id === rid);
         if (!f || !r)
@@ -221,6 +234,8 @@ function receiptPickButtons(has) {
     return `<div class="actions" style="justify-content:center;margin-top:4px"><button type="button" class="small" onclick="receiptPick('camera')">${ic('camera', 16)} ${has ? 'Retake' : 'Take photo'}</button><button type="button" class="small alt" onclick="receiptPick('files')">${ic('upload', 16)} Upload photo or PDF</button>${has ? `<button type="button" class="small danger" onclick="receiptDraft.photo='';receiptDraft.isPdf=false;$('rDrop').innerHTML=receiptDropInner()">Remove</button>` : ''}</div>`;
 }
 function receiptPick(src) {
+    if (!receiptDraft?.photo && receiptPhotoLimitReached(receiptDraft?.id))
+        return;
     let i = document.createElement('input');
     i.type = 'file';
     i.className = 'hidden';
