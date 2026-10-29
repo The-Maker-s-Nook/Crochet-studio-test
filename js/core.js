@@ -208,4 +208,4 @@ function byName(a, b) {
     return a.name.localeCompare(b.name);
 }
 // ===== v21: spreadsheet import (beta), feedback, pattern limit =====
-const APP_VERSION = 24, PATTERN_LIMIT = 5, FEEDBACK_EMAIL = 'support@themakersnook.ca';
+const APP_VERSION = 24, PATTERN_LIMIT = 5, RECEIPT_LIMIT = 10, FEEDBACK_EMAIL = 'support@themakersnook.ca';
