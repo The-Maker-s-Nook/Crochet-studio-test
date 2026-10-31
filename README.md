@@ -51,6 +51,19 @@ The Android and iPhone app wrapper (Capacitor) lives on the `app-wrap` branch un
 `capacitor.config.json`, `package.json`, `js/native.js` (phone-app-only adjustments) and the GitHub build in
 `.github/workflows/android.yml`. Every app change is made here first, then merged into `app-wrap`.
 
+### Stripe Tap to Pay (test, `app-wrap` only)
+- `js/stripe-pay.js` – adds Settings › Finances › Payments › "Take card payments with: None / Square / Stripe"; with Stripe,
+  checkout's Card button becomes "Charge $X with Tap to Pay" (Stripe Terminal plugin `@capacitor-community/stripe-terminal`).
+  Sales save with `payment: { method: 'card', via: 'stripe', stripePi, appFee, cardBrand, cardLast4, test }`.
+  It does nothing on the website (no plugin there).
+- `supabase/functions/stripe/` – the server part (Supabase Edge Function). Holds the Stripe secret key, creates each seller's
+  own Stripe account (seller pays Stripe's fees, Stripe covers losses), connection tokens, payments with the app fee
+  (1% on the free plan, 0% on paid; decided on the server), and confirms each payment with Stripe before the sale is saved.
+  The seller's Stripe account id and selling-address location are kept in the user's `app_metadata` (users can't change it).
+- `.github/workflows/stripe-server.yml` installs the function. Needs repository secrets `SUPABASE_ACCESS_TOKEN` and
+  `STRIPE_SECRET_KEY` (sandbox `sk_test_...` only while testing). Never put either key in the code.
+- Android builds need Android 11+ (minSdk 30) for Tap to Pay.
+
 ## Updating
 Every change saved to the `main` branch goes live automatically on Netlify (about 15 Netlify
 credits per deploy), so only finished, tested versions are saved to `main`. Work in progress
