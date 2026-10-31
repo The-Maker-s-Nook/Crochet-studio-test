@@ -210,7 +210,7 @@ async function handle(action: string, b: Record<string, any>, user: User) {
       }
       const link = await stripeV2('POST', '/core/account_links', {
         account: acct,
-        use_case: { type: 'account_onboarding', account_onboarding: { configurations: ['merchant'], return_url: RETURN_URL, refresh_url: REFRESH_URL } },
+        use_case: { type: 'account_onboarding', account_onboarding: { collection_options: { fields: 'eventually_due' }, return_url: RETURN_URL, refresh_url: REFRESH_URL } },
       });
       return { url: link.url };
     }
