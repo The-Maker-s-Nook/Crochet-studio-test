@@ -211,7 +211,8 @@ function stripeDiscover(T, locationId) {
             h?.remove?.();
             err ? fail(err) : ok(readers);
         }
-        T.addListener('terminalDiscoveredReaders', ({ readers }) => finish(readers)).then(x => {
+        // On the phone, addListener may hand back the handle directly instead of a promise
+        Promise.resolve(T.addListener('terminalDiscoveredReaders', ({ readers }) => finish(readers))).then(x => {
             h = x;
             if (done)
                 x.remove();
