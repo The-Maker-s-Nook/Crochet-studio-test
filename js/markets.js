@@ -99,14 +99,28 @@ function saveTodoNotes(v) {
     }, 500);
 }
 // Totals for some markets, plus extra no-market sales and expenses. Profit is before tax.
+// Card fees taken out of card payouts (processing fee + app fee), saved on each order's payment by Tap to Pay sales.
+function cardFeesOf(sales) {
+    let ids = new Set(sales.map(x => x.orderId).filter(Boolean)), proc = 0, app = 0, n = 0;
+    for (let o of data.orders || []) {
+        let p = o.payment;
+        if (ids.has(o.id) && p && (num(p.stripeFee) || num(p.appFee))) {
+            proc += num(p.stripeFee);
+            app += num(p.appFee);
+            n++;
+        }
+    }
+    return { proc: round2(proc), app: round2(app), total: round2(proc + app), n };
+}
 function marketFigures(ms, extra = [], looseExp = []) {
     let ids = new Set(ms.map(m => m.id)), sales = data.sales.filter(x => ids.has(x.marketId)).concat(extra), expenses = (data.expenses || []).filter(e => e.marketId && ids.has(e.marketId)).concat(looseExp), other = round2(expenses.reduce((a, e) => a + expenseCost(e), 0));
     let full = round2(sales.reduce((a, x) => a + lineFull(x), 0)), revenue = round2(sales.reduce((a, x) => a + lineRev(x), 0)), materials = sales.reduce((a, x) => a + num(x.qty) * num(x.estimatedMaterialCost), 0), qty = sales.reduce((a, x) => a + num(x.qty), 0), booth = ms.reduce((a, m) => a + num(m.cost), 0);
-    return { revenue, full, discounts: round2(full - revenue), materials, qty, booth, expenses, other, profit: revenue - materials - booth - other, sales };
+    let cf = cardFeesOf(sales);
+    return { revenue, full, discounts: round2(full - revenue), materials, qty, booth, expenses, other, cardFees: cf.total, procFees: cf.proc, appFees: cf.app, feeSales: cf.n, profit: revenue - materials - booth - other - cf.total, sales };
 }
 function completedPanel(m) {
     let f = marketFigures([m]);
-    return `<div class="panel done-panel"><div class="row"><h3 style="margin:0">Market completed ✓</h3><button class="alt small" onclick="reopenMarket('${m.id}')">Reopen</button></div><div class="muted" style="margin:6px 0 12px">Completed ${new Date(m.completedAt || Date.now()).toLocaleDateString()} · included in Reports</div><div class="grid keep2"><div><div class="muted">Sales</div><div class="stat">${cash(f.revenue)}</div></div><div><div class="muted">Items sold</div><div class="stat">${f.qty}</div></div><div><div class="muted">${f.expenses.length ? 'Booth + expenses' : 'Booth cost'}</div><div class="stat">${cash(f.booth + f.other)}</div></div><div><div class="muted">Profit</div><div class="stat ${f.profit < 0 ? 'bad' : 'good'}">${signedCash(f.profit)}</div></div></div></div>`;
+    return `<div class="panel done-panel"><div class="row"><h3 style="margin:0">Market completed ✓</h3><button class="alt small" onclick="reopenMarket('${m.id}')">Reopen</button></div><div class="muted" style="margin:6px 0 12px">Completed ${new Date(m.completedAt || Date.now()).toLocaleDateString()} · included in Reports</div><div class="grid keep2"><div><div class="muted">Sales</div><div class="stat">${cash(f.revenue)}</div></div><div><div class="muted">Items sold</div><div class="stat">${f.qty}</div></div><div><div class="muted">${f.cardFees ? 'Booth, expenses + fees' : f.expenses.length ? 'Booth + expenses' : 'Booth cost'}</div><div class="stat">${cash(f.booth + f.other + f.cardFees)}</div></div><div><div class="muted">Profit</div><div class="stat ${f.profit < 0 ? 'bad' : 'good'}">${signedCash(f.profit)}</div></div></div></div>`;
 }
 function finishPanel(m) {
     let left = Object.values(m.items || {}).reduce((a, q) => a + num(q), 0);

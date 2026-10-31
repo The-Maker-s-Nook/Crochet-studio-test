@@ -31,6 +31,7 @@ function reportPack(r) {
         byCat[k].n++;
         byCat[k].total += num(e.amount);
     }
+    let feeIds = new Set(f.sales.map(s => s.orderId)), feeOrders = (data.orders || []).filter(o => feeIds.has(o.id) && (num(o.payment?.stripeFee) || num(o.payment?.appFee))).sort((a, b) => String(a.date).localeCompare(String(b.date))).map(o => ({ date: String(o.date || '').slice(0, 10), market: data.markets.find(m => m.id === o.marketId)?.name || (o.marketId ? 'Deleted market' : 'Quick sale'), order: String(o.id).slice(-6).toUpperCase(), total: num(o.total), card: o.payment.cardBrand ? `${String(o.payment.cardBrand).toUpperCase()} ${o.payment.cardLast4 || ''}`.trim() : 'Card', proc: num(o.payment.stripeFee), app: num(o.payment.appFee) }));
     let orders = new Map();
     for (let s of f.sales) {
         let k = s.orderId || s.id;
@@ -54,7 +55,7 @@ function reportPack(r) {
         if (pd > 0.004)
             reasons[s.priceReason || 'Price change'] = (reasons[s.priceReason || 'Price change'] || 0) + pd;
     }
-    return { f, ex, mk, sold: soldProducts(f.sales), pays, reasons, byCat, md: materialValueData(), tax: { coll: round2(coll), paidM: round2(paidM), paidE: round2(paidE), diff: round2(coll - paidM - paidE) }, who: normName(data.settings.businessName), cur: data.settings.currency || 'CAD' };
+    return { f, ex, mk, feeOrders, sold: soldProducts(f.sales), pays, reasons, byCat, md: materialValueData(), tax: { coll: round2(coll), paidM: round2(paidM), paidE: round2(paidE), diff: round2(coll - paidM - paidE) }, who: normName(data.settings.businessName), cur: data.settings.currency || 'CAD' };
 }
 async function downloadReport() {
     let r = reportSelection();
@@ -75,7 +76,7 @@ async function downloadReport() {
 async function reportXlsx(r) {
     let P = reportPack(r), f = P.f, cur = P.cur, title = `${P.who ? P.who + ' · ' : ''}Sales report · ${r.rangeLabel} · ${r.marketLabel}`;
     let sheets = [];
-    sheets.push({ name: 'Summary', cols: [34, 16, 60], rows: [[{ v: title, s: 't' }], [`Made ${new Date().toLocaleDateString('en-CA')} · amounts in ${cur}`], [], ['', xh('Amount')], ['Sales (after discounts)', xm(f.revenue)], ['At full price', xm(f.full)], ['Discounts given', xm(f.discounts)], ['Items sold', f.qty], ['Material costs', xm(f.materials)], ['Booth costs', xm(f.booth)], ['Other expenses', xm(f.other)], [xb('Profit'), xbm(f.profit)], [], ['Tax collected', xm(P.tax.coll)], ['Tax paid on materials', xm(P.tax.paidM)], ['Tax paid on expenses', xm(P.tax.paidE)], [xb('Tax difference (collected − paid)'), xbm(P.tax.diff)], [], [profitNote(f)], ['A guide only, not tax advice.']] });
+    sheets.push({ name: 'Summary', cols: [34, 16, 60], rows: [[{ v: title, s: 't' }], [`Made ${new Date().toLocaleDateString('en-CA')} · amounts in ${cur}`], [], ['', xh('Amount')], ['Sales (after discounts)', xm(f.revenue)], ['At full price', xm(f.full)], ['Discounts given', xm(f.discounts)], ['Items sold', f.qty], ['Material costs', xm(f.materials)], ['Booth costs', xm(f.booth)], ['Other expenses', xm(f.other)], ...(f.cardFees ? [['Card processing fees', xm(f.procFees)], ['App fees', xm(f.appFees)]] : []), [xb('Profit'), xbm(f.profit)], [], ['Tax collected', xm(P.tax.coll)], ['Tax paid on materials', xm(P.tax.paidM)], ['Tax paid on expenses', xm(P.tax.paidE)], [xb('Tax difference (collected − paid)'), xbm(P.tax.diff)], [], [profitNote(f)], ['A guide only, not tax advice.']] });
     sheets.push({ name: 'Sales', cols: [11, 22, 9, 26, 16, 18, 6, 12, 12, 12, 20, 10, 14, 12, 16], freeze: 1, rows: [['Date', 'Market', 'Order', 'Product', 'Variation', 'Tags', 'Qty', `List price (${cur})`, `Sold at (${cur})`, `Discount (${cur})`, 'Discount reason', `Tax (${cur})`, `Line total before tax (${cur})`, 'Payment', 'Square receipt'].map(xh), ...reportLines(r).map(l => [l.date, l.market, l.order, l.product, l.variation, l.tags, l.qty, xm(l.list), xm(l.sold), xm(l.disc), l.reason, xm(l.tax), xm(l.total), l.pay, l.sq])] });
     let pr = [];
     for (let x of P.sold) {
@@ -85,7 +86,10 @@ async function reportXlsx(r) {
             pr.push(['    with discounts', x.disc.price, x.disc.qty, xm(x.disc.sales), '']);
     }
     sheets.push({ name: 'Products sold', cols: [36, 26, 8, 14, 14], freeze: 1, rows: [['Product', 'Price', 'Sold', `Sales (${cur})`, 'In stock now'].map(xh), ...pr, [], [xb('Total'), '', xb(f.qty), xbm(f.revenue)]] });
-    sheets.push({ name: 'Markets', cols: [30, 12, 8, 13, 13, 12, 13, 13], freeze: 1, rows: [['Market', 'Date', 'Items', `Sales (${cur})`, `Materials (${cur})`, `Booth (${cur})`, `Expenses (${cur})`, `Profit (${cur})`].map(xh), ...P.mk.map(m => [m.name, m.date, m.f.qty, xm(m.f.revenue), xm(m.f.materials), xm(m.f.booth), xm(m.f.other), xm(m.f.profit)]), [], [xb('Total'), '', xb(f.qty), xbm(f.revenue), xbm(f.materials), xbm(f.booth), xbm(f.other), xbm(f.profit)]] });
+    let fe = f.cardFees > 0, fc = (v, b) => fe ? [b ? xbm(v) : xm(v)] : [];
+    sheets.push({ name: 'Markets', cols: [30, 12, 8, 13, 13, 12, 13, ...(fe ? [13] : []), 13], freeze: 1, rows: [['Market', 'Date', 'Items', `Sales (${cur})`, `Materials (${cur})`, `Booth (${cur})`, `Expenses (${cur})`, ...(fe ? [`Card fees (${cur})`] : []), `Profit (${cur})`].map(xh), ...P.mk.map(m => [m.name, m.date, m.f.qty, xm(m.f.revenue), xm(m.f.materials), xm(m.f.booth), xm(m.f.other), ...fc(m.f.cardFees), xm(m.f.profit)]), [], [xb('Total'), '', xb(f.qty), xbm(f.revenue), xbm(f.materials), xbm(f.booth), xbm(f.other), ...fc(f.cardFees, 1), xbm(f.profit)]] });
+    if (fe)
+        sheets.push({ name: 'Card fees', cols: [11, 24, 9, 14, 18, 14, 12, 14], freeze: 1, rows: [['Date', 'Market', 'Order', `Sale total (${cur})`, 'Card', `Processing fee (${cur})`, `App fee (${cur})`, `Total fees (${cur})`].map(xh), ...P.feeOrders.map(o => [o.date, o.market, o.order, xm(o.total), o.card, xm(o.proc), xm(o.app), xm(round2(o.proc + o.app))]), [], [xb('Total'), '', '', xbm(round2(P.feeOrders.reduce((a, o) => a + o.total, 0))), '', xbm(f.procFees), xbm(f.appFees), xbm(f.cardFees)], [], ['Card fees come out of your Tap to Pay payouts (processing fee + app fee). Business expenses; already taken off profit.']] });
     let es = receiptListSheet(P.ex, `${P.who ? P.who + ' · ' : ''}Expenses & receipts · ${r.rangeLabel}`);
     es.name = 'Expenses & receipts';
     es.rows.push([], ['How each category counts'], ...Object.entries(P.byCat).sort((a, b) => b[1].total - a[1].total).map(([k, o]) => [k, `${o.n} receipt${o.n === 1 ? '' : 's'}`, '', '', '', '', '', xm(o.total), o.kind === 'material' ? 'Proof only (already in material costs)' : o.kind === 'proof' ? 'Proof only (booth cost comes from the market)' : 'Other expense, taken off profit']));
@@ -281,13 +285,14 @@ function reportPdf(r) {
         txt(x + 8, y - 39, v, 15, true, c || INK);
     });
     y -= 64;
-    note(`Profit = sales after discounts (${cash(f.revenue)}) - material costs (${cash(f.materials)}) - booth costs (${cash(f.booth)})${f.other ? ` - other expenses (${cash(f.other)})` : ''}, before tax. Your time and payment fees are not included.`);
+    note(`Profit = sales after discounts (${cash(f.revenue)}) - material costs (${cash(f.materials)}) - booth costs (${cash(f.booth)})${f.other ? ` - other expenses (${cash(f.other)})` : ''}${f.cardFees ? ` - card fees (${cash(f.cardFees)})` : ''}, before tax. ${f.cardFees ? 'Your time is not included.' : 'Your time and payment fees are not included.'}`);
     // 1. Overview
     section('Overview');
-    let mrows = P.mk.map(m => [m.name, m.date ? new Date(m.date + 'T12:00:00').toLocaleDateString('en-CA', { month: 'short', day: 'numeric', year: 'numeric' }) : '', String(m.f.qty), cash(m.f.revenue), cash(m.f.materials), cash(m.f.booth), cash(m.f.other), money(m.f.profit)]);
+    let fe = f.cardFees > 0, fcol = (v, b) => fe ? [b ? { t: cash(v), b: 1 } : cash(v)] : [];
+    let mrows = P.mk.map(m => [m.name, m.date ? new Date(m.date + 'T12:00:00').toLocaleDateString('en-CA', { month: 'short', day: 'numeric', year: 'numeric' }) : '', String(m.f.qty), cash(m.f.revenue), cash(m.f.materials), cash(m.f.booth), cash(m.f.other), ...fcol(m.f.cardFees), money(m.f.profit)]);
     if (mrows.length > 1)
-        mrows.push([{ t: 'Total', b: 1 }, '', { t: String(f.qty), b: 1 }, { t: cash(f.revenue), b: 1 }, { t: cash(f.materials), b: 1 }, { t: cash(f.booth), b: 1 }, { t: cash(f.other), b: 1 }, { ...money(f.profit), b: 1 }]);
-    table('By market', [{ t: 'Market', w: .27 }, { t: 'Date', w: .14 }, { t: 'Items', w: .07, r: 1 }, { t: 'Sales', w: .11, r: 1 }, { t: 'Materials', w: .11, r: 1 }, { t: 'Booth', w: .09, r: 1 }, { t: 'Expenses', w: .1, r: 1 }, { t: 'Profit', w: .11, r: 1 }], mrows, { empty: 'No completed markets or quick sales in this time frame.' });
+        mrows.push([{ t: 'Total', b: 1 }, '', { t: String(f.qty), b: 1 }, { t: cash(f.revenue), b: 1 }, { t: cash(f.materials), b: 1 }, { t: cash(f.booth), b: 1 }, { t: cash(f.other), b: 1 }, ...fcol(f.cardFees, 1), { ...money(f.profit), b: 1 }]);
+    table('By market', fe ? [{ t: 'Market', w: .22 }, { t: 'Date', w: .12 }, { t: 'Items', w: .06, r: 1 }, { t: 'Sales', w: .1, r: 1 }, { t: 'Materials', w: .1, r: 1 }, { t: 'Booth', w: .09, r: 1 }, { t: 'Expenses', w: .1, r: 1 }, { t: 'Card fees', w: .1, r: 1 }, { t: 'Profit', w: .11, r: 1 }] : [{ t: 'Market', w: .27 }, { t: 'Date', w: .14 }, { t: 'Items', w: .07, r: 1 }, { t: 'Sales', w: .11, r: 1 }, { t: 'Materials', w: .11, r: 1 }, { t: 'Booth', w: .09, r: 1 }, { t: 'Expenses', w: .1, r: 1 }, { t: 'Profit', w: .11, r: 1 }], mrows, { empty: 'No completed markets or quick sales in this time frame.' });
     let prow = Object.entries(P.pays).sort((a, b) => b[1].t - a[1].t).map(([k, v]) => [payLabel(k), String(v.n), cash(v.t)]);
     if (prow.length)
         table('How customers paid (including tax)', [{ t: 'Method', w: .6 }, { t: 'Sales', w: .15, r: 1 }, { t: 'Amount', w: .25, r: 1 }], prow);
@@ -320,7 +325,11 @@ function reportPdf(r) {
     let crows = Object.entries(P.byCat).sort((a, b) => b[1].total - a[1].total).map(([k, o]) => [k, String(o.n), o.kind === 'other' ? 'Taken off profit' : o.kind === 'material' ? 'Proof only (in material costs)' : 'Proof only (booth from market)', cash(o.total)]);
     if (crows.length)
         table('By category', [{ t: 'Category', w: .32 }, { t: 'Receipts', w: .12, r: 1 }, { t: 'How it counts', w: .36 }, { t: 'Total', w: .2, r: 1 }], crows);
-    table('Profit after expenses', [{ t: '', w: .7 }, { t: '', w: .3, r: 1 }], [['Profit from markets and quick sales', money(round2(f.revenue - f.materials - f.booth))], ['Other expenses (all but supplies and booth fees)', '-' + cash(f.other)], [{ t: 'Profit after expenses', b: 1 }, { ...money(f.profit), b: 1 }]]);
+    if (fe) {
+        table('Card payment fees (Tap to Pay)', [{ t: 'Date', w: .13 }, { t: 'Market', w: .27 }, { t: 'Card', w: .16 }, { t: 'Sale', w: .11, r: 1 }, { t: 'Processing', w: .12, r: 1 }, { t: 'App fee', w: .1, r: 1 }, { t: 'Fees', w: .11, r: 1 }], [...P.feeOrders.map(o => [o.date, o.market, o.card, cash(o.total), cash(o.proc), cash(o.app), cash(round2(o.proc + o.app))]), [{ t: 'Total', b: 1 }, '', '', { t: cash(round2(P.feeOrders.reduce((a, o) => a + o.total, 0))), b: 1 }, { t: cash(f.procFees), b: 1 }, { t: cash(f.appFees), b: 1 }, { t: cash(f.cardFees), b: 1 }]]);
+        note('Card fees come out of your Tap to Pay payouts, so there is no receipt for them. They are business expenses (card processing fees) and are taken off profit.');
+    }
+    table('Profit after expenses', [{ t: '', w: .7 }, { t: '', w: .3, r: 1 }], [['Profit from markets and quick sales', money(round2(f.revenue - f.materials - f.booth))], ['Other expenses (all but supplies and booth fees)', '-' + cash(f.other)], ...(fe ? [['Card fees (processing + app fees)', '-' + cash(f.cardFees)]] : []), [{ t: 'Profit after expenses', b: 1 }, { ...money(f.profit), b: 1 }]]);
     table('Sales tax', [{ t: '', w: .7 }, { t: '', w: .3, r: 1 }], [['Tax collected on sales', cash(P.tax.coll)], ['Tax paid on materials', '-' + cash(P.tax.paidM)], ['Tax paid on expenses (not supplies)', '-' + cash(P.tax.paidE)], [{ t: 'Difference (collected - paid)', b: 1 }, { t: signedCash(P.tax.diff), b: 1 }]]);
     note('Sales tax counts sales, material purchases and receipts dated in this time frame. A guide only, not tax advice; check with an accountant.');
     pages.push(ops);
