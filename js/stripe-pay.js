@@ -409,24 +409,4 @@ deleteSale = async function (key) {
     return deleteSaleBase(key);
 };
 
-// ---------- Reports › Expenses & tax: card payment fees ----------
-// Stripe's processing fee and the app fee come out of the seller's payouts. Shown so they can be tracked and claimed as business expenses.
-function stripeFeeData(a, b) {
-    let list = data.orders.filter(o => o.payment?.via === 'stripe').filter(o => {
-        let t = Date.parse(o.date) || 0;
-        return t >= a && t < b;
-    });
-    let stripe = round2(list.reduce((s, o) => s + num(o.payment.stripeFee), 0)), app = round2(list.reduce((s, o) => s + num(o.payment.appFee), 0));
-    return { list, stripe, app, total: round2(stripe + app), sales: round2(list.reduce((s, o) => s + num(o.total), 0)), missing: list.filter(o => o.payment.stripeFee == null).length, test: list.some(o => o.payment.test) };
-}
-function stripeFeesPanel(r) {
-    let d = stripeFeeData(r.a, r.b);
-    return `<div class="section-label">Card payment fees</div><div class="panel"><div class="kv"><span>Tap to Pay sales <small>(${d.list.length} sale${d.list.length === 1 ? '' : 's'})</small></span><b>${cash(d.sales)}</b></div><div class="kv"><span>Stripe processing fees</span><b>${cash(d.stripe)}</b></div><div class="kv"><span>App fees <small>(free plan, 1%)</small></span><b>${cash(d.app)}</b></div><div class="kv total"><span>Total card fees</span><b>${cash(d.total)}</b></div><p class="hint">These come out of your Stripe payouts, so they’re not on any receipt. They’re business expenses (card processing fees) you can claim. They aren’t taken off the profit figures in Reports yet.${d.missing ? ` ${d.missing} older sale${d.missing > 1 ? 's don’t' : ' doesn’t'} have Stripe’s fee recorded; see your Stripe Dashboard for those.` : ''}${d.test ? ' Includes test payments (no real money).' : ''}</p></div>`;
-}
-const reportExpensesBase = reportExpenses;
-reportExpenses = function (r) {
-    let h = reportExpensesBase(r);
-    if (!data.orders.some(o => o.payment?.via === 'stripe'))
-        return h;
-    return h.replace('<div class="section-label">Profit after expenses</div>', stripeFeesPanel(r) + '<div class="section-label">Profit after expenses</div>');
-};
+// Card fees in Reports (taken off profit, PDF and Excel) are in markets.js (cardFeesOf), reports.js and report-files.js.
