@@ -320,7 +320,7 @@ async function stripeCollect(total, description, ref, test) {
         if (c.status !== 'succeeded')
             throw new Error(`Stripe didn’t approve the payment (${c.status}).`);
         stripePiId = '';
-        return { id: pi.id, amount: c.amount / 100, fee: (c.fee || 0) / 100, brand: c.brand, last4: c.last4, currency: c.currency };
+        return { id: pi.id, amount: c.amount / 100, fee: (c.fee || 0) / 100, stripeFee: c.stripeFee == null ? null : c.stripeFee / 100, brand: c.brand, last4: c.last4, currency: c.currency };
     }
     catch (e) {
         if (stripePiId)
@@ -355,7 +355,7 @@ async function stripeCharge() {
     let r = await stripeCollect(o.total, (m ? m.name + ': ' : '') + o.lines.map(l => `${l.name} × ${l.qty}`).join(', '), id(), false);
     if (!r)
         return;
-    let oid = finalizeOrder(mid, draft, adj, { method: 'card', via: 'stripe', stripePi: r.id, appFee: r.fee, cardBrand: r.brand || '', cardLast4: r.last4 || '', test: !!stripeInfo?.sandbox }, true);
+    let oid = finalizeOrder(mid, draft, adj, { method: 'card', via: 'stripe', stripePi: r.id, appFee: r.fee, stripeFee: r.stripeFee, cardBrand: r.brand || '', cardLast4: r.last4 || '', test: !!stripeInfo?.sandbox }, true);
     if (!oid)
         return appAlert(`The ${cash(o.total)} payment went through, but the sale couldn’t be saved. Please add it by hand.`);
     saleKind = kind;
@@ -393,7 +393,7 @@ saleEdit = function () {
     if (!o)
         return h;
     let p = o.payment, card = p.cardBrand ? `${esc(p.cardBrand.toUpperCase())} •••• ${esc(p.cardLast4 || '')}` : 'Card';
-    let paid = `<div class="eyebrow">Paid by</div><p class="muted" style="margin:6px 0 0">${card} · Tap to Pay (Stripe${p.test ? ', test' : ''})${num(p.appFee) ? ` · app fee ${cash(p.appFee)}` : ''}</p><p class="hint">Changing the price or discount here doesn't change what Stripe charged. Refund any difference in your Stripe Dashboard.</p></div>`;
+    let paid = `<div class="eyebrow">Paid by</div><p class="muted" style="margin:6px 0 0">${card} · Tap to Pay (Stripe${p.test ? ', test' : ''})</p><p class="muted" style="margin:4px 0 0">Fees taken from your payout: Stripe ${p.stripeFee == null ? 'not recorded' : cash(p.stripeFee)} · app fee ${cash(num(p.appFee))}</p><p class="hint">Changing the price or discount here doesn't change what Stripe charged. Refund any difference in your Stripe Dashboard.</p></div>`;
     return h.replace(/<div class="eyebrow">Paid by<\/div><div class="paygrid">[\s\S]*?<\/div><\/div>/, paid);
 };
 const setPayMethodBase = setPayMethod;
@@ -407,4 +407,26 @@ deleteSale = async function (key) {
     if (stripeOrder(key) && !await appConfirm('This sale was paid with Tap to Pay. Deleting it here doesn’t refund the card. Refund it in your Stripe Dashboard.\n\nContinue?', { ok: 'Continue' }))
         return;
     return deleteSaleBase(key);
+};
+
+// ---------- Reports › Expenses & tax: card payment fees ----------
+// Stripe's processing fee and the app fee come out of the seller's payouts. Shown so they can be tracked and claimed as business expenses.
+function stripeFeeData(a, b) {
+    let list = data.orders.filter(o => o.payment?.via === 'stripe').filter(o => {
+        let t = Date.parse(o.date) || 0;
+        return t >= a && t < b;
+    });
+    let stripe = round2(list.reduce((s, o) => s + num(o.payment.stripeFee), 0)), app = round2(list.reduce((s, o) => s + num(o.payment.appFee), 0));
+    return { list, stripe, app, total: round2(stripe + app), sales: round2(list.reduce((s, o) => s + num(o.total), 0)), missing: list.filter(o => o.payment.stripeFee == null).length, test: list.some(o => o.payment.test) };
+}
+function stripeFeesPanel(r) {
+    let d = stripeFeeData(r.a, r.b);
+    return `<div class="section-label">Card payment fees</div><div class="panel"><div class="kv"><span>Tap to Pay sales <small>(${d.list.length} sale${d.list.length === 1 ? '' : 's'})</small></span><b>${cash(d.sales)}</b></div><div class="kv"><span>Stripe processing fees</span><b>${cash(d.stripe)}</b></div><div class="kv"><span>App fees <small>(free plan, 1%)</small></span><b>${cash(d.app)}</b></div><div class="kv total"><span>Total card fees</span><b>${cash(d.total)}</b></div><p class="hint">These come out of your Stripe payouts, so they’re not on any receipt. They’re business expenses (card processing fees) you can claim. They aren’t taken off the profit figures in Reports yet.${d.missing ? ` ${d.missing} older sale${d.missing > 1 ? 's don’t' : ' doesn’t'} have Stripe’s fee recorded; see your Stripe Dashboard for those.` : ''}${d.test ? ' Includes test payments (no real money).' : ''}</p></div>`;
+}
+const reportExpensesBase = reportExpenses;
+reportExpenses = function (r) {
+    let h = reportExpensesBase(r);
+    if (!data.orders.some(o => o.payment?.via === 'stripe'))
+        return h;
+    return h.replace('<div class="section-label">Profit after expenses</div>', stripeFeesPanel(r) + '<div class="section-label">Profit after expenses</div>');
 };

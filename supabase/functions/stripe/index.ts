@@ -153,14 +153,18 @@ async function ownPayment(user: User, id: unknown) {
   if (typeof id !== 'string' || !id.startsWith('pi_')) throw new Oops('Unknown payment.');
   const acct = acctOf(user);
   if (!acct) throw new Oops('Connect your Stripe account first.');
-  const pi = await stripe('GET', `/payment_intents/${id}`, { 'expand[]': 'latest_charge' } as Record<string, unknown>, acct);
+  const pi = await stripe('GET', `/payment_intents/${id}`, { 'expand[]': 'latest_charge.balance_transaction' } as Record<string, unknown>, acct);
   if (pi?.metadata?.user_id !== user.id) throw new Oops('Unknown payment.', 403);
   return { pi, acct };
 }
 function cardInfo(pi: Record<string, any>) {
   const d = pi?.latest_charge?.payment_method_details || {};
   const c = d.card_present || d.interac_present || d.card || {};
-  return { brand: c.brand || '', last4: c.last4 || '' };
+  // Fees taken out of the seller's payout: balance_transaction.fee = Stripe's fee + the app fee
+  const bt = pi?.latest_charge?.balance_transaction;
+  const appFee = pi?.application_fee_amount || 0;
+  const stripeFee = bt && typeof bt === 'object' && typeof bt.fee === 'number' ? Math.max(0, bt.fee - appFee) : null;
+  return { brand: c.brand || '', last4: c.last4 || '', stripeFee };
 }
 
 async function handle(action: string, b: Record<string, any>, user: User) {
@@ -247,7 +251,7 @@ async function handle(action: string, b: Record<string, any>, user: User) {
     }
     case 'confirm': {
       let { pi, acct } = await ownPayment(user, b.id);
-      if (pi.status === 'requires_capture') pi = await stripe('POST', `/payment_intents/${pi.id}/capture`, { 'expand[]': 'latest_charge' } as Record<string, unknown>, acct);
+      if (pi.status === 'requires_capture') pi = await stripe('POST', `/payment_intents/${pi.id}/capture`, { 'expand[]': 'latest_charge.balance_transaction' } as Record<string, unknown>, acct);
       return { status: pi.status, amount: pi.amount, fee: pi.application_fee_amount || 0, currency: pi.currency, ...cardInfo(pi) };
     }
     case 'cancel': {
