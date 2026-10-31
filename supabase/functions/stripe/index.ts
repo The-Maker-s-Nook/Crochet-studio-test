@@ -70,6 +70,41 @@ async function stripe(method: string, path: string, params?: Record<string, unkn
   return j;
 }
 
+// ---- Stripe Accounts v2 (JSON). Stripe requires v2 for creating connected accounts on new platforms. ----
+const STRIPE_V2_VERSION = '2026-10-28.endive';
+async function stripeV2(method: string, path: string, body?: Record<string, unknown>, query = '') {
+  const r = await fetch('https://api.stripe.com/v2' + path + (query ? '?' + query : ''), {
+    method,
+    headers: { Authorization: `Bearer ${STRIPE_KEY}`, 'Stripe-Version': STRIPE_V2_VERSION, ...(body ? { 'Content-Type': 'application/json' } : {}) },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  const j = await r.json();
+  if (!r.ok) {
+    console.error('Stripe v2 error', path, j?.error);
+    throw new Oops(j?.error?.message || 'Stripe error', 502);
+  }
+  return j;
+}
+type AcctInfo = { id: string; ready: boolean; submitted: boolean; country: string; currency: string };
+// Reads the seller's account (v2), falling back to v1 for any account made the older way.
+async function accountInfo(acct: string): Promise<AcctInfo> {
+  try {
+    const a = await stripeV2('GET', `/core/accounts/${acct}`, undefined, 'include[0]=configuration.merchant&include[1]=identity&include[2]=defaults&include[3]=requirements');
+    const st = a?.configuration?.merchant?.capabilities?.card_payments?.status || '';
+    const due = (a?.requirements?.entries || []).some((e: Record<string, any>) => ['currently_due', 'past_due'].includes(e?.minimum_deadline?.status));
+    return { id: a.id, ready: st === 'active', submitted: st === 'active' || st === 'pending' || !due, country: String(a?.identity?.country || '').toUpperCase(), currency: String(a?.defaults?.currency || '').toLowerCase() };
+  } catch (e) {
+    // An account made with the older v1 method: read it the old way
+    let a;
+    try {
+      a = await stripe('GET', `/accounts/${acct}`);
+    } catch (_) {
+      throw e;
+    }
+    return { id: a.id, ready: !!a.charges_enabled, submitted: !!a.details_submitted, country: a.country || '', currency: a.default_currency || '' };
+  }
+}
+
 // ---- Supabase user (verified with Supabase, not trusted from the phone) ----
 type User = { id: string; email?: string; app_metadata: Record<string, unknown> };
 async function getUser(req: Request): Promise<User> {
@@ -110,8 +145,8 @@ function acctOf(user: User) {
 async function readyAccount(user: User) {
   const acct = acctOf(user);
   if (!acct) throw new Oops('Connect your Stripe account first (Settings › Finances › Payments).');
-  const a = await stripe('GET', `/accounts/${acct}`);
-  if (!a.charges_enabled) throw new Oops('Your Stripe account isn’t ready to take payments yet. Finish the Stripe setup in Settings › Finances › Payments.');
+  const a = await accountInfo(acct);
+  if (!a.ready) throw new Oops('Your Stripe account isn’t ready to take payments yet. Finish the Stripe setup in Settings › Finances › Payments.');
   return a;
 }
 async function ownPayment(user: User, id: unknown) {
@@ -134,11 +169,11 @@ async function handle(action: string, b: Record<string, any>, user: User) {
       const acct = acctOf(user);
       let ready = false, submitted = false, country = '', currency = '';
       if (acct) {
-        const a = await stripe('GET', `/accounts/${acct}`);
-        ready = !!a.charges_enabled;
-        submitted = !!a.details_submitted;
-        country = a.country || '';
-        currency = a.default_currency || '';
+        const a = await accountInfo(acct);
+        ready = a.ready;
+        submitted = a.submitted;
+        country = a.country;
+        currency = a.currency;
       }
       return {
         sandbox: SANDBOX,
@@ -157,24 +192,26 @@ async function handle(action: string, b: Record<string, any>, user: User) {
     case 'onboard': {
       let acct = acctOf(user);
       if (!acct) {
-        const country = b.country === 'US' ? 'US' : 'CA';
-        // A full Stripe account owned by the seller: Stripe charges the seller its normal fees,
+        const us = b.country === 'US';
+        // The seller's own Stripe account (Accounts v2): Stripe charges the seller its normal fees,
         // Stripe covers fraud/dispute losses, and the seller gets the full Stripe Dashboard.
-        const a = await stripe('POST', '/accounts', {
-          country,
-          email: user.email,
-          controller: {
-            fees: { payer: 'account' },
-            losses: { payments: 'stripe' },
-            stripe_dashboard: { type: 'full' },
-          },
-          capabilities: { card_payments: { requested: true }, transfers: { requested: true } },
+        const a = await stripeV2('POST', '/core/accounts', {
+          contact_email: user.email,
+          display_name: String(b.name || user.email || 'Seller').slice(0, 100),
+          dashboard: 'full',
+          identity: { country: us ? 'us' : 'ca' },
+          configuration: { merchant: { capabilities: { card_payments: { requested: true } } } },
+          defaults: { currency: us ? 'usd' : 'cad', responsibilities: { fees_collector: 'stripe', losses_collector: 'stripe' } },
           metadata: { user_id: user.id, app: 'makers-nook' },
+          include: ['configuration.merchant'],
         });
         acct = a.id;
         await saveMeta(user, { stripe_account: acct, stripe_location: null });
       }
-      const link = await stripe('POST', '/account_links', { account: acct, type: 'account_onboarding', return_url: RETURN_URL, refresh_url: REFRESH_URL });
+      const link = await stripeV2('POST', '/core/account_links', {
+        account: acct,
+        use_case: { type: 'account_onboarding', account_onboarding: { configurations: ['merchant'], return_url: RETURN_URL, refresh_url: REFRESH_URL } },
+      });
       return { url: link.url };
     }
     case 'location': {
@@ -199,7 +236,7 @@ async function handle(action: string, b: Record<string, any>, user: User) {
       const fee = appFeeCents(user, amount);
       const pi = await stripe('POST', '/payment_intents', {
         amount,
-        currency: a.default_currency || (a.country === 'US' ? 'usd' : 'cad'),
+        currency: a.currency || (a.country === 'US' ? 'usd' : 'cad'),
         payment_method_types: ['card_present'],
         capture_method: 'manual', // captured by 'confirm' after the server checks it
         application_fee_amount: fee > 0 ? fee : undefined,

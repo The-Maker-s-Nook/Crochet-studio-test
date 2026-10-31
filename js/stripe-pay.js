@@ -100,7 +100,7 @@ settingsFinances = function () {
 async function stripeConnect() {
     try {
         flash('Opening Stripe…');
-        let r = await stripeApi('onboard', { country: sqCurrency() === 'USD' ? 'US' : 'CA' });
+        let r = await stripeApi('onboard', { country: sqCurrency() === 'USD' ? 'US' : 'CA', name: data.settings.businessName || data.settings.userName || '' });
         await stripeRefresh(true);
         render();
         await appOpenUrl(r.url);
