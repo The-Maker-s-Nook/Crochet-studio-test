@@ -237,7 +237,7 @@ async function handle(action: string, b: Record<string, any>, user: User) {
       const pi = await stripe('POST', '/payment_intents', {
         amount,
         currency: a.currency || (a.country === 'US' ? 'usd' : 'cad'),
-        payment_method_types: ['card_present'],
+        allowed_payment_method_types: ['card_present'], // newer Stripe API: payment_method_types was removed
         capture_method: 'manual', // captured by 'confirm' after the server checks it
         application_fee_amount: fee > 0 ? fee : undefined,
         description: String(b.description || 'Sale').slice(0, 200),
