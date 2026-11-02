@@ -2,7 +2,7 @@
   "id": "./",
   "name": "Crochet Studio",
   "short_name": "Crochet",
-  "description": "Inventory, pricing, patterns and market sales for crochet makers.",
+  "description": "Inventory, pricing, patterns and market sales for makers.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

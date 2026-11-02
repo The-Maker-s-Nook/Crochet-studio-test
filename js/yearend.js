@@ -69,7 +69,7 @@ function yearEndOnOpenReceipts() {
     }, 250);
 }
 
-// ---- File names: "01 January/Yarn/2026-01-05 Michaels $45.20.jpg" ----
+// ---- File names: "01 January/Materials/2026-01-05 Michaels $45.20.jpg" ----
 function safeFileName(s) {
     return String(s || '').replace(/[\/\\:*?"<>|\x00-\x1F]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 60) || 'Receipt';
 }

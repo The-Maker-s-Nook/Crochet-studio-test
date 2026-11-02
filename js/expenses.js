@@ -2,24 +2,24 @@
 // The receipt screens (list, add/edit, details) are in receipts.js. Every receipt is an expense in data.expenses.
 // Part of the Crochet Studio app. Files load in the order listed in index.html.
 
-const EXPENSE_CATS = ['Yarn', 'Supplies', 'Packaging', 'Booth fees', 'Shipping', 'Tools', 'Marketing', 'Gas & travel', 'Displays & booth', 'Fees & subscriptions', 'Other'];
+const EXPENSE_CATS = ['Materials', 'Supplies', 'Packaging', 'Booth fees', 'Shipping', 'Tools', 'Marketing', 'Gas & travel', 'Displays & booth', 'Fees & subscriptions', 'Other'];
 // Yarn and supplies are already in Material costs on each sale; booth fees are already on each market.
-const MATERIAL_EXPENSE_CATS = ['Yarn', 'Supplies'], PROOF_EXPENSE_CATS = ['Booth fees'];
+const MATERIAL_EXPENSE_CATS = ['Materials', 'Supplies'], PROOF_EXPENSE_CATS = ['Booth fees'];
 function expenseCats() {
     return [...EXPENSE_CATS, ...(data.expenseCats || []).filter(c => !EXPENSE_CATS.includes(c))];
 }
-// 'material' (yarn, supplies), 'proof' (booth fees) or 'other' (taken off profit as Other expenses)
+// 'material' (materials, supplies), 'proof' (booth fees) or 'other' (taken off profit as Other expenses)
 function expenseKind(e) {
     return MATERIAL_EXPENSE_CATS.includes(e?.category) ? 'material' : PROOF_EXPENSE_CATS.includes(e?.category) ? 'proof' : 'other';
 }
 // Cost counted against profit: before tax, unless "Not claiming tax on materials" is ticked.
-// Yarn, supply and booth fee receipts are proof only, so they aren't taken off again.
+// Material, supply and booth fee receipts are proof only, so they aren't taken off again.
 function expenseCost(e) {
     if (expenseKind(e) !== 'other')
         return 0;
     return data.settings.notClaimingTax ? num(e.pre) + num(e.tax) : num(e.pre);
 }
-// Tax paid on an expense that counts in the Sales tax totals (yarn and supply tax is already in "tax paid on materials").
+// Tax paid on an expense that counts in the Sales tax totals (material and supply tax is already in "tax paid on materials").
 function expenseTaxPaid(e) {
     return expenseKind(e) === 'material' ? 0 : num(e.tax);
 }

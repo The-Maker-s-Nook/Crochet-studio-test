@@ -14,7 +14,7 @@ Object.assign(ICONS, {
     search: '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>'
 });
 const RECEIPT_PAY = [['card', 'Card'], ['cash', 'Cash'], ['etransfer', 'E-transfer']];
-const CAT_PILL = { Yarn: 'c-yarn', Supplies: 'c-supplies', Packaging: 'c-packaging', 'Booth fees': 'c-booth', Shipping: 'c-shipping', 'Gas & travel': 'c-gas', 'Displays & booth': 'c-booth' };
+const CAT_PILL = { Materials: 'c-yarn', Supplies: 'c-supplies', Packaging: 'c-packaging', 'Booth fees': 'c-booth', Shipping: 'c-shipping', 'Gas & travel': 'c-gas', 'Displays & booth': 'c-booth' };
 let receiptRange = 'month', receiptCat = 'all', receiptQ = '', receiptOnly = '', receiptOpen = null, receiptDraft = null;
 
 const receiptsAll = () => (data.expenses || []).slice().sort((a, b) => String(b.date).localeCompare(String(a.date)) || String(b.id).localeCompare(String(a.id)));
