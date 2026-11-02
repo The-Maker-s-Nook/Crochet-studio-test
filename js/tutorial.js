@@ -587,8 +587,17 @@ function tutEnd() {
     else
         view(activeTab() || 'home');
 }
+// See plans: leave the lesson and open the Plans screen (js/plans.js); Back returns to where the lesson started
 function tutPlans() {
-    appAlert('Pro is $8 a month and adds reminders, pattern storage, receipts and expenses, the Markets, Stock and Expenses and tax reports with more time frames, unlimited markets, and no 1% app fee on Stripe card payments.\n\n(Plans screen coming soon.)');
+    let t = tut;
+    if (!t)
+        return go('plans');
+    tut = null;
+    $('tutLayer')?.remove();
+    try { t.lesson.done?.(); } catch { }
+    tutRestoreData();
+    view(t.from === 'hub' ? 'settings' : (TABS.includes(t.back) ? t.back : (activeTab() || 'home')));
+    setTimeout(() => go('plans'), 200);
 }
 addEventListener('keydown', e => {
     if (!tut)
