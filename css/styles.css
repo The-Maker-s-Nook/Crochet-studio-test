@@ -485,3 +485,10 @@ button.setopt.on{background:#F7F3FF;box-shadow:inset 0 0 0 2.5px var(--lav-deep)
 .setchips{display:flex;gap:8px;margin-top:8px}.setchips button{flex:1}
 .setupbtns{display:flex;gap:10px;margin:16px 0 8px}.setupbtns button{flex:2;min-height:52px}.setupbtns button.alt{flex:1}
 .setupdone{text-align:center;margin:18px 0 14px}.setupdone .tic{margin:0 auto}.setupdone h2{margin:12px 0 4px}
+/* E-transfer at checkout: the seller's email shown big for the customer */
+.etbox{margin-top:12px;background:var(--card2);border:1.5px solid var(--lav-soft);border-radius:18px;padding:14px}
+button.etemail{display:block;width:100%;margin:6px 0 4px;padding:6px 0;background:none;box-shadow:none;color:var(--ink);font-weight:900;text-align:left;overflow-wrap:break-word;min-height:0;justify-content:flex-start;letter-spacing:.01em;user-select:all}
+.etamt{font-weight:700}.etamt b{font-family:var(--display);font-size:22px}
+.etfull{text-align:center;padding:10px 2px}
+.etbig{font-weight:900;color:var(--ink);margin-top:10px;overflow-wrap:break-word;user-select:all;letter-spacing:.01em}
+.etbigamt{font-family:var(--display);font-size:46px;color:var(--ink);margin-top:4px}
