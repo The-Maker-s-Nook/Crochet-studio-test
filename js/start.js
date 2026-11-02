@@ -28,6 +28,12 @@ addEventListener('appinstalled', () => {
 addEventListener('popstate', () => {
     if (skipPop) {
         skipPop = false;
+        for (; pendingPushes > 0; pendingPushes--)
+            try {
+                history.pushState({ cs: navStack.length - pendingPushes + 1 }, '');
+            }
+            catch {
+            }
         return;
     }
     let st = navStack.pop();
