@@ -78,7 +78,7 @@ async function installApp() {
     render();
 }
 // ---- Home messages ----
-const HOME_MSGS = ['Ready to make something today?', 'Every little bit counts. You’ve got this!', 'Market season is here. Time to pack?', 'Don’t forget to snap photos of new makes.', 'Check your supplies before the next big project.', 'Small business, big heart.', 'Hydrate, stretch, then create.', 'Your next best seller is in the making.', 'Tip: back up your data in Settings.', 'Thanks for supporting handmade!'];
+const HOME_MSGS = ['Ready to make something today?', 'Every handmade piece tells a story.', 'Market day is coming. Time to pack?', 'New make? Snap a photo before it sells.', 'Check your supplies before the next big project.', 'Small business, big heart.', 'Stretch, sip some water, then create.', 'Your next best seller might start today.', 'Tip: back up your data in Settings.', 'Thanks for keeping handmade alive!'];
 let homeMsgIdx = null;
 function homeMessage() {
     if (homeMsgIdx === null) {
