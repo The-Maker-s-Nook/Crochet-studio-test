@@ -11,7 +11,8 @@ function render() {
     updateReminderBadge();
 }
 // ===== Navigation: back returns to wherever you came from =====
-let navStack = [], skipPop = false;
+// skipPop: view() is rewinding browser history; pendingPushes: screens opened before that rewind finished
+let navStack = [], skipPop = false, pendingPushes = 0;
 const TABS = ['home', 'products', 'materials', 'patterns', 'markets', 'reports'];
 function snap() {
     return { screen, selected, marketSelected, editing, scroll: scrollY };
@@ -24,11 +25,15 @@ function closeOverlays() {
 function go(s, setup) {
     closeOverlays();
     navStack.push(snap());
-    try {
-        history.pushState({ cs: navStack.length }, '');
-    }
-    catch {
-    }
+    // If view() is still rewinding history, add this entry once the rewind lands (else the rewind overshoots and leaves the app)
+    if (skipPop)
+        pendingPushes++;
+    else
+        try {
+            history.pushState({ cs: navStack.length }, '');
+        }
+        catch {
+        }
     setup?.();
     screen = s;
     render();
@@ -37,6 +42,11 @@ function go(s, setup) {
 function goBack() {
     if (!navStack.length)
         return view('home');
+    // Still rewinding from view(): this screen was never added to the browser history, so step back here directly
+    if (skipPop && pendingPushes > 0) {
+        pendingPushes--;
+        return restoreNav(navStack.pop());
+    }
     history.back();
 }
 function restoreNav(st) {
@@ -59,14 +69,18 @@ function view(s) {
     if (s !== screen || s !== 'products')
         productFolderOpen.clear();
     if (navStack.length) {
-        let n = navStack.length;
+        // Only rewind the entries really in the browser history (not ones still waiting for an earlier rewind)
+        let n = navStack.length - pendingPushes;
         navStack = [];
-        skipPop = true;
-        try {
-            history.go(-n);
-        }
-        catch {
-            skipPop = false;
+        pendingPushes = 0;
+        if (n > 0 && !skipPop) {
+            skipPop = true;
+            try {
+                history.go(-n);
+            }
+            catch {
+                skipPop = false;
+            }
         }
     }
     screen = s;

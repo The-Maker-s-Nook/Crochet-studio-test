@@ -120,11 +120,11 @@ function soldPanel(f) {
     return `<div class="section-label">What sold</div><div class="panel">${show.map((x, i) => `<div class="rank"><span class="rk">${i + 1}</span><div class="grow"><div class="row"><span>${esc(x.name)}</span><b>${x.qty} sold</b></div><div class="bar"><div style="width:${Math.max(3, Math.round(x.qty / max * 100))}%;background:var(--lav-deep)"></div></div><div class="muted rsub">${x.price} each · ${cash(x.sales)} in sales</div>${x.disc ? `<div class="muted rsub indent">with discounts: ${x.disc.qty} at ${x.disc.price} · ${cash(x.disc.sales)}</div>` : ''}</div></div>`).join('')}${list.length > 5 ? `<button class="seeall" onclick="reportShowAllSold=${!reportShowAllSold};render()">${reportShowAllSold ? 'Show less' : `See all ${list.length} products sold`}</button>` : ''}</div>`;
 }
 function paymentsPanel(f) {
-    let orders = new Map();
+    let orders = new Map(), byId = new Map(data.orders.map(o => [o.id, o]));
     for (let x of f.sales) {
         let k = x.orderId || x.id;
         if (!orders.has(k)) {
-            let o = x.orderId ? data.orders.find(z => z.id === x.orderId) : null;
+            let o = x.orderId ? byId.get(x.orderId) : null;
             orders.set(k, { m: o?.payment?.method || '', t: 0 });
         }
         orders.get(k).t += lineRev(x) + num(x.tax);
