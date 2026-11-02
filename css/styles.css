@@ -471,3 +471,17 @@ button.linkcard b{font-family:var(--display);font-weight:400;font-size:18px;line
 .planlist li{display:flex;gap:10px;align-items:flex-start}
 .plancheck{flex-shrink:0;width:20px;height:20px;border-radius:50%;background:var(--ok-bg);color:var(--ok-ink);display:flex;align-items:center;justify-content:center;margin-top:1px}
 .plancheck.pro{background:var(--pink-soft);color:var(--pink-soft-ink)}
+
+/* First-time setup (js/setup.js) */
+.setuphead{margin:6px 0 14px}.setuphead h2{margin:10px 0 4px}.setuphead p{margin:0}.setuphead .linkbtn{padding-right:0}
+.setbar{display:flex;gap:6px;margin-top:8px}.setbar i{flex:1;height:6px;border-radius:6px;background:var(--lav-soft)}.setbar i.on{background:var(--lav-deep)}
+button.setopt,.setopt{width:100%;display:flex;gap:12px;align-items:flex-start;text-align:left;justify-content:flex-start;background:var(--card);color:var(--ink);border-radius:18px;padding:13px 15px;margin:8px 0 0;box-shadow:inset 0 0 0 2px var(--lav-soft);font-weight:600;min-height:0}
+.setopt .grow{display:flex;flex-direction:column;gap:2px}.setopt b{font-size:15px}.setopt .muted{font-size:13px}
+button.setopt.on{background:#F7F3FF;box-shadow:inset 0 0 0 2.5px var(--lav-deep)}
+.setradio{flex-shrink:0;width:20px;height:20px;margin-top:1px;border-radius:50%;box-shadow:inset 0 0 0 2px var(--thumb-ico);background:var(--card)}
+.setopt.on .setradio{box-shadow:inset 0 0 0 6px var(--lav-deep)}
+.setopt.soon{opacity:.7;box-shadow:inset 0 0 0 2px var(--lav-line);border:none;background:transparent}
+.setinline{display:block;margin-top:8px}.setinline label{margin-top:0}
+.setchips{display:flex;gap:8px;margin-top:8px}.setchips button{flex:1}
+.setupbtns{display:flex;gap:10px;margin:16px 0 8px}.setupbtns button{flex:2;min-height:52px}.setupbtns button.alt{flex:1}
+.setupdone{text-align:center;margin:18px 0 14px}.setupdone .tic{margin:0 auto}.setupdone h2{margin:12px 0 4px}

@@ -1,6 +1,6 @@
 // Crochet Studio service worker: lets the app open and work with no internet.
 // When you change any app file, bump this version so phones pick up the update.
-const CACHE = 'crochet-studio-v24-5';
+const CACHE = 'crochet-studio-v24-6';
 const ASSETS = [
   './',
   './index.html',
@@ -33,6 +33,7 @@ const ASSETS = [
   './js/import.js',
   './js/sync.js',
   './js/account-screens.js',
+  './js/setup.js',
   './js/tutorial.js',
   './js/start.js',
   './icons/icon-192.png',

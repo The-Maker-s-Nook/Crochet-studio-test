@@ -622,7 +622,7 @@ function tutWelcome() {
 const tutRenderBase = render;
 render = function () {
     let r = tutRenderBase.apply(this, arguments);
-    if (screen === 'home' && dataLoaded && !tut && !lsGet('csTutOffered', false))
+    if (screen === 'home' && dataLoaded && !tut && !lsGet('csTutOffered', false) && !setupNeeded())
         setTimeout(() => { if (screen === 'home' && !tut && !$('modal') && !$('appDialog')) tutWelcome(); }, 900);
     return r;
 };
