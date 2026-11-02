@@ -460,3 +460,14 @@ button.linkcard b{font-family:var(--display);font-weight:400;font-size:18px;line
 .rphoto{max-height:65vh;object-fit:contain}
 #vbody{touch-action:pan-x pan-y}
 #app .grid+.panel,#app .grid+.section-label{margin-top:14px}
+
+/* Plans screen (js/plans.js) */
+.planbanner{background:var(--alt-bg);color:var(--alt-ink);font-size:14px;line-height:1.45}
+.plancard .row{align-items:flex-start}
+.planprice{font-family:inherit;font-size:30px;font-weight:900;margin-top:2px}.planprice span{font-size:15px;font-weight:700;color:var(--ink2)}
+.procard{box-shadow:0 0 0 2.5px var(--pink)}
+.pill.propill{background:var(--pink-soft);color:var(--pink-soft-ink)}
+.planlist{list-style:none;margin:12px 0 14px;padding:0;display:flex;flex-direction:column;gap:8px;font-size:15px;line-height:1.4}
+.planlist li{display:flex;gap:10px;align-items:flex-start}
+.plancheck{flex-shrink:0;width:20px;height:20px;border-radius:50%;background:var(--ok-bg);color:var(--ok-ink);display:flex;align-items:center;justify-content:center;margin-top:1px}
+.plancheck.pro{background:var(--pink-soft);color:var(--pink-soft-ink)}
