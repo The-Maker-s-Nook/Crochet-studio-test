@@ -38,6 +38,8 @@ function migrateData(d, fresh) {
     for (let e of d.expenses)
         if (e.category === 'Fees')
             e.category = 'Fees & subscriptions';
+        else if (e.category === 'Yarn')
+            e.category = 'Materials'; // receipt category renamed so the app suits every craft
     if (!Array.isArray(d.reminders))
         d.reminders = [];
     if (!Array.isArray(d.patternLinks))

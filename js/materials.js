@@ -114,7 +114,7 @@ function unitInUse(u) {
     return data.materials.some(m => m.unit === u.id) || data.materialCategories.some(c => c.unit === u.id);
 }
 function openUnitsModal() {
-    openModal(`<div class="row"><h2 style="margin:0">Units</h2>${closeX()}</div><p class="muted">Units are how materials are measured. Add your own for other crafts, like yards, metres or skeins.</p>${data.units.map(u => `<div class="row entry" style="margin:6px 0"><span><b>${esc(u.name)}</b> <span class="muted">(${esc(u.short)})</span></span>${u.builtin ? '<span class="chip">Built-in</span>' : unitInUse(u) ? '<span class="chip">In use</span>' : `<button class="danger small" onclick="deleteUnit('${u.id}')">Delete</button>`}</div>`).join('')}<h3 style="margin-top:18px">Add a unit</h3><div class="two"><div><label for="nuName">Unit name</label><input id="nuName" placeholder="e.g. yards"></div><div><label for="nuShort">Short form</label><input id="nuShort" placeholder="e.g. yd"></div></div><div class="actions"><button onclick="addUnitModal()">Add unit</button></div>`);
+    openModal(`<div class="row"><h2 style="margin:0">Units</h2>${closeX()}</div><p class="muted">Units are how materials are measured. Add your own for other crafts, like yards, metres or rolls.</p>${data.units.map(u => `<div class="row entry" style="margin:6px 0"><span><b>${esc(u.name)}</b> <span class="muted">(${esc(u.short)})</span></span>${u.builtin ? '<span class="chip">Built-in</span>' : unitInUse(u) ? '<span class="chip">In use</span>' : `<button class="danger small" onclick="deleteUnit('${u.id}')">Delete</button>`}</div>`).join('')}<h3 style="margin-top:18px">Add a unit</h3><div class="two"><div><label for="nuName">Unit name</label><input id="nuName" placeholder="e.g. yards"></div><div><label for="nuShort">Short form</label><input id="nuShort" placeholder="e.g. yd"></div></div><div class="actions"><button onclick="addUnitModal()">Add unit</button></div>`);
 }
 function addUnitModal() {
     let nm = $('nuName').value;
@@ -405,7 +405,7 @@ async function saveMaterial(e) {
     if (unit === '__new')
         return needField('munitNewName', 'Finish adding the new unit first (tap Add unit).');
     if (!name)
-        return needField('mname', 'Enter a type or brand name, e.g. Polyfill.');
+        return needField('mname', 'Enter a type or brand name, e.g. Soy wax or Cotton blend.');
     if (!(weight > 0))
         return needField('mweight', 'Enter the package size (more than 0).');
     if ($('mprice').value.trim() === '' || !(Number($('mprice').value) >= 0))
@@ -492,7 +492,7 @@ async function saveQuickMaterial() {
     if (unit === '__new')
         return needField('qunitNewName', 'Finish adding the new unit first (tap Add unit).');
     if (!name)
-        return needField('qname', 'Enter a type or brand name, e.g. Polyfill.');
+        return needField('qname', 'Enter a type or brand name, e.g. Soy wax or Cotton blend.');
     if (!(weight > 0))
         return needField('qweight', 'Enter the package size (more than 0).');
     if ($('qprice').value.trim() === '' || !(price >= 0))

@@ -81,7 +81,7 @@ function purchaseTax(item, amount) {
 function taxExample() {
     let s = data.settings, r = taxRate(), mode = s.materialTax || 'none', sp = splitPrice(12.99, mode, r), use = s.notClaimingTax ? sp.pre + sp.tax : sp.pre;
     let rows = mode === 'none' ? '<div class="row"><span>No tax tracked</span><span></span></div>' : mode === 'add' ? `<div class="row"><span>+ ${num(r)}% tax</span><span>${cash(sp.tax)}</span></div>` : `<div class="row"><span>Tax inside (${num(r)}%)</span><span>${cash(sp.tax)}</span></div><div class="row"><span>Before tax</span><span>${cash(sp.pre)}</span></div>`;
-    return `<div class="taxex"><div class="muted" style="font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.04em">Example: one skein entered as $12.99</div>${rows}<div class="row tot"><span>Cost used in pricing</span><span>${cash(use)}</span></div></div>`;
+    return `<div class="taxex"><div class="muted" style="font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.04em">Example: one pack entered as $12.99</div>${rows}<div class="row tot"><span>Cost used in pricing</span><span>${cash(use)}</span></div></div>`;
 }
 const signedCash = v => (v < 0 ? '−' : '') + cash(Math.abs(v));
 // Sale lines. For tax-included lines, "full" and "revenue" leave out the tax inside the price, so profit is always before tax.

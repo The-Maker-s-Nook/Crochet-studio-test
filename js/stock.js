@@ -45,7 +45,7 @@ function packCount(n) {
     let r = Math.round(n * 10) / 10;
     return Number.isInteger(r) ? String(r) : r.toFixed(1);
 }
-// "2 skeins left · 600 g"
+// e.g. "2 bags left · 600 g"
 function stockLine(m) {
     if (!stockKnown(m))
         return 'Not counted yet';
@@ -128,7 +128,7 @@ function stockSettingField() {
 // ---- Category form: "What do you buy it in?" ----
 function packWordField(c) {
     let w = c ? (c.packWord ?? '') : 'pack';
-    return `<label for="mcWord">What do you buy it in? (optional)</label><input id="mcWord" value="${esc(w)}" placeholder="e.g. skein" oninput="packWordPreview()"><div class="chips" style="margin-top:8px">${PACK_WORDS.map(x => `<button type="button" class="chip" onclick="$('mcWord').value='${x}';packWordPreview()">${x}</button>`).join('')}</div><div class="hint" id="mcWordHint">${packWordHint(w, c?.unit || 'g')}</div>`;
+    return `<label for="mcWord">What do you buy it in? (optional)</label><input id="mcWord" value="${esc(w)}" placeholder="e.g. pack" oninput="packWordPreview()"><div class="chips" style="margin-top:8px">${PACK_WORDS.map(x => `<button type="button" class="chip" onclick="$('mcWord').value='${x}';packWordPreview()">${x}</button>`).join('')}</div><div class="hint" id="mcWordHint">${packWordHint(w, c?.unit || 'g')}</div>`;
 }
 function packWordHint(w, unit) {
     w = normName(w) || 'package';

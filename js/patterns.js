@@ -816,7 +816,7 @@ function addPatternTagTo(itemId) {
 // + Tag (new) or Edit tag (rename / delete) on the Patterns page
 function editPatternTag(tid) {
     let t = tid ? patternTag(tid) : null;
-    openModal(`<div class="row"><h2 style="margin:0">${t ? 'Edit' : 'New'} pattern tag</h2>${closeX()}</div><label for="ptName">Tag name</label><input id="ptName" maxlength="40" value="${esc(t?.name || '')}" placeholder="e.g. Bees, Amigurumi, Holiday" onkeydown="if(event.key==='Enter'){event.preventDefault();savePatternTag(${t ? `'${t.id}'` : ''})}"><div class="actions"><button onclick="savePatternTag(${t ? `'${t.id}'` : ''})">Save tag</button>${t ? `<button class="danger" onclick="deletePatternTag('${t.id}')">Delete tag</button>` : `<button class="alt" onclick="closeModal()">Cancel</button>`}</div>`);
+    openModal(`<div class="row"><h2 style="margin:0">${t ? 'Edit' : 'New'} pattern tag</h2>${closeX()}</div><label for="ptName">Tag name</label><input id="ptName" maxlength="40" value="${esc(t?.name || '')}" placeholder="e.g. Bees, Gifts, Holiday" onkeydown="if(event.key==='Enter'){event.preventDefault();savePatternTag(${t ? `'${t.id}'` : ''})}"><div class="actions"><button onclick="savePatternTag(${t ? `'${t.id}'` : ''})">Save tag</button>${t ? `<button class="danger" onclick="deletePatternTag('${t.id}')">Delete tag</button>` : `<button class="alt" onclick="closeModal()">Cancel</button>`}</div>`);
     setTimeout(() => $('ptName')?.focus(), 50);
 }
 function savePatternTag(tid) {
