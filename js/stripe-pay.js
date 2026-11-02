@@ -87,7 +87,7 @@ settingsPayments = function () {
     if (!STRIPE_DEVICE)
         return settingsPaymentsSquare();
     if (stripeChosen())
-        return `${backBtn()}<h2 style="margin-top:12px">Payments</h2>${providerPicker()}${stripePanel()}<div class="panel muted">Cash, card on your own reader and e-transfer can always be recorded at checkout.</div>`;
+        return `${backBtn()}<h2 style="margin-top:12px">Payments</h2>${providerPicker()}${stripePanel()}<div class="panel muted">Cash, card on your own reader and e-transfer can always be recorded at checkout.</div>${etransferPanel()}`;
     // Square / None: the existing screen, with the on/off box swapped for the picker
     let h = settingsPaymentsSquare();
     return h.replace(/<div class="panel"><label class="check" style="margin-top:0"><input type="checkbox" id="sqOn"[\s\S]*?<\/p><\/div>/, providerPicker());
