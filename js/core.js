@@ -198,6 +198,7 @@ const ICONS = { "percent": "<path d=\"M19 5 5 19\"/><circle cx=\"7\" cy=\"7\" r=
 ICONS.upload ||= '<path d="M12 21V9M7 14l5-5 5 5M5 3h14"/>';
 ICONS.pin ||= '<path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>';
 ICONS.calendar ||= '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/>';
+ICONS.eye ||= '<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>';
 Object.assign(ICONS, { back: '<path d="M15 5l-7 7 7 7"/>', cloud: '<path d="M7 18a4.5 4.5 0 0 1-.5-8.97A6 6 0 0 1 18 9a4 4 0 0 1 0 9z"/>', upload: '<path d="M7 18a4.5 4.5 0 0 1-.5-8.97A6 6 0 0 1 18 9a4 4 0 0 1 0 9"/><path d="M12 12v8M9 15l3-3 3 3"/>' });
 Object.assign(ICONS, { card: '<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20M6 15h4"/>', pencil: '<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>', receipt: '<path d="M5 3h14v18l-3-2-2 2-2-2-2 2-2-2-3 2z"/><path d="M9 8h6M9 12h6"/>' });
 // ===== v23: tester feedback fixes and new features =====

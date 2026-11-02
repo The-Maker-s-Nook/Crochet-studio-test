@@ -199,7 +199,45 @@ function saleReview() {
         return `${backBtn()}<div class="panel" style="margin-top:12px"><p class="muted">There's no sale in progress.</p></div>`;
     let d = saleAdj.discount, meth = payTmp.method, cardSq = meth === 'card' && squareOn(), given = payTmp.given === '' ? NaN : Number(payTmp.given);
     let lines = o.lines.map(l => `<div class="row rline"><span class="grow">${esc(l.name)} × ${l.qty}${l.price !== l.list ? `<span class="hint block">${esc(l.reason || 'Price change')} · ${cash(l.price)} each</span>` : ''}</span><span>${l.price !== l.list ? `<s class="hint">${cash(l.qty * l.list)}</s> ` : ''}${cash(l.qty * l.price)}</span></div>`).join('');
-    return `${backBtn()}<h2 style="margin-top:12px">Review sale</h2><div class="muted" style="margin:-8px 0 12px;font-weight:700">${m ? esc(m.name) : 'Quick sale'}</div><div class="panel">${lines}<div class="divider" style="height:1.5px;margin:10px 0"></div><div class="row"><span class="muted">Subtotal</span><span>${cash(o.sub)}</span></div>${o.disc ? `<div class="row discline"><span>${esc(discLabel(d, o.sub))}</span><span>−${cash(o.disc)}</span></div><div class="linkrow"><button class="linkbtn" onclick="openDiscount()">Edit discount</button><button class="linkbtn" onclick="saleAdj.discount=null;render()">Remove</button></div>` : `<div class="linkrow"><button class="linkbtn" onclick="openDiscount()">+ Add a discount</button><button class="linkbtn" onclick="openPriceEdit()">Change a price</button></div>`}${taxRows(o)}<div class="divider" style="height:1.5px;margin:10px 0"></div><div class="row totalrow"><b>Total</b><span class="bigtotal">${cash(o.total)}</span></div></div><div class="panel"><div class="eyebrow">How are they paying?</div><div class="paygrid">${PAY_METHODS.map(([k, l]) => `<button class="paybtn ${meth === k ? 'on' : ''}" aria-pressed="${meth === k}" onclick="payTmp.method='${k}';payTmp.touched=true;render()">${k === 'card' ? ic('card', 18) : ''}${l}${k === 'card' && squareOn() ? '<span class="sqtag">Square</span>' : ''}</button>`).join('')}</div>${meth === 'cash' ? `<label for="cashGiven">Cash given (optional)</label><input id="cashGiven" type="number" inputmode="decimal" min="0" step="0.01" value="${esc(payTmp.given)}" placeholder="${cash(o.total)}" oninput="payTmp.given=this.value;let c=$('changeDue');if(c)c.innerHTML=changeHtml(${o.total})"><div id="changeDue">${changeHtml(o.total)}</div>` : ''}${cardSq ? `<p class="hint">Square opens with ${cash(o.total)} ready. After the payment, Square brings you back here and the sale is saved.</p>` : meth === 'card' ? `<p class="hint">Records a card payment taken on your own reader. Turn on Square in Settings › Finances › Payments to open Square automatically.</p>` : ''}</div><button class="btn-wide" onclick="completeSale()">${cardSq ? `${ic('card', 18)} Charge ${cash(o.total)} with Square` : `Complete sale · ${cash(o.total)}`}</button>`;
+    return `${backBtn()}<h2 style="margin-top:12px">Review sale</h2><div class="muted" style="margin:-8px 0 12px;font-weight:700">${m ? esc(m.name) : 'Quick sale'}</div><div class="panel">${lines}<div class="divider" style="height:1.5px;margin:10px 0"></div><div class="row"><span class="muted">Subtotal</span><span>${cash(o.sub)}</span></div>${o.disc ? `<div class="row discline"><span>${esc(discLabel(d, o.sub))}</span><span>−${cash(o.disc)}</span></div><div class="linkrow"><button class="linkbtn" onclick="openDiscount()">Edit discount</button><button class="linkbtn" onclick="saleAdj.discount=null;render()">Remove</button></div>` : `<div class="linkrow"><button class="linkbtn" onclick="openDiscount()">+ Add a discount</button><button class="linkbtn" onclick="openPriceEdit()">Change a price</button></div>`}${taxRows(o)}<div class="divider" style="height:1.5px;margin:10px 0"></div><div class="row totalrow"><b>Total</b><span class="bigtotal">${cash(o.total)}</span></div></div><div class="panel"><div class="eyebrow">How are they paying?</div><div class="paygrid">${PAY_METHODS.map(([k, l]) => `<button class="paybtn ${meth === k ? 'on' : ''}" aria-pressed="${meth === k}" onclick="payTmp.method='${k}';payTmp.touched=true;render()">${k === 'card' ? ic('card', 18) : ''}${l}${k === 'card' && squareOn() ? '<span class="sqtag">Square</span>' : ''}</button>`).join('')}</div>${meth === 'cash' ? `<label for="cashGiven">Cash given (optional)</label><input id="cashGiven" type="number" inputmode="decimal" min="0" step="0.01" value="${esc(payTmp.given)}" placeholder="${cash(o.total)}" oninput="payTmp.given=this.value;let c=$('changeDue');if(c)c.innerHTML=changeHtml(${o.total})"><div id="changeDue">${changeHtml(o.total)}</div>` : ''}${meth === 'etransfer' ? etransferBox(o.total) : ''}${cardSq ? `<p class="hint">Square opens with ${cash(o.total)} ready. After the payment, Square brings you back here and the sale is saved.</p>` : meth === 'card' ? `<p class="hint">Records a card payment taken on your own reader. Turn on Square in Settings › Finances › Payments to open Square automatically.</p>` : ''}</div><button class="btn-wide" onclick="completeSale()">${cardSq ? `${ic('card', 18)} Charge ${cash(o.total)} with Square` : `Complete sale · ${cash(o.total)}`}</button>`;
+}
+// ---- E-transfer: show the seller's e-transfer email big, so the customer can type it in ----
+function etEmail() {
+    return (data.settings.etransferEmail || '').trim();
+}
+function etFitSize(text, max, min = 20) {
+    // Shrinks long addresses to fit one line on a phone; very long ones wrap instead of getting tiny
+    return `font-size:clamp(${min}px, calc((min(100vw, 560px) - 80px) / (${Math.max(text.length, 8)} * 0.68)), ${max}px)`;
+}
+function etWrap(em) {
+    // If it has to wrap, wrap right after the @ rather than mid-word
+    return esc(em).replace('@', '@<wbr>');
+}
+function etransferBox(total) {
+    let em = etEmail();
+    if (!em)
+        return `<div class="etbox"><label for="etSet" style="margin-top:0">Your e-transfer email</label><p class="hint" style="margin:0 0 8px">Shown big here so the customer can type it in. Saved for next time (Settings › Finances › Payments).</p><div class="row" style="gap:8px"><input id="etSet" type="email" inputmode="email" autocomplete="email" placeholder="you@example.com" class="grow"><button class="small" onclick="saveEtEmail($('etSet').value)">Save</button></div></div>`;
+    return `<div class="etbox"><div class="eyebrow">Send the e-transfer to</div><button class="etemail" onclick="showEtransfer(${total})" aria-label="Show ${esc(em)} full screen" style="${etFitSize(em, 26)}">${etWrap(em)}</button><div class="row etamt"><span class="muted">Amount</span><b>${cash(total)}</b></div><div class="actions" style="margin-top:10px"><button class="grow" onclick="showEtransfer(${total})">${ic('eye', 18)} Show customer</button><button class="alt" onclick="copyEtEmail()">Copy</button></div><p class="hint" style="margin-bottom:0">Check the money has arrived before they leave. <button class="linkbtn" onclick="go('settingsPayments')">Change email</button></p></div>`;
+}
+function saveEtEmail(v) {
+    v = (v || '').trim();
+    if (!v)
+        return appAlert('Type the email (or mobile number) you get e-transfers at.');
+    data.settings.etransferEmail = v;
+    save();
+    render();
+}
+async function copyEtEmail() {
+    try {
+        await navigator.clipboard.writeText(etEmail());
+        toast('Email copied');
+    } catch (e) {
+        appAlert(etEmail());
+    }
+}
+function showEtransfer(total) {
+    let em = etEmail();
+    openModal(`<div class="etfull"><div class="eyebrow">Send an Interac e-Transfer to</div><div class="etbig" style="${etFitSize(em, 44, 28)}">${etWrap(em)}</div><div class="eyebrow" style="margin-top:22px">Amount</div><div class="etbigamt">${cash(total)}</div>${data.settings.businessName ? `<p class="muted" style="margin-top:14px;font-weight:700">${esc(data.settings.businessName)}</p>` : ''}<button class="btn-wide" style="margin-top:22px" onclick="closeModal()">Done</button></div>`);
 }
 function changeHtml(total) {
     let g = payTmp.given === '' ? NaN : Number(payTmp.given);
