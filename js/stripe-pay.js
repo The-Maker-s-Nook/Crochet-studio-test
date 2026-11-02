@@ -340,7 +340,7 @@ async function stripeCollect(total, description, ref, test) {
 async function stripeTest() {
     let r = await stripeCollect(1, 'Crochet Studio test payment', 'test', true);
     if (r)
-        appAlert(`Tap to Pay worked! ${r.brand ? `${r.brand.toUpperCase()} •••• ${r.last4}. ` : ''}App fee: ${cash(r.fee)}.${stripeInfo?.sandbox ? ' This was a test payment, no real money.' : ' Refund the $1.00 in your Stripe Dashboard.'}`, 'Stripe is connected');
+        appAlert(`Tap to Pay worked! ${r.brand ? `${r.brand.toUpperCase()} •••• ${r.last4}.` : ''}${stripeInfo?.sandbox ? ' This was a test payment, no real money.' : ' Refund the $1.00 in your Stripe Dashboard.'}`, 'Stripe is connected');
 }
 async function stripeCharge() {
     if (stripeBusy)
@@ -360,8 +360,6 @@ async function stripeCharge() {
         return appAlert(`The ${cash(o.total)} payment went through, but the sale couldn’t be saved. Please add it by hand.`);
     saleKind = kind;
     afterSale(o.total);
-    if (r.fee)
-        setTimeout(() => toast(`Card approved · app fee ${cash(r.fee)}`), 600);
 }
 const completeSaleBase = completeSale;
 completeSale = function () {
@@ -377,8 +375,8 @@ saleReview = function () {
     h = h.replace(/(onclick="payTmp\.method='card';payTmp\.touched=true;render\(\)">[\s\S]*?)(<\/button>)/, '$1<span class="sqtag">Tap to Pay</span>$2');
     if (payTmp.method !== 'card')
         return h;
-    let o = computeOrder(marketSaleDraft, saleAdj), fee = stripeInfo && !stripeInfo.paid ? round2(o.total * (stripeInfo.feePct || 0) / 100) : 0;
-    let hint = `<p class="hint">Tap to Pay: the customer taps their card or phone on the back of this phone. The sale saves once Stripe approves it.${fee ? ` App fee on the free plan: ${cash(fee)}.` : ''}</p>`;
+    let o = computeOrder(marketSaleDraft, saleAdj);
+    let hint = `<p class="hint">Tap to Pay: the customer taps their card or phone on the back of this phone. The sale saves once Stripe approves it.</p>`;
     return h.replace(/<p class="hint">Records a card payment taken on your own reader\.[\s\S]*?<\/p>/, hint).replace(/<button class="btn-wide" onclick="completeSale\(\)">[\s\S]*?<\/button>$/, `<button class="btn-wide" onclick="completeSale()">${ic('card', 18)} Charge ${cash(o.total)} with Tap to Pay</button>`);
 };
 
