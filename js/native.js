@@ -81,6 +81,17 @@ if (IS_APP) {
         }
         return webOpen(url, target, features);
     };
+    // Android back button: close a pop-up first, then step back one screen; from Home it leaves the app.
+    appPlugin('App')?.addListener('backButton', ({ canGoBack }) => {
+        if (closeTopOverlay())
+            return;
+        if ($('viewer') || navStack.length || canGoBack)
+            return history.back();
+        if (screen !== 'home')
+            return view('home');
+        let a = appPlugin('App');
+        a?.minimizeApp ? a.minimizeApp() : a?.exitApp();
+    });
     // Share sheet for files: the app version supports it even where the phone's web view doesn't.
     Object.defineProperty(navigator, 'canShare', { configurable: true, value: data => !!(data && (data.files?.length || data.url || data.text)) });
     Object.defineProperty(navigator, 'share', { configurable: true, value: async data => {
