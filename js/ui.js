@@ -147,6 +147,20 @@ function resizePhoto(file, done, max = 480) {
         return;
     compressImage(file, max).then(b => b && blobToDataUrl(b)).then(u => u && done(u)).catch(e => appAlert(e?.message || 'This photo couldn’t be added.'));
 }
+// Several photos picked at once: shrink them side by side, but add them in the order they were picked.
+async function resizePhotos(files, done, max = 480) {
+    let jobs = [...(files || [])].map(f => compressImage(f, max).then(b => b && blobToDataUrl(b)).catch(e => ({ err: e })));
+    let failed = null;
+    for (let j of jobs) {
+        let u = await j;
+        if (u?.err)
+            failed ||= u.err;
+        else if (u)
+            done(u);
+    }
+    if (failed)
+        appAlert(failed?.message || 'This photo couldn’t be added.');
+}
 // ===== Styled pop-ups (replace the phone's plain alert / confirm boxes) =====
 let dlgDone = null;
 function appDialog({ title = '', message = '', ok = 'OK', cancel = null, danger = false }) {

@@ -13,3 +13,12 @@
   for = "/index.html"
   [headers.values]
     Cache-Control = "no-cache"
+
+# Basic security headers for every page: the app can't be shown inside another site (stops click-jacking),
+# browsers don't guess file types, and full page addresses aren't sent to other sites.
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"

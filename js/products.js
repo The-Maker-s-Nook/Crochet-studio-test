@@ -128,6 +128,8 @@ function useSuggested() {
     $('pprice').value = suggest(getDraft());
 }
 async function saveProduct() {
+    if (screen !== 'productForm' || !$('pname'))
+        return; // a second tap after the form already closed
     let p = getDraft();
     if (!p.name)
         return needField('pname', 'Enter a product name.');
@@ -141,6 +143,8 @@ async function saveProduct() {
         return appAlert(`Enter how much ${materialLabel(material(missing.materialId))} this product uses.`);
     }
     if (!p.materials.length && !await appConfirm('No materials added yet, so the material cost will be $0. Save anyway?'))
+        return;
+    if (!$('pprice'))
         return;
     let price = $('pprice').value === '' ? suggest(p) : num($('pprice').value);
     let initial = Number($('pinitialStock').value);
@@ -171,10 +175,10 @@ async function saveProduct() {
     toast(wasCopy ? 'Variation saved.' : 'Product saved.');
 }
 function loadPhoto(e) {
-    [...(e.target.files || [])].forEach(f => resizePhoto(f, src => {
+    resizePhotos(e.target.files, src => {
         productPhotos.push(src);
         refreshPhotos('product');
-    }, 600));
+    }, 600);
 }
 function pcat(cid) {
     return cid ? data.productCategories.find(c => c.id === cid) : null;

@@ -346,6 +346,8 @@ function receiptTotal() {
         t.textContent = cash(num($('rPre').value) + num($('rTax').value));
 }
 function saveExpense() {
+    if (!$('rStore'))
+        return; // a second tap after the form already closed
     let d = receiptDraft, name = normName($('rStore').value), pv = $('rPre').value.trim(), tv = $('rTax').value.trim(), date = $('rDate').value || new Date().toISOString().slice(0, 10);
     if (!name)
         return needField('rStore', 'Enter the store, or what the receipt was for.');

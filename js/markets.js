@@ -123,8 +123,23 @@ function cardFeesOf(sales) {
     }
     return { proc: round2(proc), app: round2(app), total: round2(proc + app), n };
 }
+// Sales grouped by market, built once per screen draw (Reports works out figures for every market;
+// filtering all sales again for each one got slow with thousands of sales). Cleared right after,
+// so edits are always picked up on the next draw.
+let salesByMarketCache = null;
+function salesByMarket() {
+    if (!salesByMarketCache || salesByMarketCache.src !== data.sales || salesByMarketCache.len !== data.sales.length) {
+        let map = new Map();
+        for (let x of data.sales)
+            if (x.marketId)
+                (map.get(x.marketId) || map.set(x.marketId, []).get(x.marketId)).push(x);
+        salesByMarketCache = { src: data.sales, len: data.sales.length, map };
+        setTimeout(() => salesByMarketCache = null, 0);
+    }
+    return salesByMarketCache.map;
+}
 function marketFigures(ms, extra = [], looseExp = []) {
-    let ids = new Set(ms.map(m => m.id)), sales = data.sales.filter(x => ids.has(x.marketId)).concat(extra), expenses = (data.expenses || []).filter(e => e.marketId && ids.has(e.marketId)).concat(looseExp), other = round2(expenses.reduce((a, e) => a + expenseCost(e), 0));
+    let ids = new Set(ms.map(m => m.id)), byM = salesByMarket(), sales = ms.flatMap(m => byM.get(m.id) || []).concat(extra), expenses = (data.expenses || []).filter(e => e.marketId && ids.has(e.marketId)).concat(looseExp), other = round2(expenses.reduce((a, e) => a + expenseCost(e), 0));
     let full = round2(sales.reduce((a, x) => a + lineFull(x), 0)), revenue = round2(sales.reduce((a, x) => a + lineRev(x), 0)), materials = sales.reduce((a, x) => a + num(x.qty) * num(x.estimatedMaterialCost), 0), qty = sales.reduce((a, x) => a + num(x.qty), 0), booth = ms.reduce((a, m) => a + num(m.cost), 0);
     let cf = cardFeesOf(sales);
     return { revenue, full, discounts: round2(full - revenue), materials, qty, booth, expenses, other, cardFees: cf.total, procFees: cf.proc, appFees: cf.app, feeSales: cf.n, profit: revenue - materials - booth - other - cf.total, sales };
@@ -243,6 +258,8 @@ function hideAddr(fid) {
     $(fid + 'List')?.classList.add('hidden');
 }
 function saveMarket() {
+    if (!$('marketName'))
+        return; // a second tap after the form already closed
     let name = $('marketName').value.trim(), target = Number($('marketTarget').value), cost = Number($('marketCost').value);
     if (!name)
         return appAlert('Enter a market name.');
@@ -304,6 +321,8 @@ function addMarketDay() {
     $('marketDays').insertAdjacentHTML('beforeend', marketDayRow());
 }
 function saveMarketInfo() {
+    if (!$('infoName'))
+        return;
     let m = data.markets.find(x => x.id === marketSelected), name = $('infoName').value.trim(), cost = Number($('infoCost').value);
     if (!name || !Number.isFinite(cost) || cost < 0)
         return appAlert('Enter a market name and a valid cost.');

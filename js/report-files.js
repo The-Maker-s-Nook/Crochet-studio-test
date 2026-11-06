@@ -36,7 +36,7 @@ function reportPack(r) {
     for (let s of f.sales) {
         let k = s.orderId || s.id;
         if (!orders.has(k)) {
-            let o = s.orderId ? (data.orders || []).find(z => z.id === s.orderId) : null;
+            let o = s.orderId ? orderById(s.orderId) : null;
             orders.set(k, { m: o?.payment?.method || '', t: 0 });
         }
         orders.get(k).t += lineRev(s) + num(s.tax);
@@ -49,7 +49,7 @@ function reportPack(r) {
     }
     let reasons = {};
     for (let s of f.sales) {
-        let o = s.orderId ? (data.orders || []).find(z => z.id === s.orderId) : null, pd = num(s.qty) * (num(s.listPrice ?? s.price) - num(s.price));
+        let o = s.orderId ? orderById(s.orderId) : null, pd = num(s.qty) * (num(s.listPrice ?? s.price) - num(s.price));
         if (num(s.disc) > 0)
             reasons[o?.discount?.reason || 'Discount'] = (reasons[o?.discount?.reason || 'Discount'] || 0) + num(s.disc);
         if (pd > 0.004)
@@ -128,7 +128,7 @@ async function saveReportFile(blob, name) {
 }
 function reportLines(r) {
     return r.f.sales.slice().sort((x, y) => String(y.date).localeCompare(String(x.date))).map(s => {
-        let o = s.orderId ? (data.orders || []).find(z => z.id === s.orderId) : null, p = product(s.productId), pc = num(s.qty) * (num(s.listPrice ?? s.price) - num(s.price)), disc = round2(num(s.disc) + (pc > 0.004 ? pc : 0));
+        let o = s.orderId ? orderById(s.orderId) : null, p = product(s.productId), pc = num(s.qty) * (num(s.listPrice ?? s.price) - num(s.price)), disc = round2(num(s.disc) + (pc > 0.004 ? pc : 0));
         let reasons = [];
         if (num(s.disc) > 0)
             reasons.push(o?.discount?.reason || 'Discount');

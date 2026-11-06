@@ -142,7 +142,7 @@ function discountsPanel(f) {
         return '';
     let byReason = {}, orders = new Set(), dOrders = new Set();
     for (let x of f.sales) {
-        let k = x.orderId || x.id, o = x.orderId ? data.orders.find(z => z.id === x.orderId) : null;
+        let k = x.orderId || x.id, o = x.orderId ? orderById(x.orderId) : null;
         orders.add(k);
         const add = (r, amt) => {
             (byReason[r] ||= { amt: 0, set: new Set() }).amt += amt;

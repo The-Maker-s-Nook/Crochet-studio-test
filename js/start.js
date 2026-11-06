@@ -104,6 +104,8 @@ const originalRender = render;
 render = function () {
     document.body.dataset.screen = screen;
     originalRender();
+    if (loadFailed)
+        return;
     try {
         v23AfterRender();
     }
@@ -132,7 +134,7 @@ render = function () {
     }
     catch (e) {
         console.error(e);
-        appAlert('Could not open saved data on this device. Try closing and reopening the app.');
+        loadFailed = true; // render() shows a plain message instead of an empty app
     }
     dataLoaded = true;
     delete data.settings.theme;

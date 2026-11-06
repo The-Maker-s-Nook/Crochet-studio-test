@@ -3,6 +3,12 @@
 
 const navItems = [['home', 'home', 'Home'], ['products', 'products', 'Products'], ['materials', 'materials', 'Materials'], ['patterns', 'patterns', 'Patterns'], ['markets', 'markets', 'Markets'], ['reports', 'reports', 'Reports']];
 function render() {
+    if (loadFailed) {
+        // Saved data couldn't be opened: say so plainly instead of showing an empty app (nothing is saved meanwhile)
+        $('nav').innerHTML = '';
+        $('app').innerHTML = `<div class="panel" style="margin-top:16px"><h2>Your data couldn’t be opened</h2><p>The app couldn’t read what’s saved on this device. Nothing has been changed or deleted, and nothing will be saved until it opens properly.</p><ol class="steps"><li>Tap <b>Try again</b>.</li><li>Still stuck? Close the app fully (swipe it away) and open it again.</li><li>If it keeps happening, tap <b>Send feedback</b> so we can help.</li></ol><div class="actions"><button class="grow" onclick="location.reload()">Try again</button><button class="alt grow" onclick="location.href='mailto:support@themakersnook.ca?subject=' + encodeURIComponent('Crochet Studio: data could not be opened')">Send feedback</button></div></div>`;
+        return;
+    }
     let nav = $('nav');
     let at = activeTab();
     nav.innerHTML = navItems.map(([s, i, n]) => `<button class="${at === s ? 'active' : ''}" ${at === s ? 'aria-current="page"' : ''} onclick="view('${s}')">${ic(i)}${n}</button>`).join('');

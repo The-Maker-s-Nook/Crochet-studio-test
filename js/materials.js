@@ -10,7 +10,7 @@ function materialLabel(m) {
     return m ? normName(m.name) + (m.colour ? ' — ' + normName(m.colour) : '') : '';
 }
 function loadMaterialPhoto(e, quick) {
-    [...(e.target.files || [])].forEach(f => resizePhoto(f, src => {
+    resizePhotos(e.target.files, src => {
         if (quick) {
             quickPhotos.push(src);
             refreshPhotos('quick');
@@ -19,7 +19,7 @@ function loadMaterialPhoto(e, quick) {
             materialPhotos.push(src);
             refreshPhotos('material');
         }
-    }));
+    });
 }
 function closeQuickMaterial() {
     $('quickOverlay')?.remove();
@@ -401,6 +401,8 @@ function materialCatChanged() {
 }
 async function saveMaterial(e) {
     e.preventDefault();
+    if (!$('mcat'))
+        return;
     let catId = $('mcat').value, c = mcat(catId), unit = $('munit').value, packs = Number($('mpackages').value), weight = num($('mweight').value), name = canonical(catId, 'name', $('mname').value), colour = canonical(catId, 'colour', $('mcolour').value);
     if (unit === '__new')
         return needField('munitNewName', 'Finish adding the new unit first (tap Add unit).');

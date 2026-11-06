@@ -184,6 +184,8 @@ function schedulePush(ms = 3000) {
 // ---- Sync engine ----
 function syncNow() {
     clearTimeout(pushTimer);
+    if (loadFailed)
+        return Promise.resolve();
     if (syncBusy) {
         syncAgain = true;
         return syncBusy;
@@ -222,8 +224,13 @@ async function syncOnce() {
             }
         }
         let head = await cloudHead(), remoteAt = tms(head?.updated_at);
-        if (head && remoteAt > tms(syncMeta.lastServerAt) && !(syncMeta.dirty && tms(syncMeta.dirtyAt) > remoteAt))
+        if (head && remoteAt > tms(syncMeta.lastServerAt) && !(syncMeta.dirty && tms(syncMeta.dirtyAt) > remoteAt)) {
+            // Another device saved newer changes while this one also had changes not sent yet (usually made offline).
+            // The newer changes win, but keep this device's version as a copy so nothing is lost for good.
+            if (syncMeta.dirty)
+                await keepUnsyncedCopy();
             await pullApply();
+        }
         else if ((syncMeta.retry || []).length)
             await retryDownloads();
         if (syncMeta.dirty)
@@ -236,6 +243,12 @@ async function syncOnce() {
         console.warn('Sync', e);
         setSync(e.code === 'network' ? 'offline' : 'error', friendlyAuth(e));
     }
+}
+async function keepUnsyncedCopy() {
+    let at = new Date().toISOString();
+    await idbSet('app', 'unsynced', { at, since: syncMeta.lastServerAt || '', data: JSON.parse(JSON.stringify(data)) });
+    lsSet('csUnsynced', at);
+    setTimeout(() => appAlert('Another of your devices saved newer changes, so this device now shows those.\n\nChanges made here that hadn’t been sent yet (for example while offline) were kept as a copy. Find it in Settings › Backup & restore.'), 0);
 }
 async function pushAll(onProgress) {
     syncMeta.pats = syncMeta.pats || {};
