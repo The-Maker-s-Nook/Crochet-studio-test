@@ -134,10 +134,14 @@ let screen = 'home', editing = null, selected = null, productYarns = [], photo =
 const $ = id => document.getElementById(id);
 const id = () => Math.random().toString(36).slice(2) + Date.now().toString(36);
 const num = v => Math.max(0, Number(v) || 0);
-const cash = v => '$' + num(v).toFixed(2);
+const cash = v => '$' + num(v).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ','); // $1,234.56
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 let saveQueue = Promise.resolve(), saveErrorShown = false, saveTimer = null;
+let changeTick = 0; // counts saves, so Undo can tell if anything else changed since
+let formDirty = false; // a form has edits that aren't saved yet (start.js asks before leaving)
 const save = () => {
+    changeTick++;
+    formDirty = false;
     clearTimeout(saveTimer);
     saveTimer = setTimeout(flushSave, 0);
     return true;

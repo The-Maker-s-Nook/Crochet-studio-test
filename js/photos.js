@@ -243,7 +243,7 @@ async function cleanupPhotos() {
 // On this phone: remove photo files nothing has used for a day (also for people without an account).
 async function cleanupLocalPhotos() {
     let used = photoIdsInUse(), drafts = photoUrlsInDrafts();
-    let kept = await idbGet('app', 'unsynced').catch(() => null);
+    let kept = lsGet('csUnsynced', '') ? await idbGet('app', 'unsynced').catch(() => null) : null;
     if (kept?.data)
         photoIdsInUse(kept.data).forEach(i => used.add(i));
     for (let r of await photoAllLocal().catch(() => []))

@@ -46,8 +46,10 @@ async function adjust(pid, delta, reason, opts = {}) {
 async function deleteProduct(pid) {
     if (!await appConfirm('Delete this product?'))
         return;
+    let snap = undoSnapshot(), name = product(pid)?.name || 'Product';
     removeProducts([pid]);
     view('products');
+    offerUndo(snap, `${name} deleted.`);
 }
 // Remove products and anything that only made sense with them. Past sales stay in Reports.
 function removeProducts(ids) {
@@ -65,9 +67,10 @@ function swipeDeleteProduct(pid) {
     let p = product(pid);
     if (!p)
         return;
+    let snap = undoSnapshot();
     removeProducts([pid]);
     render();
-    toast(`${p.name} deleted.`);
+    offerUndo(snap, `${p.name} deleted.`);
 }
 // ---- Delete several products at once (trash button beside + Tag) ----
 let productSelectMode = false, productPicked = new Set();
@@ -100,17 +103,18 @@ async function deletePickedProducts() {
     let n = productPicked.size;
     if (!n)
         return;
-    if (!await appConfirm(`Delete ${n} product${n > 1 ? 's' : ''}?\n\nThis can't be undone. Past sales of ${n > 1 ? 'them' : 'it'} stay in Reports.`, { ok: `Delete ${n}`, danger: true }))
+    if (!await appConfirm(`Delete ${n} product${n > 1 ? 's' : ''}?\n\nPast sales of ${n > 1 ? 'them' : 'it'} stay in Reports.`, { ok: `Delete ${n}`, danger: true }))
         return;
+    let snap = undoSnapshot();
     removeProducts([...productPicked]);
     productSelectMode = false;
     productPicked = new Set();
     render();
-    toast(`${n} product${n > 1 ? 's' : ''} deleted.`);
+    offerUndo(snap, `${n} product${n > 1 ? 's' : ''} deleted.`);
 }
 function productForm() {
     let copy = !editing && product(productCopyOf), p = product(editing) || (copy ? { ...copy, variation: '' } : {});
-    return `${backBtn()}<div class="panel" style="margin-top:12px"><h2>${editing ? 'Edit product' : copy ? 'New variation' : 'Create product'}</h2>${copy ? `<div class="tip" style="margin:0 0 12px">Copied from <b>${esc(copy.name)}${copy.variation ? ' · ' + esc(copy.variation) : ''}</b>: materials, time, hook, price, tags and pattern. Change what's different. Stock starts at 0, and photos and sales aren't copied.</div>` : ''}<label>Product name</label><input id="pname" value="${esc(p.name || '')}" placeholder="e.g. Small bee"><label>Variation / colour (optional)</label><input id="pvariation" value="${esc(p.variation || '')}" placeholder="${copy ? 'e.g. Blue' : 'e.g. Yellow'}"><label>Product photo (optional)</label><button class="alt" onclick="photoMenu(loadPhoto,true)">${ic('camera', 16)} Add photo</button><div id="photoPreview">${photoGallery("product")}</div><div class="divider"></div><h3 style="font-size:22px">Materials used</h3><div id="supplies">${suppliesHtml()}</div><div class="divider"></div><div class="two"><div><label>Hook size (mm)</label><input id="phook" value="${esc(p.hook || '')}" placeholder="6"></div><div><label>Time to make (hours)</label><input id="phours" type="number" step="any" min="0" inputmode="decimal" placeholder="Required, e.g. 1.5" value="${p.hours ?? ''}" oninput="updatePrice()"></div></div><label>Tags (optional, pick any)</label>${tagPicker()}<label for="ppattern">Linked pattern (optional)</label><select id="ppattern" class="fancy"><option value="">No pattern</option></select><div class="divider"></div><h3>Pricing</h3><label>Pricing method</label><select id="pmethod" onchange="updatePrice()"><option value="labour">Materials + hourly labour</option><option value="multiply">Materials × multiplier</option><option value="markup">Materials with markup + labour</option></select><div id="multiplierControls"><label>Material cost multiplier</label><input id="pmultiplier" type="number" min="0" step="any" value="${p.multiplier ?? data.settings.multiplier}" oninput="updatePrice()"></div><div id="markupControls"><label>Markup: <b id="markupLabel">${p.markup ?? data.settings.markup}%</b></label><input id="pmarkup" type="range" min="0" max="300" step="5" value="${p.markup ?? data.settings.markup}" oninput="updatePrice()"><div class="muted">Slide to change the suggested price live (0–300%).</div></div><div class="panel" style="background:var(--card2);margin-top:15px"><div>Material cost: <b id="materialTotal">—</b></div><div><span id="labourLabel">Labour</span>: <b id="labourTotal">—</b></div><div>Suggested selling price: <b id="suggestTotal">—</b></div></div><label>Actual selling price ($) — editable</label><div class="row"><input id="pprice" type="number" min="0" step="0.01" value="${p.price ?? ''}"><button class="alt small" onclick="useSuggested()">Use suggested</button></div><div class="hint">Suggestions update as you change materials. Your selling price stays editable.</div>${taxOverrideField('p', p, 'product', 'updatePrice()')}${noStockUseField(p)}<label>Finished inventory to add now</label><div class="row" style="justify-content:flex-start"><button class="alt" onclick="stepNumber('pinitialStock',-1)">−</button><input id="pinitialStock" type="number" min="0" step="1" value="0" style="width:95px;text-align:center"><button class="alt" onclick="stepNumber('pinitialStock',1)">+</button></div><div class="hint">Leave at 0 if you have not made this product yet. On existing products, this adds to current stock.</div><div class="actions"><button onclick="saveProduct()">${copy ? 'Save variation' : 'Save product'}</button></div></div>`;
+    return `${backBtn()}<div class="panel" style="margin-top:12px"><h2>${editing ? 'Edit product' : copy ? 'New variation' : 'Create product'}</h2>${copy ? `<div class="tip" style="margin:0 0 12px">Copied from <b>${esc(copy.name)}${copy.variation ? ' · ' + esc(copy.variation) : ''}</b>: materials, time, hook, price, tags and pattern. Change what's different. Stock starts at 0, and photos and sales aren't copied.</div>` : ''}<label>Product name</label><input id="pname" value="${esc(p.name || '')}" placeholder="e.g. Small bee"><label>Variation / colour (optional)</label><input id="pvariation" value="${esc(p.variation || '')}" placeholder="${copy ? 'e.g. Blue' : 'e.g. Yellow'}"><label>Product photo (optional)</label><button class="alt" onclick="photoMenu(loadPhoto,true)">${ic('camera', 16)} Add photo</button><div id="photoPreview">${photoGallery("product")}</div><div class="divider"></div><h3 style="font-size:22px">Materials used</h3><div id="supplies">${suppliesHtml()}</div><div class="divider"></div><div class="two"><div><label>Hook size (mm)</label><input id="phook" value="${esc(p.hook || '')}" placeholder="6"></div><div><label>Time to make (hours)</label><input id="phours" type="number" step="any" min="0" inputmode="decimal" placeholder="Optional, e.g. 1.5" value="${p.hours ?? ''}" oninput="updatePrice()"></div></div><label>Tags (optional, pick any)</label>${tagPicker()}<label for="ppattern">Linked pattern (optional)</label><select id="ppattern" class="fancy"><option value="">No pattern</option></select><div class="divider"></div><h3>Pricing</h3><label>Pricing method</label><select id="pmethod" onchange="updatePrice()"><option value="labour">Materials + hourly labour</option><option value="multiply">Materials × multiplier</option><option value="markup">Materials with markup + labour</option></select><div id="multiplierControls"><label>Material cost multiplier</label><input id="pmultiplier" type="number" min="0" step="any" value="${p.multiplier ?? data.settings.multiplier}" oninput="updatePrice()"></div><div id="markupControls"><label>Markup: <b id="markupLabel">${p.markup ?? data.settings.markup}%</b></label><input id="pmarkup" type="range" min="0" max="300" step="5" value="${p.markup ?? data.settings.markup}" oninput="updatePrice()"><div class="muted">Slide to change the suggested price live (0–300%).</div></div><div class="panel" style="background:var(--card2);margin-top:15px"><div>Material cost: <b id="materialTotal">—</b></div><div><span id="labourLabel">Labour</span>: <b id="labourTotal">—</b></div><div>Suggested selling price: <b id="suggestTotal">—</b></div></div><label>Actual selling price ($) — editable</label><div class="row"><input id="pprice" type="number" min="0" step="0.01" value="${p.price ?? ''}"><button class="alt small" onclick="useSuggested()">Use suggested</button></div><div class="hint">Suggestions update as you change materials. Your selling price stays editable.</div>${taxOverrideField('p', p, 'product', 'updatePrice()')}${noStockUseField(p)}<label>Finished inventory to add now</label><div class="row" style="justify-content:flex-start"><button class="alt" onclick="stepNumber('pinitialStock',-1)">−</button><input id="pinitialStock" type="number" min="0" step="1" value="0" style="width:95px;text-align:center"><button class="alt" onclick="stepNumber('pinitialStock',1)">+</button></div><div class="hint">Leave at 0 if you have not made this product yet. On existing products, this adds to current stock.</div><div class="actions"><button onclick="saveProduct()">${copy ? 'Save variation' : 'Save product'}</button></div></div>`;
 }
 function updatePrice() {
     let method = $('pmethod').value;
@@ -135,8 +139,8 @@ async function saveProduct() {
         return needField('pname', 'Enter a product name.');
     if (badTaxOverride('p'))
         return needField('pTaxRate', 'Enter a tax rate between 0 and 100 for this product, or untick Override tax settings.');
-    if ($('phours').value.trim() === '' || !(Number($('phours').value) >= 0))
-        return needField('phours', 'Enter how long this takes to make, in hours. Use 0 if you don’t want to track time.');
+    if ($('phours').value.trim() !== '' && !(Number($('phours').value) >= 0))
+        return needField('phours', 'Enter how long this takes to make, in hours, or leave it empty.');
     let missing = productLines.find(l => l.materialId && !(num(l.amount) > 0));
     if (missing) {
         $('amt_' + missing.key)?.focus();

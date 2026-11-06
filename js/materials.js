@@ -464,17 +464,20 @@ function swipeDeleteMaterial(mid) {
         closeSwipes();
         return appAlert(`${materialLabel(m)} is used by a product. Remove it from that product first.`);
     }
+    let snap = undoSnapshot();
     removeMaterial(mid);
     render();
-    toast(`${materialLabel(m)} deleted.`);
+    offerUndo(snap, `${materialLabel(m)} deleted.`);
 }
 async function deleteMaterial(mid) {
     if (data.products.some(p => (p.materials || []).some(x => x.materialId === mid)))
         return appAlert('This material is used by a product. Remove it from that product first.');
     if (!await appConfirm('Delete this material?'))
         return;
+    let snap = undoSnapshot(), label = materialLabel(material(mid));
     removeMaterial(mid);
     goBack();
+    offerUndo(snap, `${label} deleted.`);
 }
 function openQuickMaterial(catId, prefill = '', target = null) {
     closeQuickMaterial();

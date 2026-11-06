@@ -6,6 +6,10 @@ function render() {
     if (loadFailed) {
         // Saved data couldn't be opened: say so plainly instead of showing an empty app (nothing is saved meanwhile)
         $('nav').innerHTML = '';
+        if (loadFailed === 'storage') {
+            $('app').innerHTML = `<div class="panel" style="margin-top:16px"><h2>This browser won’t let the app save</h2><p>Crochet Studio keeps your work on this device, but the browser is blocking it, so nothing you add would be kept.</p><ol class="steps"><li>Turn off private or incognito browsing.</li><li>Or allow this site to store data (browser settings › Site settings › Cookies and site data).</li><li>Then open Crochet Studio again.</li></ol><div class="actions"><button class="grow" onclick="location.reload()">Try again</button></div></div>`;
+            return;
+        }
         $('app').innerHTML = `<div class="panel" style="margin-top:16px"><h2>Your data couldn’t be opened</h2><p>The app couldn’t read what’s saved on this device. Nothing has been changed or deleted, and nothing will be saved until it opens properly.</p><ol class="steps"><li>Tap <b>Try again</b>.</li><li>Still stuck? Close the app fully (swipe it away) and open it again.</li><li>If it keeps happening, tap <b>Send feedback</b> so we can help.</li></ol><div class="actions"><button class="grow" onclick="location.reload()">Try again</button><button class="alt grow" onclick="location.href='mailto:support@themakersnook.ca?subject=' + encodeURIComponent('Crochet Studio: data could not be opened')">Send feedback</button></div></div>`;
         return;
     }
@@ -18,7 +22,7 @@ function render() {
 }
 // ===== Navigation: back returns to wherever you came from =====
 // skipPop: view() is rewinding browser history; pendingPushes: screens opened before that rewind finished
-let navStack = [], skipPop = false, pendingPushes = 0;
+let navStack = [], skipPop = false, pendingPushes = 0, appBack = false; // appBack: the app itself stepped back (not the back button)
 const TABS = ['home', 'products', 'materials', 'patterns', 'markets', 'reports'];
 function snap() {
     return { screen, selected, marketSelected, editing, scroll: scrollY };
@@ -53,6 +57,7 @@ function goBack() {
         pendingPushes--;
         return restoreNav(navStack.pop());
     }
+    appBack = true;
     history.back();
 }
 function restoreNav(st) {

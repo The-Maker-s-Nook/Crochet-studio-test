@@ -224,12 +224,13 @@ async function syncOnce() {
             }
         }
         let head = await cloudHead(), remoteAt = tms(head?.updated_at);
-        if (head && remoteAt > tms(syncMeta.lastServerAt) && !(syncMeta.dirty && tms(syncMeta.dirtyAt) > remoteAt)) {
-            // Another device saved newer changes while this one also had changes not sent yet (usually made offline).
-            // The newer changes win, but keep this device's version as a copy so nothing is lost for good.
+        if (head && remoteAt > tms(syncMeta.lastServerAt)) {
+            // Another device saved changes since this one last synced. If this device also has changes it
+            // hasn't sent (usually made offline), combine both; otherwise just take the account's version.
             if (syncMeta.dirty)
-                await keepUnsyncedCopy();
-            await pullApply();
+                await mergeRemote();
+            else
+                await pullApply();
         }
         else if ((syncMeta.retry || []).length)
             await retryDownloads();
@@ -243,6 +244,74 @@ async function syncOnce() {
         console.warn('Sync', e);
         setSync(e.code === 'network' ? 'offline' : 'error', friendlyAuth(e));
     }
+}
+// ---- Combining changes from two devices (three-way merge) ----
+// base = the account's data as this device last saw it; local = this device now; remote = the account now.
+// Whatever only one side changed is kept. Records are matched by id, so new sales, receipts and products
+// from both devices are all kept, and something deleted on one side stays deleted unless the other side edited it.
+// Stock counts changed on both sides add up both changes (2 sold on the phone + 3 made on the tablet).
+// Anything else changed on both sides: the account's (newest saved) version wins.
+const mSame = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+const mObj = v => v && typeof v === 'object' && !Array.isArray(v);
+const mRecs = a => Array.isArray(a) && a.every(x => mObj(x) && x.id != null);
+function merge3(base, local, remote, key = '', parent = '') {
+    if (mSame(local, remote) || mSame(base, local))
+        return remote;
+    if (mSame(base, remote))
+        return local;
+    if (Array.isArray(local) && Array.isArray(remote) && mRecs(local) && mRecs(remote) && (base === undefined || mRecs(base)))
+        return mergeById(base || [], local, remote, key);
+    if (mObj(local) && mObj(remote)) {
+        let b = mObj(base) ? base : {}, out = {};
+        for (let k of new Set([...Object.keys(remote), ...Object.keys(local)])) {
+            let v = merge3(b[k], local[k], remote[k], k, key);
+            if (v !== undefined)
+                out[k] = v;
+        }
+        return out;
+    }
+    if (typeof local === 'number' && typeof remote === 'number' && typeof base === 'number' && (key === 'stock' || parent === 'items'))
+        return Math.max(0, Math.round((base + (local - base) + (remote - base)) * 1000) / 1000);
+    return remote === undefined ? local : remote;
+}
+function mergeById(base, local, remote, key) {
+    let B = new Map(base.map(x => [x.id, x])), L = new Map(local.map(x => [x.id, x])), R = new Map(remote.map(x => [x.id, x])), out = [];
+    for (let id of new Set([...R.keys(), ...L.keys()])) {
+        let v = merge3(B.get(id), L.get(id), R.get(id), '', key);
+        if (v !== undefined)
+            out.push(v);
+    }
+    return out;
+}
+async function saveSyncBase(d) {
+    try {
+        await idbSet('app', 'syncBase', typeof d === 'string' ? JSON.parse(d) : JSON.parse(JSON.stringify(d)));
+    }
+    catch (e) {
+        console.warn('Sync base', e);
+    }
+}
+async function mergeRemote() {
+    let row = await cloudGet();
+    if (!row)
+        return;
+    let base = await idbGet('app', 'syncBase').catch(() => null);
+    if (!base) {
+        // No record of what the account looked like before (first sync after this update): old behaviour, but keep a copy
+        await keepUnsyncedCopy();
+        return pullApply(row);
+    }
+    let remote = { ...(row.data || {}) }, pats = remote._patterns;
+    delete remote._patterns;
+    const clean = d => normalizeData(JSON.parse(JSON.stringify(d)));
+    let remoteN = clean(remote), merged = merge3(clean(base), clean(data), remoteN);
+    // Safety copy of this device's version, in case anything needs checking later (not shown unless needed)
+    await idbSet('app', 'unsynced', { at: new Date().toISOString(), since: syncMeta.lastServerAt || '', merged: true, data: JSON.parse(JSON.stringify(data)) }).catch(() => {});
+    await pullApply({ ...row, data: { ...merged, _patterns: pats }, base: remoteN });
+    // Send the combined version back so every device ends up with it
+    syncMeta.dirty = true;
+    syncMeta.dirtyAt = new Date().toISOString();
+    saveSyncMeta();
 }
 async function keepUnsyncedCopy() {
     let at = new Date().toISOString();
@@ -278,9 +347,10 @@ async function pushAll(onProgress) {
     }
     // Photos go up once each as files (js/photos.js); the data row only carries their references
     await pushPhotos();
-    let at = new Date().toISOString();
-    await cloudPut({ ...data, _patterns: local.filter(p => syncMeta.pats[p.id] === 1).map(patMeta) }, at);
+    let at = new Date().toISOString(), sent = JSON.stringify(data);
+    await cloudPut({ ...JSON.parse(sent), _patterns: local.filter(p => syncMeta.pats[p.id] === 1).map(patMeta) }, at);
     syncMeta.lastServerAt = at;
+    await saveSyncBase(sent);
     if (syncMeta.dirtyAt === startedAt)
         syncMeta.dirty = false;
     saveSyncMeta();
@@ -292,6 +362,7 @@ async function pullApply(row, onProgress) {
         return;
     let d = { ...(row.data || {}) }, pats = Array.isArray(d._patterns) ? d._patterns : [];
     delete d._patterns;
+    let baseSnap = row.base || JSON.parse(JSON.stringify(d));
     syncMeta.pats = syncMeta.pats || {};
     applyingRemote = true;
     try {
@@ -315,6 +386,7 @@ async function pullApply(row, onProgress) {
         }
         syncMeta.retry = pats.filter(m => !byId[m.id]);
         syncMeta.lastServerAt = row.updated_at;
+        await saveSyncBase(baseSnap);
         syncMeta.dirty = false;
         if (movedPhotos || local.some(p => !cloudIds.has(p.id) && !syncMeta.pats[p.id])) {
             syncMeta.dirty = true;
@@ -430,6 +502,9 @@ async function clearLocal() {
     applyingRemote = true;
     try {
         await idbDel('app', 'data');
+        await idbDel('app', 'syncBase').catch(() => {});
+        await idbDel('app', 'unsynced').catch(() => {});
+        lsSet('csUnsynced', null);
         for (let p of await pdfAll())
             await _pdfDelete(p.id);
         await photoClearLocal();
