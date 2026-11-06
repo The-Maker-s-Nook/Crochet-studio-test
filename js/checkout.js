@@ -554,7 +554,7 @@ function orderGroups(mid) {
         (groups[s.orderId] = groups[s.orderId] || []).push(s);
     }
     return Object.entries(groups).map(([k, ls]) => {
-        let o = data.orders.find(x => x.id === k), rev = round2(ls.reduce((a, x) => a + lineRev(x), 0)), full = round2(ls.reduce((a, x) => a + lineFull(x), 0)), tax = round2(ls.reduce((a, x) => a + num(x.tax), 0));
+        let o = orderById(k), rev = round2(ls.reduce((a, x) => a + lineRev(x), 0)), full = round2(ls.reduce((a, x) => a + lineFull(x), 0)), tax = round2(ls.reduce((a, x) => a + num(x.tax), 0));
         let inside = round2(ls.reduce((a, x) => a + (x.taxIncluded ? num(x.tax) : 0), 0)), rates = [...new Set(ls.filter(x => num(x.tax)).map(x => num(x.taxRate ?? taxRate())))];
         return { key: k, order: o, lines: ls, date: ls[0].date, rev, full, disc: round2(full - rev), tax, taxAdded: round2(tax - inside), taxInside: inside, taxRates: rates, total: round2(rev + tax), method: o?.payment?.method || '' };
     }).sort((a, b) => String(b.date).localeCompare(String(a.date)));

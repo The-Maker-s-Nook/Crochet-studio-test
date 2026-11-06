@@ -123,8 +123,23 @@ function cardFeesOf(sales) {
     }
     return { proc: round2(proc), app: round2(app), total: round2(proc + app), n };
 }
+// Sales grouped by market, built once per screen draw (Reports works out figures for every market;
+// filtering all sales again for each one got slow with thousands of sales). Cleared right after,
+// so edits are always picked up on the next draw.
+let salesByMarketCache = null;
+function salesByMarket() {
+    if (!salesByMarketCache || salesByMarketCache.src !== data.sales || salesByMarketCache.len !== data.sales.length) {
+        let map = new Map();
+        for (let x of data.sales)
+            if (x.marketId)
+                (map.get(x.marketId) || map.set(x.marketId, []).get(x.marketId)).push(x);
+        salesByMarketCache = { src: data.sales, len: data.sales.length, map };
+        setTimeout(() => salesByMarketCache = null, 0);
+    }
+    return salesByMarketCache.map;
+}
 function marketFigures(ms, extra = [], looseExp = []) {
-    let ids = new Set(ms.map(m => m.id)), sales = data.sales.filter(x => ids.has(x.marketId)).concat(extra), expenses = (data.expenses || []).filter(e => e.marketId && ids.has(e.marketId)).concat(looseExp), other = round2(expenses.reduce((a, e) => a + expenseCost(e), 0));
+    let ids = new Set(ms.map(m => m.id)), byM = salesByMarket(), sales = ms.flatMap(m => byM.get(m.id) || []).concat(extra), expenses = (data.expenses || []).filter(e => e.marketId && ids.has(e.marketId)).concat(looseExp), other = round2(expenses.reduce((a, e) => a + expenseCost(e), 0));
     let full = round2(sales.reduce((a, x) => a + lineFull(x), 0)), revenue = round2(sales.reduce((a, x) => a + lineRev(x), 0)), materials = sales.reduce((a, x) => a + num(x.qty) * num(x.estimatedMaterialCost), 0), qty = sales.reduce((a, x) => a + num(x.qty), 0), booth = ms.reduce((a, m) => a + num(m.cost), 0);
     let cf = cardFeesOf(sales);
     return { revenue, full, discounts: round2(full - revenue), materials, qty, booth, expenses, other, cardFees: cf.total, procFees: cf.proc, appFees: cf.app, feeSales: cf.n, profit: revenue - materials - booth - other - cf.total, sales };
@@ -178,7 +193,7 @@ async function reopenMarket(mid) {
     toast(back ? `Market reopened. ${back} item${back > 1 ? 's' : ''} packed again.` : 'Market reopened.');
 }
 function marketForm() {
-    return `${backBtn()}<div class="panel" style="margin-top:12px"><h2>New market</h2><label>Market name</label><input id="marketName" placeholder="Fall Craft Fair">${addressField('marketLocation', '')}<label>Market / booth cost ($)</label><input id="marketCost" type="number" min="0" step="0.01" value="0"><h3 style="margin-top:20px">Market dates & times</h3><div id="marketDays">${marketDayRow()}</div><button class="alt small" onclick="addMarketDay()">+ Add another day</button><label>Inventory value target ($)</label><input id="marketTarget" type="number" min="0" step="1" value="0"><div class="hint">Target is the retail value of items you want to bring.</div><div class="actions"><button onclick="saveMarket()">Save market</button></div></div>`;
+    return `${backBtn()}<div class="panel" style="margin-top:12px"><h2>New market</h2><label>Market name</label><input id="marketName" placeholder="Fall Craft Fair">${addressField('marketLocation', '')}<label>Market / booth cost ($)</label><input id="marketCost" type="number" min="0" step="0.01" value="0"><h3 style="margin-top:20px">Market dates & times</h3><div id="marketDays">${marketDayRow()}</div><button class="alt small" onclick="addMarketDay()">+ Add another day</button><label>Packing goal ($) <span class="muted">(optional)</span></label><input id="marketTarget" type="number" min="0" step="1" value="0"><div class="hint">How much stock (at your selling prices) you want to bring.</div><div class="actions"><button onclick="saveMarket()">Save market</button></div></div>`;
 }
 function readMarketDays() {
     return [...document.querySelectorAll('.market-day')].map(e => ({ date: e.querySelector('.dayDate').value, start: e.querySelector('.dayStart').value, end: e.querySelector('.dayEnd').value })).filter(d => d.date);
@@ -243,13 +258,15 @@ function hideAddr(fid) {
     $(fid + 'List')?.classList.add('hidden');
 }
 function saveMarket() {
+    if (!$('marketName'))
+        return; // a second tap after the form already closed
     let name = $('marketName').value.trim(), target = Number($('marketTarget').value), cost = Number($('marketCost').value);
     if (!name)
         return appAlert('Enter a market name.');
     if (!Number.isFinite(cost) || cost < 0)
         return appAlert('Enter a valid market cost.');
     if (!Number.isFinite(target) || target < 0)
-        return appAlert('Enter a valid target amount.');
+        return appAlert('Enter a valid packing goal, or leave it empty.');
     let days = readMarketDays(), mid = id();
     data.markets.push({ id: mid, name, location: $('marketLocation').value.trim(), cost, days, date: days[0]?.date || '', target, items: {} });
     save();
@@ -272,7 +289,7 @@ function marketDetail() {
     let allocated = Object.entries(m.items).reduce((a, [pid, q]) => a + num(q) * num(product(pid)?.price), 0), allValue = data.products.reduce((a, p) => a + num(p.stock) * num(p.price), 0), sold = data.sales.filter(s => s.marketId === m.id).reduce((a, s) => a + lineRev(s), 0);
     let days = m.days?.length ? m.days : (m.date ? [{ date: m.date, start: '', end: '' }] : []);
     let draftCount = Object.values(marketSaleDraft).reduce((a, q) => a + q, 0), draftValue = Object.entries(marketSaleDraft).reduce((a, [pid, q]) => a + q * num(product(pid)?.price), 0);
-    return `${backBtn()}<div class="panel mkthead ${mktFold ? 'mktfolded' : ''}" style="margin-top:12px"><div class="row" style="align-items:flex-start"><h2>${esc(m.name)}</h2><button class="alt" onclick="go('marketInfo')">Details</button></div>${mktFold ? `<div class="muted mktsum">${esc([days[0] ? formatMarketDay(days[0]) + (days.length > 1 ? ` +${days.length - 1} more` : '') : '', num(m.target) ? `Packed ${cash(allocated)} of ${cash(m.target)}` : `Packed ${cash(allocated)}`].filter(Boolean).join(' · '))}</div>` : ''}<button type="button" class="linkbtn foldbtn" aria-expanded="${!mktFold}" onclick="toggleMktFold()">${mktFold ? 'Show market details' : 'Hide market details'} ${ic('chevr', 15)}</button><div class="mktdetails ${mktFold ? 'hidden' : ''}">${m.completed ? '<span class="pill ok">Completed ✓</span>' : ''}<div class="muted" style="margin:8px 0">${days.length ? days.map(d => `<div style="margin:4px 0">${ic('calendar', 14)} ${esc(formatMarketDay(d))}</div>`).join('') : ic('calendar', 14) + ' Dates and times not set'}</div>${todoLine(m)}<div class="row" style="align-items:center;justify-content:flex-start;gap:8px"><span>${ic('pin', 14)} ${esc(m.location || 'Address not set')}</span>${m.location ? `<button class="alt small" onclick="marketDirectionsSaved()">Directions ↗</button>` : ''}</div>${m.completed ? '' : `<label>Inventory value target ($)</label><input id="targetEdit" type="number" min="0" step="1" value="${num(m.target)}" onchange="setMarketTarget(this.value)">${num(m.target) ? `<div class="row" style="font-size:13px;font-weight:700;margin:12px 0 6px"><span>Packed ${cash(allocated)} of ${cash(m.target)}</span><span>${Math.min(100, Math.round(allocated / num(m.target) * 100))}%</span></div><div class="bar"><div style="width:${Math.min(100, Math.round(allocated / num(m.target) * 100))}%"></div></div>` : ''}<div class="grid keep2" style="margin-top:12px"><div><div class="muted">Assigned to this market</div><div class="stat">${cash(allocated)}</div></div><div><div class="muted">Remaining to target</div><div class="stat">${cash(Math.max(0, num(m.target) - allocated))}</div></div><div><div class="muted">All finished stock value</div><div class="stat">${cash(allValue)}</div></div><div><div class="muted">Sales at this market</div><div class="stat">${cash(sold)}</div></div></div><p class="hint">Market inventory is reserved for planning. Sales reduce stock only after you tap Complete sale.</p>`}</div></div>${mktFold ? '' : salesLinkPanel(m) + marketCostsPanel(m)}${m.completed ? completedPanel(m) : `<div class="panel"><div class="actions" style="margin-top:0"><button onclick="showMarketAdd()">${marketAddOpen ? 'Close' : '+ Add inventory'}</button><button class="alt" onclick="includeAllInventory()">Include all available</button></div><div id="marketAdd" class="${marketAddOpen ? '' : 'hidden'}"><div class="addbar"><span id="addCount" class="muted" aria-live="polite">${addCountText()}</span><button onclick="addSelectedToMarket()">Add all selected</button></div><label for="marketSearch">Find a product</label><input id="marketSearch" placeholder="Search products" value="${esc(marketAddSearch)}" oninput="marketAddSearch=this.value;$('pickList').innerHTML=marketPickRows()"><div class="picklist addlist" id="pickList">${marketPickRows()}</div></div></div>`}<div class="panel"><div class="row"><h3>Market inventory</h3>${m.completed ? '' : `<button class="${marketSaleMode ? 'danger' : 'aqua'} small" onclick="toggleMarketSale()">${marketSaleMode ? 'Cancel sale' : 'Start a sale'}</button>`}</div>${marketSaleMode ? `<p class="hint">Tap + next to each product sold (− to undo). Nothing is deducted until you complete the sale.</p>` : ''}${mktSearchBox(m)}<div id="mktItems">${marketItemRows(m)}</div>${marketSaleMode ? salePanel() : ''}</div>${m.completed ? '' : finishPanel(m)}`;
+    return `${backBtn()}<div class="panel mkthead ${mktFold ? 'mktfolded' : ''}" style="margin-top:12px"><div class="row" style="align-items:flex-start"><h2>${esc(m.name)}</h2><button class="alt" onclick="go('marketInfo')">Details</button></div>${mktFold ? `<div class="muted mktsum">${esc([days[0] ? formatMarketDay(days[0]) + (days.length > 1 ? ` +${days.length - 1} more` : '') : '', num(m.target) ? `Packed ${cash(allocated)} of ${cash(m.target)}` : `Packed ${cash(allocated)}`].filter(Boolean).join(' · '))}</div>` : ''}<button type="button" class="linkbtn foldbtn" aria-expanded="${!mktFold}" onclick="toggleMktFold()">${mktFold ? 'Show market details' : 'Hide market details'} ${ic('chevr', 15)}</button><div class="mktdetails ${mktFold ? 'hidden' : ''}">${m.completed ? '<span class="pill ok">Completed ✓</span>' : ''}<div class="muted" style="margin:8px 0">${days.length ? days.map(d => `<div style="margin:4px 0">${ic('calendar', 14)} ${esc(formatMarketDay(d))}</div>`).join('') : ic('calendar', 14) + ' Dates and times not set'}</div>${todoLine(m)}<div class="row" style="align-items:center;justify-content:flex-start;gap:8px"><span>${ic('pin', 14)} ${esc(m.location || 'Address not set')}</span>${m.location ? `<button class="alt small" onclick="marketDirectionsSaved()">Directions ↗</button>` : ''}</div>${m.completed ? '' : `<label>Packing goal ($) <span class="muted">(optional)</span></label><input id="targetEdit" type="number" min="0" step="1" value="${num(m.target)}" onchange="setMarketTarget(this.value)">${num(m.target) ? `<div class="row" style="font-size:13px;font-weight:700;margin:12px 0 6px"><span>Packed ${cash(allocated)} of ${cash(m.target)}</span><span>${Math.min(100, Math.round(allocated / num(m.target) * 100))}%</span></div><div class="bar"><div style="width:${Math.min(100, Math.round(allocated / num(m.target) * 100))}%"></div></div>` : ''}<div class="grid keep2" style="margin-top:12px"><div><div class="muted">Assigned to this market</div><div class="stat">${cash(allocated)}</div></div><div><div class="muted">Left to reach goal</div><div class="stat">${cash(Math.max(0, num(m.target) - allocated))}</div></div><div><div class="muted">All finished stock value</div><div class="stat">${cash(allValue)}</div></div><div><div class="muted">Sales at this market</div><div class="stat">${cash(sold)}</div></div></div><p class="hint">Market inventory is reserved for planning. Sales reduce stock only after you tap Complete sale.</p>`}</div></div>${mktFold ? '' : salesLinkPanel(m) + marketCostsPanel(m)}${m.completed ? completedPanel(m) : `<div class="panel"><div class="actions" style="margin-top:0"><button onclick="showMarketAdd()">${marketAddOpen ? 'Close' : '+ Add inventory'}</button><button class="alt" onclick="includeAllInventory()">Include all available</button></div><div id="marketAdd" class="${marketAddOpen ? '' : 'hidden'}"><div class="addbar"><span id="addCount" class="muted" aria-live="polite">${addCountText()}</span><button onclick="addSelectedToMarket()">Add all selected</button></div><label for="marketSearch">Find a product</label><input id="marketSearch" placeholder="Search products" value="${esc(marketAddSearch)}" oninput="marketAddSearch=this.value;$('pickList').innerHTML=marketPickRows()"><div class="picklist addlist" id="pickList">${marketPickRows()}</div></div></div>`}<div class="panel"><div class="row"><h3>Market inventory</h3>${m.completed ? '' : `<button class="${marketSaleMode ? 'danger' : 'aqua'} small" onclick="toggleMarketSale()">${marketSaleMode ? 'Cancel sale' : 'Start a sale'}</button>`}</div>${marketSaleMode ? `<p class="hint">Tap + next to each product sold (− to undo). Nothing is deducted until you complete the sale.</p>` : ''}${mktSearchBox(m)}<div id="mktItems">${marketItemRows(m)}</div>${marketSaleMode ? salePanel() : ''}</div>${m.completed ? '' : finishPanel(m)}`;
 }
 function marketDirectionsSaved() {
     let m = data.markets.find(x => x.id === marketSelected);
@@ -304,6 +321,8 @@ function addMarketDay() {
     $('marketDays').insertAdjacentHTML('beforeend', marketDayRow());
 }
 function saveMarketInfo() {
+    if (!$('infoName'))
+        return;
     let m = data.markets.find(x => x.id === marketSelected), name = $('infoName').value.trim(), cost = Number($('infoCost').value);
     if (!name || !Number.isFinite(cost) || cost < 0)
         return appAlert('Enter a market name and a valid cost.');
@@ -326,7 +345,7 @@ function marketDirections() {
 function setMarketTarget(value) {
     let n = Number(value);
     if (!Number.isFinite(n) || n < 0)
-        return appAlert('Enter a valid target amount.');
+        return appAlert('Enter a valid packing goal, or leave it empty.');
     data.markets.find(m => m.id === marketSelected).target = n;
     save();
     render();
@@ -447,7 +466,7 @@ async function deleteMarket() {
     if (!m)
         return;
     let packed = Object.values(m.items || {}).reduce((a, q) => a + num(q), 0), sales = data.sales.filter(s => s.marketId === m.id), amt = sales.reduce((a, s) => a + lineRev(s), 0), n = new Set(sales.map(s => s.orderId || s.id)).size;
-    let msg = (m.completed ? '' : packed ? `The ${packed} item${packed === 1 ? '' : 's'} packed for it go back to your available stock.` : 'Nothing is packed for it yet.') + (n ? `\n\nIt has ${n} sale${n === 1 ? '' : 's'} (${cash(amt)}) recorded. They'll stay in Reports as sales with no market, so your totals don't change.` : '') + '\n\nThis can’t be undone.';
+    let msg = (m.completed ? '' : packed ? `The ${packed} item${packed === 1 ? '' : 's'} packed for it go back to your available stock.` : 'Nothing is packed for it yet.') + (n ? `\n\nIt has ${n} sale${n === 1 ? '' : 's'} (${cash(amt)}) recorded. They'll stay in Reports as sales with no market, so your sales totals don't change.` : '') + (m.completed && num(m.cost) > 0 ? `\n\nIts booth cost (${cash(m.cost)}) will no longer be taken off your profit in Reports.` : '') + '\n\nThis can’t be undone.';
     if (!await appDialog({ title: `Delete ${m.name}?`, message: msg.trim(), ok: 'Delete market', cancel: 'Cancel', danger: true }))
         return;
     for (let s of sales) {

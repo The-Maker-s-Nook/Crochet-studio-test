@@ -11,7 +11,7 @@ function labourInfo(p) {
     return { label: `Labour (${num(p.hours)} h × ${cash(data.settings.hourly)}/hr)`, text: cash(labourCost(p)) };
 }
 function suggest(p) {
-    let m = recipeCost(p), s = data.settings, method = p.method || s.method, raw = method === 'multiply' ? m * num(p.multiplier || s.multiplier) : method === 'markup' ? m * (1 + num(p.markup || s.markup) / 100) + num(p.hours) * num(s.hourly) : m + num(p.hours) * num(s.hourly);
+    let m = recipeCost(p), s = data.settings, method = p.method || s.method, raw = method === 'multiply' ? m * num(p.multiplier || s.multiplier) : method === 'markup' ? m * (1 + num(p.markup ?? s.markup) / 100) + num(p.hours) * num(s.hourly) : m + num(p.hours) * num(s.hourly);
     // Prices are worked out before tax. If this product's price already includes tax, add it so the amount kept stays the same.
     let t = productTaxInfo(p);
     if (t.mode === 'included')
@@ -94,13 +94,21 @@ function discountAmount(sub, d) {
     let v = num(d.value), a = d.type === 'pct' ? sub * Math.min(v, 100) / 100 : d.type === 'amt' ? v : d.type === 'total' ? sub - v : 0;
     return round2(Math.max(0, Math.min(sub, a)));
 }
+// Split an order discount across its items in proportion to price, to the cent.
+// Works in whole cents and hands out leftover cents by largest remainder, so the item
+// discounts always add up to exactly the order discount (and never more than an item's price).
 function allocate(lines, disc) {
-    let sub = lines.reduce((a, l) => a + l.qty * l.price, 0), left = disc;
-    lines.forEach((l, i) => {
-        let base = l.qty * l.price, share = i === lines.length - 1 ? left : round2(sub ? disc * base / sub : 0);
-        l.disc = round2(Math.max(0, Math.min(share, base)));
-        left = round2(left - l.disc);
-    });
+    let cents = lines.map(l => Math.round(l.qty * l.price * 100)), sub = cents.reduce((a, c) => a + c, 0), d = Math.min(Math.round(num(disc) * 100), sub);
+    let exact = cents.map(c => sub ? d * c / sub : 0), share = exact.map(Math.floor), left = d - share.reduce((a, c) => a + c, 0);
+    let order = exact.map((e, i) => [e - share[i], i]).sort((a, b) => b[0] - a[0] || a[1] - b[1]);
+    for (let k = 0; left > 0 && k < order.length * 2; k++) {
+        let i = order[k % order.length][1];
+        if (share[i] < cents[i]) {
+            share[i]++;
+            left--;
+        }
+    }
+    lines.forEach((l, i) => l.disc = share[i] / 100);
 }
 function computeOrder(draft, adj) {
     let lines = Object.entries(draft || {}).filter(([, q]) => q > 0).map(([pid, q]) => {

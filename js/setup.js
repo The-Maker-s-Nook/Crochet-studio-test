@@ -12,6 +12,8 @@ const FIBRE_CATS = [['Yarn', 'grams', 'skein'], ['Eyes', 'pairs', 'pack'], ['Stu
 const hasOwnData = () => !!(data.products.length || data.materials.length || data.markets.length || data.sales.length || (data.expenses || []).length);
 // True when the setup survey should be offered now
 function setupNeeded() {
+    if (loadFailed)
+        return false;
     let s = data.settings;
     if (s.setupDone)
         return false;

@@ -147,6 +147,20 @@ function resizePhoto(file, done, max = 480) {
         return;
     compressImage(file, max).then(b => b && blobToDataUrl(b)).then(u => u && done(u)).catch(e => appAlert(e?.message || 'This photo couldn’t be added.'));
 }
+// Several photos picked at once: shrink them side by side, but add them in the order they were picked.
+async function resizePhotos(files, done, max = 480) {
+    let jobs = [...(files || [])].map(f => compressImage(f, max).then(b => b && blobToDataUrl(b)).catch(e => ({ err: e })));
+    let failed = null;
+    for (let j of jobs) {
+        let u = await j;
+        if (u?.err)
+            failed ||= u.err;
+        else if (u)
+            done(u);
+    }
+    if (failed)
+        appAlert(failed?.message || 'This photo couldn’t be added.');
+}
 // ===== Styled pop-ups (replace the phone's plain alert / confirm boxes) =====
 let dlgDone = null;
 function appDialog({ title = '', message = '', ok = 'OK', cancel = null, danger = false }) {
@@ -266,6 +280,85 @@ function openModal(html) {
 }
 function closeModal() {
     $('modal')?.remove();
+}
+// ---- Undo after deleting (a few seconds to change your mind) ----
+const UNDO_KEYS = ['products', 'materials', 'markets', 'reminders', 'materialCategories'];
+let undoState = null;
+function undoSnapshot() {
+    return JSON.stringify(Object.fromEntries(UNDO_KEYS.map(k => [k, data[k]])));
+}
+// Call with the snapshot taken just before deleting
+function offerUndo(snap, message) {
+    clearTimeout(undoState?.timer);
+    $('undoBar')?.remove();
+    undoState = { snap, tick: changeTick, timer: setTimeout(dropUndo, 8000) };
+    document.body.insertAdjacentHTML('beforeend', `<div id="undoBar" role="status"><span>${esc(message)}</span><button onclick="undoDelete()">Undo</button></div>`);
+}
+function dropUndo() {
+    clearTimeout(undoState?.timer);
+    undoState = null;
+    $('undoBar')?.remove();
+}
+function undoDelete() {
+    let u = undoState;
+    dropUndo();
+    if (!u)
+        return;
+    if (u.tick !== changeTick)
+        return appAlert('Other changes were made since, so this can’t be undone now.');
+    Object.assign(data, JSON.parse(u.snap));
+    save();
+    render();
+    flash('Brought back.');
+}
+// Number boxes everywhere: no negative numbers, and a sensible top limit (catches a typo with extra zeros)
+const NUMBER_MAX = 9999999;
+document.addEventListener('change', e => {
+    let t = e.target;
+    if (t?.tagName !== 'INPUT' || t.type !== 'number' || t.value === '')
+        return;
+    let v = Number(t.value), max = t.max !== '' && Number.isFinite(Number(t.max)) ? Number(t.max) : NUMBER_MAX;
+    if (v < 0) {
+        t.value = 0;
+        flash('Numbers can’t be negative, so this was set to 0.');
+        t.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+    else if (v > max) {
+        t.value = max;
+        flash(`That number is too big. The most it can be is ${max.toLocaleString()}.`);
+        t.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+}, true);
+// Back button (Android, or the browser's back): close the top pop-up instead of leaving the screen.
+// Returns true if something was closed.
+function closeTopOverlay() {
+    let d = $('appDialog');
+    if (d) {
+        (d.querySelector('button[data-v="0"]') || d.querySelector('button'))?.click();
+        return true;
+    }
+    let rv = document.querySelector('.rviewer');
+    if (rv) {
+        rv.remove();
+        return true;
+    }
+    if ($('tutWelcome')) {
+        $('tutWelcome').remove();
+        return true;
+    }
+    if ($('modal')) {
+        closeModal();
+        return true;
+    }
+    if ($('quickOverlay')) {
+        closeQuickMaterial();
+        return true;
+    }
+    if ($('tutLayer') && typeof tutExit === 'function') {
+        tutExit();
+        return true;
+    }
+    return false;
 }
 function closeX() {
     return `<button class="iconbtn" aria-label="Close" onclick="closeModal()">${ic('x', 18)}</button>`;

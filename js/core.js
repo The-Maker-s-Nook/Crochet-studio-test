@@ -111,6 +111,10 @@ function normalizeData(d) {
     for (const k of ['materials', 'products', 'sales', 'markets'])
         if (!Array.isArray(d[k]))
             d[k] = [];
+    // A damaged entry (empty or not a record) is dropped so one bad item can't stop the whole app from opening
+    for (const k of ['materials', 'products', 'sales', 'markets', 'orders', 'expenses', 'reminders', 'productCategories', 'materialCategories', 'units', 'purchases', 'patternLinks', 'patternTags', 'expenseCats'])
+        if (Array.isArray(d[k]))
+            d[k] = d[k].filter(x => k === 'expenseCats' ? x != null : x && typeof x === 'object');
     let fresh = !d.settings || !Object.keys(d.settings).length;
     d.settings = { ...DEFAULT_SETTINGS, ...(d.settings || {}) };
     migrateData(d, fresh);
@@ -130,17 +134,24 @@ let screen = 'home', editing = null, selected = null, productYarns = [], photo =
 const $ = id => document.getElementById(id);
 const id = () => Math.random().toString(36).slice(2) + Date.now().toString(36);
 const num = v => Math.max(0, Number(v) || 0);
-const cash = v => '$' + num(v).toFixed(2);
+const cash = v => '$' + num(v).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ','); // $1,234.56
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 let saveQueue = Promise.resolve(), saveErrorShown = false, saveTimer = null;
+let changeTick = 0; // counts saves, so Undo can tell if anything else changed since
+let formDirty = false; // a form has edits that aren't saved yet (start.js asks before leaving)
 const save = () => {
+    changeTick++;
+    formDirty = false;
     clearTimeout(saveTimer);
     saveTimer = setTimeout(flushSave, 0);
     return true;
 };
+let loadFailed = false; // saved data couldn't be opened: never save over it (or sync it) until the app is reopened
 function flushSave() {
     clearTimeout(saveTimer);
     saveTimer = null;
+    if (loadFailed)
+        return saveQueue;
     // Photos are kept as their own files; the data only holds short references (js/photos.js)
     externalizePhotos(data);
     saveQueue = saveQueue.then(photosWritten).then(() => idbSet('app', 'data', data)).then(() => {
@@ -179,8 +190,30 @@ function toast(t) {
         return f.format(this);
     };
 })();
-const material = id => data.materials.find(x => x.id === id);
-const product = id => data.products.find(x => x.id === id);
+// Fast lookup by id for big lists (thousands of sales in Reports and downloads).
+// Keeps an id -> position index per array and double-checks the hit, so adding, removing
+// or replacing items can never return a stale record (it just rebuilds the index).
+const idIndex = new WeakMap();
+function findById(arr, id) {
+    if (!arr || id == null)
+        return undefined;
+    if (arr.length < 40)
+        return arr.find(x => x.id === id);
+    let ix = idIndex.get(arr);
+    let i = ix?.get(id);
+    if (i !== undefined && arr[i]?.id === id)
+        return arr[i];
+    if (ix && i === undefined && ix.size === arr.length)
+        return undefined;
+    ix = new Map();
+    arr.forEach((x, k) => x && ix.set(x.id, k));
+    idIndex.set(arr, ix);
+    i = ix.get(id);
+    return i === undefined ? undefined : arr[i];
+}
+const material = id => findById(data.materials, id);
+const product = id => findById(data.products, id);
+const orderById = id => findById(data.orders || [], id);
 // ---- Country & currency ----
 function guessCurrency() {
     try {

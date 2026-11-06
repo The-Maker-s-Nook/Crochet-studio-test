@@ -141,6 +141,27 @@ function canShareFiles() {
         return false;
     }
 }
+// A copy kept when another device's newer changes replaced unsent changes here (js/sync.js keepUnsyncedCopy)
+async function exportKeptCopy() {
+    let k = await idbGet('app', 'unsynced').catch(() => null);
+    if (!k?.data)
+        return appAlert('The kept copy isn’t on this device any more.');
+    let backup = { app: 'Crochet Studio', backupVersion: 3, exported: k.at, keptCopy: true, data: k.data, photos: await photosForBackup(k.data), patterns: [] };
+    let a = document.createElement('a'), u = URL.createObjectURL(new File([JSON.stringify(backup)], 'name.json', { type: 'application/json' }));
+    a.href = u;
+    a.download = 'crochet-studio-kept-copy-' + k.at.slice(0, 10) + '.json';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(u), 5000);
+}
+async function deleteKeptCopy() {
+    if (!await appConfirm('Delete the kept copy? Download it first if you might need it.', { ok: 'Delete', danger: true }))
+        return;
+    await idbDel('app', 'unsynced').catch(() => {});
+    lsSet('csUnsynced', null);
+    render();
+}
 async function exportData(share) {
     try {
         let patterns = await pdfAll();
