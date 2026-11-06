@@ -8,7 +8,7 @@ function productDetail() {
     return `${backBtn()}<div class="panel" style="margin-top:12px"><div class="item">${photoSlot(p.photo || '', "", 'product', p.id, p.name)}<div class="grow"><h2 style="margin:0">${esc(p.name)}</h2><div class="muted">${esc(p.variation || 'Standard')} · ${cash(p.price)} each</div>${ptags(p).map(c => `<span class="chip" style="display:inline-block;margin:6px 4px 0 0">${ic('tag', 13)} ${esc(c.name)}</span>`).join('')}<div style="margin-top:8px">${reminderToggleBtn('product', p.id, p.name)}</div></div></div><div class="divider"></div><div class="eyebrow">Finished inventory</div><div class="big">${num(p.stock)}</div><label>Quantity to add or remove</label><div class="row" style="justify-content:flex-start"><button class="alt" onclick="changeQty(-1)">−</button><input id="adjustQty" type="number" min="1" step="1" value="1" style="width:100px;text-align:center"><button class="alt" onclick="changeQty(1)">+</button></div><div class="actions"><button onclick="adjustFromField(1)">+ Add quantity</button><button class="alt" onclick="adjustFromField(-1)">− Remove quantity</button></div>${skipMaterialsBox(p)}<div class="hint">${productStockHint(p)}</div></div><div class="panel"><h3>Saved formula</h3>${(p.materials || []).map(x => {
         let m = material(x.materialId);
         return `<div class="muted">${m ? `<b>${esc(mcat(m.categoryId)?.name || '')}:</b> ${esc(materialLabel(m))}` : 'Deleted material'} — ${x.amount} ${esc(num(x.amount) === 1 && m?.unit === 'pair' ? 'pair' : unitShort(m?.unit))}</div>`;
-    }).join('') || '<div class="muted">No materials saved.</div>'}<p class="muted">Hook: ${esc(p.hook || '—')}${p.hook && /^[\d.]+$/.test(p.hook) ? ' mm' : ''} · Time: ${num(p.hours)} hours</p><div>Materials: <b>${cash(recipeCost(p))}</b> · ${labourInfo(p).label}: <b>${labourInfo(p).text}</b> · Suggested: <b>${cash(suggest(p))}</b> · Selling: <b>${cash(p.price)}</b></div><div class="actions"><button class="alt" onclick="editProduct('${p.id}')">Edit product</button>${productPatternBtn(p)}<button class="danger" onclick="deleteProduct('${p.id}')">Delete</button></div></div><div class="panel"><h3>Production history</h3>${(p.batches || []).slice().reverse().map(b => `<div class="entry"><b>+${b.qty} made</b> · ${new Date(b.date).toLocaleDateString()}<div class="muted">Material cost each: ${cash(b.unitCost)} · ${b.deducted ? 'Materials deducted' : 'No material deduction'}</div></div>`).join('') || '<div class="muted">No production entries yet.</div>'}</div>`;
+    }).join('') || '<div class="muted">No materials saved.</div>'}<p class="muted">Hook: ${esc(p.hook || '—')}${p.hook && /^[\d.]+$/.test(p.hook) ? ' mm' : ''} · Time: ${num(p.hours)} hours</p><div>Materials: <b>${cash(recipeCost(p))}</b> · ${labourInfo(p).label}: <b>${labourInfo(p).text}</b> · Suggested: <b>${cash(suggest(p))}</b> · Selling: <b>${cash(p.price)}</b></div><div class="actions"><button class="alt" onclick="editProduct('${p.id}')">Edit product</button><button class="alt" onclick="makeVariation('${p.id}')">${ic('products', 16)} Make a variation</button>${productPatternBtn(p)}<button class="danger" onclick="deleteProduct('${p.id}')">Delete</button></div></div><div class="panel"><h3>Production history</h3>${(p.batches || []).slice().reverse().map(b => `<div class="entry"><b>+${b.qty} made</b> · ${new Date(b.date).toLocaleDateString()}<div class="muted">Material cost each: ${cash(b.unitCost)} · ${b.deducted ? 'Materials deducted' : 'No material deduction'}</div></div>`).join('') || '<div class="muted">No production entries yet.</div>'}</div>`;
 }
 function changeQty(d) {
     let e = $('adjustQty');
@@ -109,8 +109,8 @@ async function deletePickedProducts() {
     toast(`${n} product${n > 1 ? 's' : ''} deleted.`);
 }
 function productForm() {
-    let p = product(editing) || {};
-    return `${backBtn()}<div class="panel" style="margin-top:12px"><h2>${editing ? 'Edit' : 'Create'} product</h2><label>Product name</label><input id="pname" value="${esc(p.name || '')}" placeholder="e.g. Small bee"><label>Variation / colour (optional)</label><input id="pvariation" value="${esc(p.variation || '')}" placeholder="e.g. Yellow"><label>Product photo (optional)</label><button class="alt" onclick="photoMenu(loadPhoto,true)">${ic('camera', 16)} Add photo</button><div id="photoPreview">${photoGallery("product")}</div><div class="divider"></div><h3 style="font-size:22px">Materials used</h3><div id="supplies">${suppliesHtml()}</div><div class="divider"></div><div class="two"><div><label>Hook size (mm)</label><input id="phook" value="${esc(p.hook || '')}" placeholder="6"></div><div><label>Time to make (hours)</label><input id="phours" type="number" step="any" min="0" inputmode="decimal" placeholder="Required, e.g. 1.5" value="${p.hours ?? ''}" oninput="updatePrice()"></div></div><label>Tags (optional, pick any)</label>${tagPicker()}<label for="ppattern">Linked pattern (optional)</label><select id="ppattern" class="fancy"><option value="">No pattern</option></select><div class="divider"></div><h3>Pricing</h3><label>Pricing method</label><select id="pmethod" onchange="updatePrice()"><option value="labour">Materials + hourly labour</option><option value="multiply">Materials × multiplier</option><option value="markup">Materials with markup + labour</option></select><div id="multiplierControls"><label>Material cost multiplier</label><input id="pmultiplier" type="number" min="0" step="any" value="${p.multiplier ?? data.settings.multiplier}" oninput="updatePrice()"></div><div id="markupControls"><label>Markup: <b id="markupLabel">${p.markup ?? data.settings.markup}%</b></label><input id="pmarkup" type="range" min="0" max="300" step="5" value="${p.markup ?? data.settings.markup}" oninput="updatePrice()"><div class="muted">Slide to change the suggested price live (0–300%).</div></div><div class="panel" style="background:var(--card2);margin-top:15px"><div>Material cost: <b id="materialTotal">—</b></div><div><span id="labourLabel">Labour</span>: <b id="labourTotal">—</b></div><div>Suggested selling price: <b id="suggestTotal">—</b></div></div><label>Actual selling price ($) — editable</label><div class="row"><input id="pprice" type="number" min="0" step="0.01" value="${p.price ?? ''}"><button class="alt small" onclick="useSuggested()">Use suggested</button></div><div class="hint">Suggestions update as you change materials. Your selling price stays editable.</div>${taxOverrideField('p', p, 'product', 'updatePrice()')}${noStockUseField(p)}<label>Finished inventory to add now</label><div class="row" style="justify-content:flex-start"><button class="alt" onclick="stepNumber('pinitialStock',-1)">−</button><input id="pinitialStock" type="number" min="0" step="1" value="0" style="width:95px;text-align:center"><button class="alt" onclick="stepNumber('pinitialStock',1)">+</button></div><div class="hint">Leave at 0 if you have not made this product yet. On existing products, this adds to current stock.</div><div class="actions"><button onclick="saveProduct()">Save product</button></div></div>`;
+    let copy = !editing && product(productCopyOf), p = product(editing) || (copy ? { ...copy, variation: '' } : {});
+    return `${backBtn()}<div class="panel" style="margin-top:12px"><h2>${editing ? 'Edit product' : copy ? 'New variation' : 'Create product'}</h2>${copy ? `<div class="tip" style="margin:0 0 12px">Copied from <b>${esc(copy.name)}${copy.variation ? ' · ' + esc(copy.variation) : ''}</b>: materials, time, hook, price, tags and pattern. Change what's different. Stock starts at 0, and photos and sales aren't copied.</div>` : ''}<label>Product name</label><input id="pname" value="${esc(p.name || '')}" placeholder="e.g. Small bee"><label>Variation / colour (optional)</label><input id="pvariation" value="${esc(p.variation || '')}" placeholder="${copy ? 'e.g. Blue' : 'e.g. Yellow'}"><label>Product photo (optional)</label><button class="alt" onclick="photoMenu(loadPhoto,true)">${ic('camera', 16)} Add photo</button><div id="photoPreview">${photoGallery("product")}</div><div class="divider"></div><h3 style="font-size:22px">Materials used</h3><div id="supplies">${suppliesHtml()}</div><div class="divider"></div><div class="two"><div><label>Hook size (mm)</label><input id="phook" value="${esc(p.hook || '')}" placeholder="6"></div><div><label>Time to make (hours)</label><input id="phours" type="number" step="any" min="0" inputmode="decimal" placeholder="Required, e.g. 1.5" value="${p.hours ?? ''}" oninput="updatePrice()"></div></div><label>Tags (optional, pick any)</label>${tagPicker()}<label for="ppattern">Linked pattern (optional)</label><select id="ppattern" class="fancy"><option value="">No pattern</option></select><div class="divider"></div><h3>Pricing</h3><label>Pricing method</label><select id="pmethod" onchange="updatePrice()"><option value="labour">Materials + hourly labour</option><option value="multiply">Materials × multiplier</option><option value="markup">Materials with markup + labour</option></select><div id="multiplierControls"><label>Material cost multiplier</label><input id="pmultiplier" type="number" min="0" step="any" value="${p.multiplier ?? data.settings.multiplier}" oninput="updatePrice()"></div><div id="markupControls"><label>Markup: <b id="markupLabel">${p.markup ?? data.settings.markup}%</b></label><input id="pmarkup" type="range" min="0" max="300" step="5" value="${p.markup ?? data.settings.markup}" oninput="updatePrice()"><div class="muted">Slide to change the suggested price live (0–300%).</div></div><div class="panel" style="background:var(--card2);margin-top:15px"><div>Material cost: <b id="materialTotal">—</b></div><div><span id="labourLabel">Labour</span>: <b id="labourTotal">—</b></div><div>Suggested selling price: <b id="suggestTotal">—</b></div></div><label>Actual selling price ($) — editable</label><div class="row"><input id="pprice" type="number" min="0" step="0.01" value="${p.price ?? ''}"><button class="alt small" onclick="useSuggested()">Use suggested</button></div><div class="hint">Suggestions update as you change materials. Your selling price stays editable.</div>${taxOverrideField('p', p, 'product', 'updatePrice()')}${noStockUseField(p)}<label>Finished inventory to add now</label><div class="row" style="justify-content:flex-start"><button class="alt" onclick="stepNumber('pinitialStock',-1)">−</button><input id="pinitialStock" type="number" min="0" step="1" value="0" style="width:95px;text-align:center"><button class="alt" onclick="stepNumber('pinitialStock',1)">+</button></div><div class="hint">Leave at 0 if you have not made this product yet. On existing products, this adds to current stock.</div><div class="actions"><button onclick="saveProduct()">${copy ? 'Save variation' : 'Save product'}</button></div></div>`;
 }
 function updatePrice() {
     let method = $('pmethod').value;
@@ -146,6 +146,10 @@ async function saveProduct() {
     let initial = Number($('pinitialStock').value);
     if (!Number.isInteger(initial) || initial < 0)
         return appAlert('Enter a valid finished inventory quantity.');
+    let twin = data.products.find(x => x.id !== editing && normName(x.name).toLowerCase() === p.name.toLowerCase() && normName(x.variation).toLowerCase() === p.variation.toLowerCase());
+    if (twin && !await appConfirm(`You already have ${p.name}${p.variation ? ' · ' + p.variation : ''}. Save another one with the same name${p.variation ? ' and variation' : ''}?${productCopyOf && !p.variation ? '\n\nTip: type a variation (like a colour or size) so you can tell them apart.' : ''}`, { ok: 'Save anyway' }))
+        return productCopyOf && !p.variation ? $('pvariation')?.focus() : undefined;
+    let wasCopy = !editing && productCopyOf;
     let pid;
     if (editing) {
         Object.assign(product(editing), p, { price });
@@ -162,8 +166,9 @@ async function saveProduct() {
         productFolderOpen.add(t);
     if (initial > 0)
         await adjust(pid, initial, 'production');
+    productCopyOf = null;
     goBack();
-    toast('Product saved.');
+    toast(wasCopy ? 'Variation saved.' : 'Product saved.');
 }
 function loadPhoto(e) {
     [...(e.target.files || [])].forEach(f => resizePhoto(f, src => {
@@ -175,7 +180,7 @@ function pcat(cid) {
     return cid ? data.productCategories.find(c => c.id === cid) : null;
 }
 // ===== Product form: material sections =====
-let productLines = [], productSecs = [], productCatPreset = '';
+let productLines = [], productSecs = [], productCatPreset = '', productCopyOf = null;
 function lineByFid(fid) {
     return productLines.find(l => 'ln_' + l.key === fid);
 }
@@ -192,6 +197,7 @@ function initLines(p) {
 function newProduct(catId) {
     go('productForm', () => {
         editing = null;
+        productCopyOf = null;
         photo = '';
         productPhotos = [];
         productCatPreset = catId || '';
@@ -202,9 +208,25 @@ function newProduct(catId) {
 function editProduct(pid) {
     go('productForm', () => {
         editing = pid;
+        productCopyOf = null;
         let p = product(pid);
         photo = p.photo || '';
         productPhotos = [...(p.photos || (photo ? [photo] : []))];
+        productCatPreset = '';
+        productTagDraft = ptagIds(p);
+        initLines(p);
+    });
+}
+// Make a variation: a new product filled in from this one (no stock, photos, sales or reminders)
+function makeVariation(pid) {
+    let p = product(pid);
+    if (!p)
+        return;
+    go('productForm', () => {
+        editing = null;
+        productCopyOf = pid;
+        photo = '';
+        productPhotos = [];
         productCatPreset = '';
         productTagDraft = ptagIds(p);
         initLines(p);
@@ -380,7 +402,7 @@ function productCard(p, inTag) {
         return `<button type="button" class="panel item pickcard ${on ? 'on' : ''}" aria-pressed="${on}" onclick="togglePickProduct('${p.id}')"><span class="pickbox" aria-hidden="true">${on ? ic('check', 16) : ''}</span>${p.photo ? thumb(p.photo, '') : '<div class="thumb thumb-empty"></div>'}<span class="grow"><span class="item-title">${esc(p.name)}</span><span class="muted block">${cash(p.price)} · ${num(p.stock)} in stock</span></span></button>`;
     }
     let others = inTag ? ptags(p).filter(c => c.id !== inTag) : [];
-    return swipeWrap(`<div class="panel item hasbell">${reminderToggleBtn('product', p.id, p.name, true)}${photoSlot(p.photo || '', "", 'product', p.id, p.name)}<div class="grow"><div class="row titlerow"><div class="item-title">${esc(p.name)}</div>${ptagIds(p).length ? '' : `<button class="alt small addcat" onclick="openAddToCategory('${p.id}')">${ic('tag', 14)} Add tag</button>`}</div><div class="muted">${cash(p.price)} · ${num(p.stock)} in stock</div>${others.length ? `<span class="chip tagchip">Also tagged ${others.map(c => esc(c.name)).join(', ')}</span>` : ''}<div class="actions"><button class="alt small" onclick="quickRemove('${p.id}')" aria-label="Remove one ${esc(p.name)} from stock">−1</button><button class="small" onclick="quickAdd('${p.id}')" aria-label="Add one ${esc(p.name)} to stock">+1</button><button class="alt small" onclick="detail('${p.id}')">Open / adjust</button></div></div></div>`, `swipeDeleteProduct('${p.id}')`, p.name);
+    return swipeWrap(`<div class="panel item hasbell">${reminderToggleBtn('product', p.id, p.name, true)}${photoSlot(p.photo || '', "", 'product', p.id, p.name)}<div class="grow"><div class="row titlerow"><div class="item-title">${esc(p.name)}${p.variation ? `<span class="itemvar"> · ${esc(p.variation)}</span>` : ''}</div>${ptagIds(p).length ? '' : `<button class="alt small addcat" onclick="openAddToCategory('${p.id}')">${ic('tag', 14)} Add tag</button>`}</div><div class="muted">${cash(p.price)} · ${num(p.stock)} in stock</div>${others.length ? `<span class="chip tagchip">Also tagged ${others.map(c => esc(c.name)).join(', ')}</span>` : ''}<div class="actions"><button class="alt small" onclick="quickRemove('${p.id}')" aria-label="Remove one ${esc(p.name)} from stock">−1</button><button class="small" onclick="quickAdd('${p.id}')" aria-label="Add one ${esc(p.name)} to stock">+1</button><button class="alt small" onclick="detail('${p.id}')">Open / adjust</button></div></div></div>`, `swipeDeleteProduct('${p.id}')`, p.name);
 }
 function productRows() {
     let q = productFilter, match = p => productMatches(p, q), loose = sortProducts(data.products.filter(p => !ptagIds(p).length && match(p))), cats = data.productCategories.slice().sort(byName), folders = '';

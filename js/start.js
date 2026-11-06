@@ -113,7 +113,7 @@ render = function () {
     if (screen === 'materialForm')
         setMaterialFormDefaults();
     if (screen === 'productForm') {
-        let p = product(editing);
+        let p = product(editing) || (!editing && product(productCopyOf));
         $('pmethod').value = p?.method || data.settings.method;
         fillPatternOptions();
         updatePrice();

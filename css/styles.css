@@ -492,3 +492,4 @@ button.etemail{display:block;width:100%;margin:6px 0 4px;padding:6px 0;backgroun
 .etfull{text-align:center;padding:10px 2px}
 .etbig{font-weight:900;color:var(--ink);margin-top:10px;overflow-wrap:break-word;user-select:all;letter-spacing:.01em}
 .etbigamt{font-family:var(--display);font-size:46px;color:var(--ink);margin-top:4px}
+.item-title .itemvar{font-family:'Nunito',system-ui,sans-serif;font-size:.78em;font-weight:800;color:var(--ink2)}
