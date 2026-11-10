@@ -1,10 +1,40 @@
 // Crochet Studio service worker: lets the app open and work with no internet.
-// When you change index.html, bump this version so phones pick up the update.
-const CACHE = 'crochet-studio-v24';
+// When you change any app file, bump this version so phones pick up the update.
+const CACHE = 'crochet-studio-v24-16';
 const ASSETS = [
   './',
   './index.html',
   './manifest.webmanifest',
+  './css/styles.css',
+  './css/tutorial.css',
+  './js/core.js',
+  './js/money.js',
+  './js/ui.js',
+  './js/nav.js',
+  './js/storage.js',
+  './js/photos.js',
+  './js/xlsx.js',
+  './js/home.js',
+  './js/products.js',
+  './js/materials.js',
+  './js/stock.js',
+  './js/patterns.js',
+  './js/markets.js',
+  './js/expenses.js',
+  './js/receipts.js',
+  './js/yearend.js',
+  './js/reminders.js',
+  './js/checkout.js',
+  './js/reports.js',
+  './js/report-files.js',
+  './js/settings.js',
+  './js/plans.js',
+  './js/import.js',
+  './js/sync.js',
+  './js/account-screens.js',
+  './js/setup.js',
+  './js/tutorial.js',
+  './js/start.js',
   './icons/icon-192.png',
   './icons/icon-512.png',
   './icons/maskable-512.png',
@@ -12,7 +42,7 @@ const ASSETS = [
   './lib/pdf.min.js',
   './lib/pdf.worker.min.js',
   './fonts/DancingScript.ttf',
-  './guides/whats-new-23.pdf',
+  './guides/whats-new-24.pdf',
   './guides/tester-guide.pdf'
 ];
 
