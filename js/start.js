@@ -261,10 +261,22 @@ render = function () {
 })();
 if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
     const hadController = !!navigator.serviceWorker.controller;
+    const openedAt = Date.now();
+    let touched = false;
+    addEventListener('pointerdown', () => touched = true, { once: true, capture: true });
     navigator.serviceWorker.addEventListener('controllerchange', () => {
         if (!hadController || $('updateBar'))
             return;
+        // A newer version finished downloading. Just opened and not used yet: switch to it straight away.
+        // Otherwise offer it, so nothing being typed is interrupted.
+        if (!touched && Date.now() - openedAt < 15000 && !marketSaleMode && !formDirty)
+            return location.reload();
         document.body.insertAdjacentHTML('beforeend', '<div id="updateBar">New version ready<button onclick="location.reload()">Refresh</button></div>');
     });
     addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(e => console.warn('Service worker not registered', e)));
+    // Check for a newer version every time the app comes to the front, not only when the phone decides to
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible' && navigator.onLine)
+            navigator.serviceWorker.getRegistration().then(r => r?.update()).catch(() => {});
+    });
 }
