@@ -123,6 +123,9 @@ document.addEventListener('pointercancel', () => { if (swipeNow) { swipeNow.card
 document.addEventListener('click', swipeClick, true);
 // ---- A sale in progress survives the app being closed or refreshed (nothing is charged until Complete sale) ----
 let saleDraftReady = false;
+// The screen showing when the app was last closed (read once at start, before the first screen is drawn)
+const screenAtLastClose = lsGet('csLastScreen', '');
+let lastScreenSaved = '';
 function keepSaleDraft() {
     if (!saleDraftReady)
         return;
@@ -198,6 +201,10 @@ render = function () {
     if (loadFailed)
         return;
     keepSaleDraft();
+    if (dataLoaded && screen !== lastScreenSaved) {
+        lastScreenSaved = screen;
+        lsSet('csLastScreen', screen);
+    }
     try {
         v23AfterRender();
     }
@@ -254,7 +261,8 @@ render = function () {
     restoreSaleDraft();
     // A pattern was open when the app was closed (or the phone restarted the app in the background): open it again.
     let openPat = lsGet('csPatternOpen', null);
-    if (screen === 'home' && openPat && pdfCache.some(p => p.id === openPat.id))
+    // Only when the pattern was what was on screen; if you'd moved on to another page, start on Home as usual
+    if (screen === 'home' && openPat && screenAtLastClose === 'patterns' && pdfCache.some(p => p.id === openPat.id))
         view('patterns');
     setTimeout(checkSquarePending, 1500);
     requestPersistentStorage().then(() => {
