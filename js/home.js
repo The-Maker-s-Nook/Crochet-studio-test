@@ -91,7 +91,7 @@ function homeMessage() {
 
 // ---- Moving from crochetstudiotest.netlify.app to app.themakersnook.ca ----
 // Set MOVE_DATE (YYYY-MM-DD) when version 24 goes live: one week after launch day.
-const NEW_HOME = 'app.themakersnook.ca', MOVE_DATE = '';
+const NEW_HOME = 'app.themakersnook.ca', MOVE_DATE = '2026-11-17';
 function appHost() {
     return window.TEST_HOST || location.hostname;
 }
