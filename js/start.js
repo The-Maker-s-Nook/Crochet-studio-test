@@ -252,10 +252,7 @@ render = function () {
     myStamp = lsGet('csStamp', '');
     render();
     restoreSaleDraft();
-    // A pattern was open when the app was closed (or the phone restarted the app in the background): open it again.
-    let openPat = lsGet('csPatternOpen', null);
-    if (screen === 'home' && openPat && pdfCache.some(p => p.id === openPat.id))
-        view('patterns');
+    // The app always opens on Home. A pattern that was open comes back when you tap Patterns (v23AfterRender).
     setTimeout(checkSquarePending, 1500);
     requestPersistentStorage().then(() => {
         if (screen === 'settingsBackup')
