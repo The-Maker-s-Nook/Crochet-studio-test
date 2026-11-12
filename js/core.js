@@ -261,5 +261,5 @@ function byName(a, b) {
 }
 // ===== v21: spreadsheet import (beta), feedback, pattern limit =====
 // APP_BUILD = the update number shown in Settings; keep it the same as the last number in sw.js CACHE (crochet-studio-v24-<build>)
-const APP_BUILD = 20;
+const APP_BUILD = 21;
 const APP_VERSION = 24, PATTERN_LIMIT = 5, RECEIPT_LIMIT = 10, FEEDBACK_EMAIL = 'support@themakersnook.ca';
