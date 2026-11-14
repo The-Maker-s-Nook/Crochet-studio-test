@@ -1,5 +1,5 @@
 // Basics used everywhere: saved-data format, app state, small helpers, saving, icons, app constants
-// Part of the Crochet Studio app. Files load in the order listed in index.html.
+// Part of The Makers Nook app. Files load in the order listed in index.html.
 
 const KEY = 'crochetStudioPrototypeV1';
 const DEFAULT_SETTINGS = { hourly: 15, method: 'labour', multiplier: 3, markup: 50, rounding: 'nearest', taxRate: 13, taxOnPurchases: true, taxOnSales: false, taxInCosts: true };

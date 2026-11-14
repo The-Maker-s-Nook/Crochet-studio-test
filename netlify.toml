@@ -1,4 +1,4 @@
-# Crochet Studio is a ready-made web app: no build step.
+# The Makers Nook is a ready-made web app: no build step.
 # Netlify publishes the files in this folder as they are.
 [build]
   publish = "."

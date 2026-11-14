@@ -1,5 +1,5 @@
 // Photos for products, materials, pattern links and receipts (receipt PDFs are kept the same way).
-// Part of the Crochet Studio app. Files load in the order listed in index.html.
+// Part of The Makers Nook app. Files load in the order listed in index.html.
 //
 // Each photo is an image file of its own: on the phone in IndexedDB (store "photos"), and with an account
 // in Supabase Storage at user-files/<user id>/photos/<photo id>. The app data only holds a short reference,

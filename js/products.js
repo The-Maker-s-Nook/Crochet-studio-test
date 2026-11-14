@@ -1,5 +1,5 @@
 // Products: list, folders/tags, sort, detail, add/edit form, supplies used
-// Part of the Crochet Studio app. Files load in the order listed in index.html.
+// Part of The Makers Nook app. Files load in the order listed in index.html.
 
 function productDetail() {
     let p = product(selected);

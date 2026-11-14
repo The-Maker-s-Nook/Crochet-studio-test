@@ -1,5 +1,5 @@
 // Home screen, quick stock buttons, backup reminder, install card, rotating messages
-// Part of the Crochet Studio app. Files load in the order listed in index.html.
+// Part of The Makers Nook app. Files load in the order listed in index.html.
 
 function upcomingMarket() {
     let today = new Date().toISOString().slice(0, 10), best = null;
@@ -60,7 +60,7 @@ function installCard() {
     if (isStandalone())
         return '';
     if (installPromptEvent)
-        return `<div class="panel"><h3>Install the app</h3><p class="muted">Add Crochet Studio to your home screen so it opens like a normal app and works without internet.</p><button onclick="installApp()">Install</button></div>`;
+        return `<div class="panel"><h3>Install the app</h3><p class="muted">Add The Makers Nook to your home screen so it opens like a normal app and works without internet.</p><button onclick="installApp()">Install</button></div>`;
     if (isIOS() && location.protocol.startsWith('http'))
         return `<div class="panel"><h3>Install on ${/ipad/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) ? 'iPad' : 'iPhone'}</h3><p class="muted">In Safari, tap the Share button (square with an arrow), then <b>Add to Home Screen</b>. The app will open full screen and work without internet.</p></div>`;
     return '';

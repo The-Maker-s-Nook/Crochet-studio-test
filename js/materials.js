@@ -1,5 +1,5 @@
 // Materials: list, groups, categories, units, stores, add/edit form, quick add
-// Part of the Crochet Studio app. Files load in the order listed in index.html.
+// Part of The Makers Nook app. Files load in the order listed in index.html.
 
 function drawMaterialRows() {
     let e = $('materialRows');

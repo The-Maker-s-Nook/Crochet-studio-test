@@ -1,6 +1,6 @@
 // Material stock: the three stock settings, per-material overrides, the −1/+1 package buttons,
 // "what do you buy it in" words, and taking materials out when finished products are made.
-// Part of the Crochet Studio app. Files load in the order listed in index.html.
+// Part of The Makers Nook app. Files load in the order listed in index.html.
 //
 // Settings › Pricing defaults › Material stock picks one of STOCK_MODES for every material.
 // A material can override it (m.stockOverride = { on: true, mode }), like the tax override.

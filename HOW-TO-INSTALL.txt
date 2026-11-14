@@ -1,4 +1,4 @@
-CROCHET STUDIO - NOTES FOR THE APP OWNER (version 24)
+THE MAKERS NOOK - NOTES FOR THE APP OWNER (version 24)
 
 LIVE TEST ADDRESS
    https://crochetstudiotest.netlify.app
@@ -17,7 +17,7 @@ INSTALLING ON A PHONE OR TABLET
    Android (Chrome): open the address, then tap Install (on the Welcome or Home
    screen), or Chrome menu (3 dots) > Install app / Add to Home screen.
    iPhone / iPad (Safari only): Share (square with arrow) > Add to Home Screen.
-   Testers: send them the Crochet Studio Tester Guide.
+   Testers: send them The Makers Nook Tester Guide.
 
 ACCOUNTS AND CLOUD (Supabase)
    Project: crochet-studio-test (Free plan)

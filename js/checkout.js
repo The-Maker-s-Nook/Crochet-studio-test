@@ -1,5 +1,5 @@
 // Selling: market checkout and Quick sale, discounts, price changes, payment methods, Square, sales list
-// Part of the Crochet Studio app. Files load in the order listed in index.html.
+// Part of The Makers Nook app. Files load in the order listed in index.html.
 
 // ===== Sales: discounts, price changes, checkout, Square =====
 const SQ_APP_ID = 'sq0idp-J4UrXdHeSOnFaEtvwuO2HQ';
@@ -348,7 +348,7 @@ function recomputeOrder(oid) {
 const SQ_CALLBACK = () => location.origin + '/';
 function squareNote(o, adj) {
     let items = o.lines.map(l => l.name + (l.qty > 1 ? ' x' + l.qty : '')).join(', ');
-    return ('Crochet Studio: ' + items + (o.disc ? ` (${adj.discount?.reason || 'Discount'} -${cash(o.disc)})` : '')).slice(0, 480);
+    return ('The Makers Nook: ' + items + (o.disc ? ` (${adj.discount?.reason || 'Discount'} -${cash(o.disc)})` : '')).slice(0, 480);
 }
 function isAndroid() {
     return /android/i.test(navigator.userAgent);
@@ -386,7 +386,7 @@ function startSquare(o) {
 function squareTest() {
     let ref = id();
     lsSet('csSquarePending', { ref, test: true, total: 1, cents: 100, at: Date.now() });
-    if (!launchSquare(100, 'Crochet Studio test payment', ref))
+    if (!launchSquare(100, 'Makers Nook test payment', ref))
         lsSet('csSquarePending', null);
 }
 function friendlySquareErr(code, desc) {
@@ -396,7 +396,7 @@ function friendlySquareErr(code, desc) {
     if (/NOT_LOGGED_IN|NO_EMPLOYEE|USER_NOT_ACTIVE/.test(c))
         return 'Sign in to the Square Point of Sale app (and choose your location) first, then try again.';
     if (/UNAUTHORIZED_CLIENT|CLIENT_NOT_AUTHORIZED/.test(c))
-        return "Square didn't recognise Crochet Studio. Check the Point of Sale API settings in the Square Developer account.";
+        return "Square didn't recognise The Makers Nook. Check the Point of Sale API settings in the Square Developer account.";
     if (/NO_NETWORK|NO_NETWORK_CONNECTION/.test(c))
         return "Square couldn't connect to the internet. The sale is still open.";
     if (/UNSUPPORTED_(WEB_)?API_VERSION/.test(c))
@@ -404,7 +404,7 @@ function friendlySquareErr(code, desc) {
     if (/ALREADY_IN_PROGRESS/.test(c))
         return 'Square already has a payment in progress. Finish or cancel it in Square, then try again.';
     if (/CURRENCY/.test(c))
-        return `Your Square account uses a different currency. Crochet Studio sent ${sqCurrency()}. Change it in Settings › Finances › Country & currency.`;
+        return `Your Square account uses a different currency. The Makers Nook sent ${sqCurrency()}. Change it in Settings › Finances › Country & currency.`;
     if (/INVALID_REQUEST/.test(c))
         return `Square turned down the request. Please check:\n\n1. Settings › Finances › Country & currency matches your Square account's country (now ${sqCurrency() === 'USD' ? 'United States · USD' : 'Canada · CAD'}).\n2. The Square Point of Sale app is up to date (check the Play Store or App Store).\n3. You're signed in to Square with your location chosen.\n\nThen tap Card again. The next try sends a simpler request. The sale is still open.`;
     return `Square couldn't take the payment${c ? ` (${esc(code)})` : ''}. The sale is still open.`;
@@ -446,7 +446,7 @@ async function finishSquare(p, res) {
     scrollTo(0, 0);
     toast(oid ? `Card payment approved · ${cash(p.total)}. Sale saved.` : 'Payment approved, but the sale could not be saved. Please add it by hand.');
     if (oid && !isStandalone())
-        setTimeout(() => appAlert(`The ${cash(p.total)} sale is saved.\n\nSquare opened this in your web browser. If you use the installed Crochet Studio app, close this browser tab and go back to the app. The sale will be there.`, 'Payment approved'), 400);
+        setTimeout(() => appAlert(`The ${cash(p.total)} sale is saved.\n\nSquare opened this in your web browser. If you use the installed Makers Nook app, close this browser tab and go back to the app. The sale will be there.`, 'Payment approved'), 400);
 }
 async function handleSquareReturn() {
     let q = new URLSearchParams(location.search);
@@ -481,7 +481,7 @@ async function handleSquareReturn() {
     let p = lsGet('csSquarePending', null);
     if (!p) {
         if (res.ok)
-            setTimeout(() => appAlert('The Square payment was approved. Go back to the Crochet Studio app on your home screen to finish the sale.', 'Payment approved'), 300);
+            setTimeout(() => appAlert('The Square payment was approved. Go back to the Makers Nook app on your home screen to finish the sale.', 'Payment approved'), 300);
         return true;
     }
     if (res.ok)
@@ -492,7 +492,7 @@ async function handleSquareReturn() {
         if (/INVALID_REQUEST/i.test(res.err || ''))
             lsSet('csSquareBasic', true);
         restoreDraft(p);
-        let msg = friendlySquareErr(res.err, res.desc) + (isStandalone() ? '' : '\n\nIf you use the installed Crochet Studio app, close this browser tab and go back to it.');
+        let msg = friendlySquareErr(res.err, res.desc) + (isStandalone() ? '' : '\n\nIf you use the installed Makers Nook app, close this browser tab and go back to it.');
         setTimeout(() => appAlert(msg, p.test ? 'Square test' : ''), 300);
     }
     return true;
@@ -523,7 +523,7 @@ async function checkSquarePending() {
         return;
     sqAsking = true;
     try {
-        let paid = await appDialog({ title: 'Did the Square payment go through?', message: `Crochet Studio didn't hear back from Square for the ${cash(p.total)} ${p.test ? 'test ' : ''}payment.\n\nCheck the Square app. Was the payment approved?`, ok: 'Yes, it was paid', cancel: 'No, not paid' });
+        let paid = await appDialog({ title: 'Did the Square payment go through?', message: `The Makers Nook didn't hear back from Square for the ${cash(p.total)} ${p.test ? 'test ' : ''}payment.\n\nCheck the Square app. Was the payment approved?`, ok: 'Yes, it was paid', cancel: 'No, not paid' });
         if (lsGet('csSquarePending', null)?.ref !== p.ref)
             return;
         if (paid)

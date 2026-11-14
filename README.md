@@ -1,6 +1,6 @@
-# Crochet Studio (test version)
+# The Makers Nook (test version)
 
-"Crochet Studio" is a working name (final name: The Makers Nook). This is the installable web app (PWA)
+The Makers Nook (formerly "Crochet Studio"). This is the installable web app (PWA)
 that testers use at https://crochetstudiotest.netlify.app
 
 ## What's here

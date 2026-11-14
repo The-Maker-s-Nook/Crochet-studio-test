@@ -1,5 +1,5 @@
 // Markets: list, details, dates, address search, packing inventory, to-do list, completing a market
-// Part of the Crochet Studio app. Files load in the order listed in index.html.
+// Part of The Makers Nook app. Files load in the order listed in index.html.
 
 function packedFor(pid) {
     return data.markets.filter(m => !m.completed).reduce((a, m) => a + num(m.items?.[pid]), 0);

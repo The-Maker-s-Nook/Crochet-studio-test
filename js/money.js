@@ -1,5 +1,5 @@
 // All money maths in one place: labour, suggested prices, tax, rounding, material unit cost, sale totals and discounts
-// Part of the Crochet Studio app. Files load in the order listed in index.html.
+// Part of The Makers Nook app. Files load in the order listed in index.html.
 
 function labourCost(p) {
     return num(p.hours) * num(data.settings.hourly);
