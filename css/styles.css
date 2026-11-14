@@ -19,7 +19,7 @@ button.small{padding:7px 13px;font-size:13px;min-height:34px}
 button.outline{background:var(--card);color:var(--pink-ink);box-shadow:inset 0 0 0 2px var(--pink)}
 button.aqua{background:var(--aqua);color:var(--aqua-ink);box-shadow:inset 0 0 0 2px var(--aqua-ring)}
 header{background:var(--lav);border:0;border-radius:0 0 26px 26px;padding:max(14px,env(safe-area-inset-top)) 16px 14px;gap:10px}
-header .brand{display:flex;align-items:center;gap:10px;font-family:'Dancing Script',var(--display);font-size:30px;font-weight:700;line-height:1;color:var(--ink)}
+header .brand{display:flex;align-items:center;gap:10px;color:#111}header .brand-mark{width:40px;height:auto;flex-shrink:0}header .brand-name{font-family:'Sour Gummy','Nunito',sans-serif;font-weight:600;font-size:25px;line-height:1;white-space:nowrap}header .brand-the{display:block;font-size:13px;margin:0 0 1px 1px}
 .badge{width:44px;height:44px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .iconbtn{width:44px;height:44px;padding:0;border-radius:50%;background:var(--glass);color:var(--ink);display:flex;align-items:center;justify-content:center;box-shadow:none;flex-shrink:0}
 .iconbtn.sm{width:38px;height:38px;min-height:0;background:transparent;color:var(--ink3)}
@@ -280,8 +280,8 @@ body.viewing nav{z-index:1001}
 .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 /* Two header buttons: keep the title on one line on small phones */
 header .brand{white-space:nowrap;min-width:0}
-@media (max-width:400px){header .brand{font-size:26px;gap:8px}header .brand .badge svg{width:38px;height:38px}.hdrbtns{gap:6px}}
-@media (max-width:350px){header .brand{font-size:22px}}
+@media (max-width:400px){header .brand{gap:8px}header .brand-name{font-size:23px}header .brand-mark{width:36px}.hdrbtns{gap:6px}}
+@media (max-width:350px){header .brand-name{font-size:20px}header .brand-the{font-size:11px}header .brand-mark{width:32px}}
 /* Product cards: reminder bell in the top-left corner, over the photo's corner */
 .panel.item.hasbell{position:relative}
 .cornerbell{position:absolute;top:6px;left:6px;z-index:2;width:32px;height:32px;min-height:32px;padding:0;border-radius:50%;background:var(--card);color:var(--ink2);box-shadow:0 1px 4px var(--shadow2),inset 0 0 0 1.5px var(--lav-line)}
