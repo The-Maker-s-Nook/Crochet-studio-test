@@ -1,5 +1,5 @@
 // Accounts and cloud sync with Supabase: sign-in, upload/download, keeping devices and tabs in step
-// Part of the Crochet Studio app. Files load in the order listed in index.html.
+// Part of The Makers Nook app. Files load in the order listed in index.html.
 
 // ===== Accounts & cloud sync (Supabase) =====
 const SB_URL = 'https://jrxapujzegvsjgljzxrp.supabase.co', SB_KEY = 'sb_publishable_AV-UcJTr3h_YDD-lzLlJ7A_7MSUOq9a', SB_BUCKET = 'user-files', OTP_LEN = 6;
@@ -727,7 +727,7 @@ async function doLinkConfirmed() {
         }
         catch (e) {
             if (e.code === 'email_not_confirmed' || /not confirmed/i.test(e.message))
-                return appAlert("Your email isn't confirmed yet. Open the newest email from Crochet Studio and tap the link in it, then try again.");
+                return appAlert("Your email isn't confirmed yet. Open the newest email from The Makers Nook and tap the link in it, then try again.");
             throw e;
         }
         delete authFlow.pw;

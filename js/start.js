@@ -1,5 +1,5 @@
 // Starts the app: global event listeners, after-render hooks, loading data, offline support
-// Part of the Crochet Studio app. Files load in the order listed in index.html.
+// Part of The Makers Nook app. Files load in the order listed in index.html.
 
 addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'hidden' && saveTimer)
@@ -23,7 +23,7 @@ addEventListener('beforeinstallprompt', e => {
 });
 addEventListener('appinstalled', () => {
     installPromptEvent = null;
-    toast('Crochet Studio installed.');
+    toast('The Makers Nook installed.');
 });
 addEventListener('popstate', () => {
     let byApp = appBack;

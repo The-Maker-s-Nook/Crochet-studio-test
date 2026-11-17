@@ -1,5 +1,5 @@
 // Saving on the phone (IndexedDB), pattern file storage, backups and restore
-// Part of the Crochet Studio app. Files load in the order listed in index.html.
+// Part of The Makers Nook app. Files load in the order listed in index.html.
 
 // PDFs and photos are kept in IndexedDB, separate from small localStorage records.
 let dbPromise = new Promise((resolve, reject) => {
@@ -146,10 +146,10 @@ async function exportKeptCopy() {
     let k = await idbGet('app', 'unsynced').catch(() => null);
     if (!k?.data)
         return appAlert('The kept copy isn’t on this device any more.');
-    let backup = { app: 'Crochet Studio', backupVersion: 3, exported: k.at, keptCopy: true, data: k.data, photos: await photosForBackup(k.data), patterns: [] };
+    let backup = { app: 'The Makers Nook', backupVersion: 3, exported: k.at, keptCopy: true, data: k.data, photos: await photosForBackup(k.data), patterns: [] };
     let a = document.createElement('a'), u = URL.createObjectURL(new File([JSON.stringify(backup)], 'name.json', { type: 'application/json' }));
     a.href = u;
-    a.download = 'crochet-studio-kept-copy-' + k.at.slice(0, 10) + '.json';
+    a.download = 'makers-nook-kept-copy-' + k.at.slice(0, 10) + '.json';
     document.body.appendChild(a);
     a.click();
     a.remove();
@@ -167,12 +167,12 @@ async function exportData(share) {
         let patterns = await pdfAll();
         let stamp = new Date();
         data.lastBackup = stamp.toISOString();
-        let backup = { app: 'Crochet Studio', backupVersion: 3, exported: stamp.toISOString(), data, photos: await photosForBackup(), patterns: await Promise.all(patterns.map(async (p) => ({ id: p.id, name: p.name, date: p.date, mime: p.mime, thumb: p.thumb || '', thumbCustom: !!p.thumbCustom, dataUrl: await blobToDataUrl(p.blob) }))) };
-        let name = 'crochet-studio-backup-' + stamp.toISOString().slice(0, 10) + '.json';
+        let backup = { app: 'The Makers Nook', backupVersion: 3, exported: stamp.toISOString(), data, photos: await photosForBackup(), patterns: await Promise.all(patterns.map(async (p) => ({ id: p.id, name: p.name, date: p.date, mime: p.mime, thumb: p.thumb || '', thumbCustom: !!p.thumbCustom, dataUrl: await blobToDataUrl(p.blob) }))) };
+        let name = 'makers-nook-backup-' + stamp.toISOString().slice(0, 10) + '.json';
         let file = new File([JSON.stringify(backup)], name, { type: 'application/json' });
         if (share && canShareFiles()) {
             try {
-                await navigator.share({ files: [file], title: 'Crochet Studio backup' });
+                await navigator.share({ files: [file], title: 'Makers Nook backup' });
             }
             catch (e) {
                 if (e.name === 'AbortError')
@@ -207,11 +207,11 @@ async function importData(e) {
         parsed = JSON.parse(await f.text());
     }
     catch {
-        return appAlert('That file is not a Crochet Studio backup.');
+        return appAlert('That file is not a Makers Nook backup.');
     }
     let d = parsed && parsed.data && typeof parsed.data === 'object' ? parsed.data : parsed;
     if (!d || !(Array.isArray(d.products) || Array.isArray(d.materials)))
-        return appAlert('That file is not a Crochet Studio backup.');
+        return appAlert('That file is not a Makers Nook backup.');
     let pats = Array.isArray(parsed.patterns) ? parsed.patterns : [];
     let summary = `${(d.products || []).length} products, ${(d.materials || []).length} materials, ${(d.markets || []).length} markets, ${(d.sales || []).length} sales${parsed.patterns ? `, ${pats.length} patterns` : ''}`;
     if (!await appConfirm(`Restore this backup?\n\n${summary}\n\n${signedIn() ? 'This replaces everything in the app and in your account, on all your devices.' : 'This replaces everything currently in the app.'}`))

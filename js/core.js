@@ -1,5 +1,5 @@
 // Basics used everywhere: saved-data format, app state, small helpers, saving, icons, app constants
-// Part of the Crochet Studio app. Files load in the order listed in index.html.
+// Part of The Makers Nook app. Files load in the order listed in index.html.
 
 const KEY = 'crochetStudioPrototypeV1';
 const DEFAULT_SETTINGS = { hourly: 15, method: 'labour', multiplier: 3, markup: 50, rounding: 'nearest', taxRate: 13, taxOnPurchases: true, taxOnSales: false, taxInCosts: true };
@@ -261,5 +261,5 @@ function byName(a, b) {
 }
 // ===== v21: spreadsheet import (beta), feedback, pattern limit =====
 // APP_BUILD = the update number shown in Settings; keep it the same as the last number in sw.js CACHE (crochet-studio-v24-<build>)
-const APP_BUILD = 21;
+const APP_BUILD = 22;
 const APP_VERSION = 24, PATTERN_LIMIT = 5, RECEIPT_LIMIT = 10, FEEDBACK_EMAIL = 'support@themakersnook.ca';

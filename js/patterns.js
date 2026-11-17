@@ -1,5 +1,5 @@
 // Pattern library and the built-in PDF/image viewer, "You stopped here" marker, pattern limit
-// Part of the Crochet Studio app. Files load in the order listed in index.html.
+// Part of The Makers Nook app. Files load in the order listed in index.html.
 
 function patterns() {
     let list = pdfCache.slice().sort((a, b) => String(b.date).localeCompare(String(a.date))), f = patternTagFilter && patternTag(patternTagFilter) ? patternTagFilter : '';

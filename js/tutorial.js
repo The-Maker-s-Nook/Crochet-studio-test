@@ -1,5 +1,5 @@
 // Tutorials: optional, page-by-page lessons that spotlight the real screens
-// Part of the Crochet Studio app. Files load in the order listed in index.html.
+// Part of The Makers Nook app. Files load in the order listed in index.html.
 // Open from Settings › Tutorials, the ? button in the header, or the welcome prompt on first open.
 // Wording is kept general to all crafts (supplies, packs, makes), not yarn-specific.
 

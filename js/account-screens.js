@@ -1,5 +1,5 @@
 // Sign-up, sign-in, password and Account settings screens
-// Part of the Crochet Studio app. Files load in the order listed in index.html.
+// Part of The Makers Nook app. Files load in the order listed in index.html.
 
 const EYE = '<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>', EYE_OFF = '<path d="M3 3l18 18"/><path d="M10.6 5.1A10.4 10.4 0 0 1 12 5c6.4 0 10 7 10 7a17.6 17.6 0 0 1-3.2 4.1M6.6 6.6A17.4 17.4 0 0 0 2 12s3.6 7 10 7a9.7 9.7 0 0 0 5.4-1.6"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/>';
 function pwField(fid, ac, extra = '') {
@@ -28,13 +28,13 @@ function welcomeInstall() {
 }
 // ---- Screens ----
 function logoSvg() {
-    return document.querySelector('header .badge')?.innerHTML || '';
+    return document.querySelector('header .brand-mark')?.outerHTML || '';
 }
 function authBack() {
     return `<button class="auth-back" onclick="goBack()" aria-label="Back">${ic('back', 22)}</button>`;
 }
 function authWelcome() {
-    return `<div class="auth"><div class="auth-top center"><span class="auth-logo">${logoSvg()}</span><h1>Crochet Studio</h1><p>Your makes, materials, patterns and market sales, on every device.</p></div><div class="auth-body"><button class="btn-wide btn-white" onclick="soon('Google')">Continue with Google <span class="soon">Soon</span></button><button class="btn-wide btn-dark" onclick="soon('Apple')">Continue with Apple <span class="soon">Soon</span></button><div class="or">or</div><button class="btn-wide" onclick="authFlow={};go('authSignup')">Sign up with email</button><p class="auth-note big-note">Already have an account? <button class="linkbtn" onclick="authFlow={email:lsGet('csLastEmail','')};go('authSignin')">Sign in</button></p><div class="grow"></div><button class="linkbtn" onclick="useLocalOnly()">Continue without an account</button><p class="auth-note">Without an account, everything stays on this device only. You can sign up later in Settings.</p>${welcomeInstall()}</div></div>`;
+    return `<div class="auth"><div class="auth-top center"><span class="auth-logo">${logoSvg()}</span><h1><span class="brand-the">The</span>Makers Nook</h1><p>Your makes, materials, patterns and market sales, on every device.</p></div><div class="auth-body"><button class="btn-wide btn-white" onclick="soon('Google')">Continue with Google <span class="soon">Soon</span></button><button class="btn-wide btn-dark" onclick="soon('Apple')">Continue with Apple <span class="soon">Soon</span></button><div class="or">or</div><button class="btn-wide" onclick="authFlow={};go('authSignup')">Sign up with email</button><p class="auth-note big-note">Already have an account? <button class="linkbtn" onclick="authFlow={email:lsGet('csLastEmail','')};go('authSignin')">Sign in</button></p><div class="grow"></div><button class="linkbtn" onclick="useLocalOnly()">Continue without an account</button><p class="auth-note">Without an account, everything stays on this device only. You can sign up later in Settings.</p>${welcomeInstall()}</div></div>`;
 }
 function authSignup() {
     return `<div class="auth"><div class="auth-top">${authBack()}<h1>Create your account</h1><p>Your data will be saved to it, so you can use any device.</p></div><form class="auth-body" novalidate onsubmit="event.preventDefault();doSignup()"><div class="panel"><label for="suEmail">Email</label><input id="suEmail" type="email" autocomplete="email" inputmode="email" autocapitalize="off" spellcheck="false" value="${esc(authFlow.email || '')}"><label for="suPass" class="gap">Password</label>${pwField('suPass', 'new-password')}<div class="hint small-hint">At least 8 characters</div><label for="suPass2" class="gap">Confirm password</label>${pwField('suPass2', 'new-password')}</div><button class="btn-wide" type="submit">Create account</button><p class="auth-note big-note">Already have an account? <button type="button" class="linkbtn" onclick="authSwap('authSignin')">Sign in</button></p></form></div>`;
@@ -51,7 +51,7 @@ function authVerify() {
 }
 function authLinkDone() {
     let pw = authFlow.done === 'password';
-    return `<div class="auth"><div class="auth-top center"><span class="auth-logo">${logoSvg()}</span><h1>${pw ? 'Password saved!' : 'Email confirmed!'}</h1><p>${pw ? 'Go back to the Crochet Studio app and sign in with your new password.' : 'Go back to the Crochet Studio app and tap <b class="ink">Continue</b>.'}</p></div><div class="auth-body"><div class="tip">You can close this page.</div><div class="grow"></div><p class="auth-note">Not using the app on this device? You can sign in here instead.</p><button class="btn-wide alt" onclick="authFlow={email:lsGet('csLastEmail','')};go('authSignin')">Sign in here</button></div></div>`;
+    return `<div class="auth"><div class="auth-top center"><span class="auth-logo">${logoSvg()}</span><h1>${pw ? 'Password saved!' : 'Email confirmed!'}</h1><p>${pw ? 'Go back to the Makers Nookio app and sign in with your new password.' : 'Go back to the Makers Nookio app and tap <b class="ink">Continue</b>.'}</p></div><div class="auth-body"><div class="tip">You can close this page.</div><div class="grow"></div><p class="auth-note">Not using the app on this device? You can sign in here instead.</p><button class="btn-wide alt" onclick="authFlow={email:lsGet('csLastEmail','')};go('authSignin')">Sign in here</button></div></div>`;
 }
 function authNewPassword() {
     return `<div class="auth"><div class="auth-top"><h1>New password</h1><p>Choose a new password for <b class="ink">${esc(session?.user?.email || authFlow.email || '')}</b></p></div><form class="auth-body" novalidate onsubmit="event.preventDefault();saveNewPassword('nwPass')"><div class="panel"><label for="nwPass">New password</label>${pwField('nwPass', 'new-password')}<div class="hint small-hint">At least 8 characters</div><label for="nwPass2" class="gap">Confirm new password</label>${pwField('nwPass2', 'new-password')}</div><button class="btn-wide" type="submit">Save password</button></form></div>`;

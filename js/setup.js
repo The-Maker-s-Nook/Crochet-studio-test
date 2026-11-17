@@ -1,5 +1,5 @@
 // First-time setup: a short, skippable survey before the tutorial (name and business, country, craft, pricing, stock, tax).
-// Part of the Crochet Studio app. Files load in the order listed in index.html.
+// Part of The Makers Nook app. Files load in the order listed in index.html.
 // Who sees it: a brand-new app with no data (no account), or a brand-new account right after sign-up with nothing in it.
 // People who already have data (testers, anyone signing in to an existing account, a restored backup) never see it:
 // their setup is marked done automatically. Settings › Setup guide reopens it with the current settings filled in;

@@ -1,5 +1,5 @@
 // Shared screen pieces: pop-ups, notices, search-as-you-type boxes, photos, help buttons, labels
-// Part of the Crochet Studio app. Files load in the order listed in index.html.
+// Part of The Makers Nook app. Files load in the order listed in index.html.
 
 function thumb(src, style = '') {
     return src ? `<img class="thumb" src="${photoUrl(src)}" alt="" style="${style}">` : `<div class="thumb thumb-empty" style="${style}" aria-hidden="true"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="8"/><path d="M6 7c4 2 6 6 6 13M18 7c-4 2-6 6-6 13M4.5 12h15"/></svg></div>`;

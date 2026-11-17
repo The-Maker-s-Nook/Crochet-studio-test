@@ -1,5 +1,5 @@
 // Report downloads: a PDF summary and an Excel workbook for the chosen time frame (everything except photos).
-// Part of the Crochet Studio app. Files load in the order listed in index.html.
+// Part of The Makers Nook app. Files load in the order listed in index.html.
 
 const PDFW = { F1: [278, 278, 355, 556, 556, 889, 667, 191, 333, 333, 389, 584, 278, 333, 278, 278, 556, 556, 556, 556, 556, 556, 556, 556, 556, 556, 278, 278, 584, 584, 584, 556, 1015, 667, 667, 722, 722, 667, 611, 778, 722, 278, 500, 667, 556, 833, 722, 778, 667, 778, 722, 667, 611, 722, 667, 944, 667, 667, 611, 278, 278, 278, 469, 556, 333, 556, 556, 500, 556, 556, 278, 556, 556, 222, 222, 500, 222, 833, 556, 556, 556, 556, 333, 500, 278, 556, 500, 722, 500, 500, 500, 334, 260, 334, 584, 761, 556, 556, 222, 556, 333, 1000, 556, 556, 333, 1000, 667, 333, 1000, 556, 611, 556, 556, 222, 222, 333, 333, 350, 556, 1000, 333, 1000, 500, 333, 944, 556, 500, 667, 278, 333, 556, 556, 556, 556, 260, 556, 333, 737, 370, 556, 584, 333, 737, 333, 400, 584, 333, 333, 333, 556, 537, 278, 333, 333, 365, 556, 834, 834, 834, 611, 667, 667, 667, 667, 667, 667, 1000, 722, 667, 667, 667, 667, 278, 278, 278, 278, 722, 722, 778, 778, 778, 778, 778, 584, 778, 722, 722, 722, 722, 667, 667, 611, 556, 556, 556, 556, 556, 556, 889, 500, 556, 556, 556, 556, 278, 278, 278, 278, 556, 556, 556, 556, 556, 556, 556, 584, 611, 556, 556, 556, 556, 500, 556, 500], F2: [278, 333, 474, 556, 556, 889, 722, 238, 333, 333, 389, 584, 278, 333, 278, 278, 556, 556, 556, 556, 556, 556, 556, 556, 556, 556, 333, 333, 584, 584, 584, 611, 975, 722, 722, 722, 722, 667, 611, 778, 722, 278, 556, 722, 611, 833, 722, 778, 667, 778, 722, 667, 611, 722, 667, 944, 667, 667, 611, 333, 278, 333, 584, 556, 333, 556, 611, 556, 611, 556, 333, 611, 611, 278, 278, 556, 278, 889, 611, 611, 611, 611, 389, 556, 333, 611, 556, 778, 556, 556, 500, 389, 280, 389, 584, 761, 556, 611, 278, 556, 500, 1000, 556, 556, 333, 1000, 667, 333, 1000, 611, 611, 611, 611, 278, 278, 500, 500, 350, 556, 1000, 333, 1000, 556, 333, 944, 611, 500, 667, 278, 333, 556, 556, 556, 556, 280, 556, 333, 737, 370, 556, 584, 333, 737, 333, 400, 584, 333, 333, 333, 611, 556, 278, 333, 333, 365, 556, 834, 834, 834, 611, 722, 722, 722, 722, 722, 722, 1000, 722, 667, 667, 667, 667, 278, 278, 278, 278, 722, 722, 778, 778, 778, 778, 778, 584, 778, 722, 722, 722, 722, 667, 667, 611, 556, 556, 556, 556, 556, 556, 889, 556, 556, 556, 556, 556, 278, 278, 278, 278, 611, 611, 611, 611, 611, 611, 611, 584, 611, 611, 611, 611, 611, 556, 611, 556] };
 let dlFmt = 'pdf';
@@ -11,7 +11,7 @@ function reportDownload() {
 }
 function reportFileName(r, ext) {
     let slug = s => String(s).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-    return `crochet-studio-report_${slug(r.rangeLabel)}${r.marketLabel !== 'All markets' ? '_' + slug(r.marketLabel) : ''}.${ext}`;
+    return `makers-nook-report_${slug(r.rangeLabel)}${r.marketLabel !== 'All markets' ? '_' + slug(r.marketLabel) : ''}.${ext}`;
 }
 // Everything both downloads need, worked out once.
 function reportPack(r) {
@@ -269,7 +269,7 @@ function reportPdf(r) {
     };
     let P = reportPack(r), f = P.f, cur = P.cur, now = new Date();
     // Header: business name (or the app name), then the time frame
-    txt(M, y - 14, P.who || 'Crochet Studio', 11, true, '#6B5596');
+    txt(M, y - 14, P.who || 'The Makers Nook', 11, true, '#6B5596');
     txt(M, y - 40, 'Sales report', 24, true);
     txt(M, y - 58, `${r.rangeLabel} · ${r.marketLabel}`, 10.5, true, INK2);
     txt(W - M, y - 30, 'Made ' + now.toLocaleDateString('en-CA', { year: 'numeric', month: 'short', day: 'numeric' }), 9, false, INK2, 'right');
@@ -337,7 +337,7 @@ function reportPdf(r) {
     let n = pages.length, objs = [], kids = [];
     pages.forEach((p, i) => {
         p.push(`${hex(SOFT)} RG 0.8 w ${M} 40 m ${W - M} 40 l S`);
-        let foot = pdfEnc('Made with Crochet Studio. A guide only, not tax advice.'), pg = `Page ${i + 1} of ${n}`;
+        let foot = pdfEnc('Made with The Makers Nook. A guide only, not tax advice.'), pg = `Page ${i + 1} of ${n}`;
         p.push(`BT /F1 7.5 Tf ${hex(INK2)} rg ${M} 28 Td (${foot}) Tj ET`);
         p.push(`BT /F1 7.5 Tf ${hex(INK2)} rg ${(W - M - pdfW(pg, 'F1', 7.5)).toFixed(2)} 28 Td (${pg}) Tj ET`);
     });
@@ -358,7 +358,7 @@ function reportPdf(r) {
         out += `${i + 1} 0 obj\n${o}\nendobj\n`;
     });
     let xref = out.length;
-    out += `xref\n0 ${objs.length + 1}\n0000000000 65535 f \n` + offs.map(o => String(o).padStart(10, '0') + ' 00000 n \n').join('') + `trailer\n<< /Size ${objs.length + 1} /Root 1 0 R /Info << /Title (${pdfEnc('Crochet Studio sales report')}) /Producer (Crochet Studio) >> >>\nstartxref\n${xref}\n%%EOF`;
+    out += `xref\n0 ${objs.length + 1}\n0000000000 65535 f \n` + offs.map(o => String(o).padStart(10, '0') + ' 00000 n \n').join('') + `trailer\n<< /Size ${objs.length + 1} /Root 1 0 R /Info << /Title (${pdfEnc('Makers Nook sales report')}) /Producer (The Makers Nook) >> >>\nstartxref\n${xref}\n%%EOF`;
     let bytes = new Uint8Array(out.length);
     for (let i = 0; i < out.length; i++)
         bytes[i] = out.charCodeAt(i) & 255;

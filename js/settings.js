@@ -1,5 +1,5 @@
 // Settings screens: pricing, tax, backup, payments, country & currency, feedback, guides, What's new
-// Part of the Crochet Studio app. Files load in the order listed in index.html.
+// Part of The Makers Nook app. Files load in the order listed in index.html.
 
 // Settings › Finances: everything to do with money, in one place.
 function settingsFinances() {
@@ -11,7 +11,7 @@ function menuRow(icon, title, sub, action) {
 }
 function settings() {
     let s = data.settings, meth = { labour: 'Materials + hourly labour', multiply: 'Materials × multiplier', markup: 'Materials with markup + labour' }[s.method] || '';
-    return `${navStack.length ? backBtn() : ''}<h2 style="margin-top:12px">Settings</h2><div class="panel menu">${menuRow('user', 'Account', signedIn() ? session.user.email : (s.userName ? s.userName + ' · not signed in' : 'Sign in to sync your devices'), "go('settingsAccount')")}${menuRow('percent', 'Finances', 'Tax, pricing defaults, currency and payments', "go('settingsFinances')")}${menuRow('download', 'Backup & restore', data.lastBackup ? 'Last backup ' + new Date(data.lastBackup).toLocaleDateString() : 'No backup yet', "go('settingsBackup')")}${menuRow('download', 'Import from spreadsheet', 'Beta · bring in products and materials', "go('settingsImport')")}${menuRow('mail', 'Send feedback', 'Report a problem or share an idea', "go('settingsFeedback')")}${menuRow('gear', 'Setup guide', 'Go through your main settings step by step', 'openSetupGuide(true)')}${menuRow('help', 'Tutorials', 'Learn each page at your own pace', "go('tutorials')")}${menuRow('book', 'What’s new & tester guide', `Version ${APP_VERSION} notes · guide updated`, "go('settingsGuides')")}</div><p class="hint" style="margin:-4px 8px 14px">Crochet Studio test version ${APP_VERSION} · update ${APP_BUILD}</p>${installCard()}<div class="panel"><h3>Danger zone</h3><button class="danger" onclick="resetData()">Delete all app data</button></div>`;
+    return `${navStack.length ? backBtn() : ''}<h2 style="margin-top:12px">Settings</h2><div class="panel menu">${menuRow('user', 'Account', signedIn() ? session.user.email : (s.userName ? s.userName + ' · not signed in' : 'Sign in to sync your devices'), "go('settingsAccount')")}${menuRow('percent', 'Finances', 'Tax, pricing defaults, currency and payments', "go('settingsFinances')")}${menuRow('download', 'Backup & restore', data.lastBackup ? 'Last backup ' + new Date(data.lastBackup).toLocaleDateString() : 'No backup yet', "go('settingsBackup')")}${menuRow('download', 'Import from spreadsheet', 'Beta · bring in products and materials', "go('settingsImport')")}${menuRow('mail', 'Send feedback', 'Report a problem or share an idea', "go('settingsFeedback')")}${menuRow('gear', 'Setup guide', 'Go through your main settings step by step', 'openSetupGuide(true)')}${menuRow('help', 'Tutorials', 'Learn each page at your own pace', "go('tutorials')")}${menuRow('book', 'What’s new & tester guide', `Version ${APP_VERSION} notes · guide updated`, "go('settingsGuides')")}</div><p class="hint" style="margin:-4px 8px 14px">The Makers Nook test version ${APP_VERSION} · update ${APP_BUILD}</p>${installCard()}<div class="panel"><h3>Danger zone</h3><button class="danger" onclick="resetData()">Delete all app data</button></div>`;
 }
 function settingsPricing() {
     let s = data.settings;
@@ -74,7 +74,7 @@ function logPurchase(m, packs, price) {
 // ---- Settings › Finances › Payments ----
 function settingsPayments() {
     let on = squareOn();
-    return `${backBtn()}<h2 style="margin-top:12px">Payments</h2><div class="panel"><label class="check" style="margin-top:0"><input type="checkbox" id="sqOn" ${on ? 'checked' : ''} onchange="data.settings.squareEnabled=this.checked;save();render()"> Use Square for card payments</label><p class="hint">When a customer pays by card, Crochet Studio opens the <b>Square Point of Sale</b> app with the total ready. After the payment, Square brings you back and the sale is saved.</p></div>${on ? `<div class="panel"><h3>Before your first sale</h3><ol class="steps"><li>Install <b>Square Point of Sale</b>, sign in to your Square account and choose your location.</li><li>Connect your card reader in the Square app, if you use one.</li><li>If Crochet Studio adds tax to your sales, turn off Square's own sales tax so it isn't charged twice.</li><li>Run a $1.00 test below, then refund it in Square.</li></ol><p class="hint">Payments go to your own Square account and Square's normal card fees apply. Square charges in ${sqCurrency() === 'USD' ? 'US dollars (USD)' : 'Canadian dollars (CAD)'}, your app's currency. Change it in Settings › Finances › Country &amp; currency; it must match your Square account's country. You need the Square Point of Sale app on this device; being signed in to Square in a web browser won't work.</p><button class="alt" onclick="squareTest()">${ic('card', 18)} Test Square with $1.00</button></div>` : ''}<div class="panel muted">Cash, card on your own reader and e-transfer can always be recorded at checkout.</div>${etransferPanel()}`;
+    return `${backBtn()}<h2 style="margin-top:12px">Payments</h2><div class="panel"><label class="check" style="margin-top:0"><input type="checkbox" id="sqOn" ${on ? 'checked' : ''} onchange="data.settings.squareEnabled=this.checked;save();render()"> Use Square for card payments</label><p class="hint">When a customer pays by card, The Makers Nook opens the <b>Square Point of Sale</b> app with the total ready. After the payment, Square brings you back and the sale is saved.</p></div>${on ? `<div class="panel"><h3>Before your first sale</h3><ol class="steps"><li>Install <b>Square Point of Sale</b>, sign in to your Square account and choose your location.</li><li>Connect your card reader in the Square app, if you use one.</li><li>If The Makers Nook adds tax to your sales, turn off Square's own sales tax so it isn't charged twice.</li><li>Run a $1.00 test below, then refund it in Square.</li></ol><p class="hint">Payments go to your own Square account and Square's normal card fees apply. Square charges in ${sqCurrency() === 'USD' ? 'US dollars (USD)' : 'Canadian dollars (CAD)'}, your app's currency. Change it in Settings › Finances › Country &amp; currency; it must match your Square account's country. You need the Square Point of Sale app on this device; being signed in to Square in a web browser won't work.</p><button class="alt" onclick="squareTest()">${ic('card', 18)} Test Square with $1.00</button></div>` : ''}<div class="panel muted">Cash, card on your own reader and e-transfer can always be recorded at checkout.</div>${etransferPanel()}`;
 }
 function etransferPanel() {
     return `<div class="panel"><h3>E-transfer</h3><label for="etEmail" style="margin-top:0">Your e-transfer email</label><input id="etEmail" type="email" inputmode="email" autocomplete="email" placeholder="you@example.com" value="${esc(data.settings.etransferEmail || '')}" onchange="data.settings.etransferEmail=this.value.trim();save()"><p class="hint">When a customer pays by e-transfer, checkout shows this big so they can type it in. A mobile number works too.</p></div>`;
@@ -100,7 +100,7 @@ function feedbackBody() {
     return `\n\n(Write your feedback above this line. Screenshots help!)\n\n---\nApp version: ${APP_VERSION} (update ${APP_BUILD})\nDevice: ${d.device} · ${d.browser}\nInstalled app: ${d.installed ? 'yes' : 'no'}\nScreen size: ${d.size}\nSigned in: ${signedIn() ? 'yes' : 'no'}${sqErrLine()}`;
 }
 function sendFeedback() {
-    let url = `mailto:${FEEDBACK_EMAIL}?subject=${encodeURIComponent('Crochet Studio feedback: ' + fbType)}&body=${encodeURIComponent(feedbackBody())}`;
+    let url = `mailto:${FEEDBACK_EMAIL}?subject=${encodeURIComponent('Makers Nook feedback: ' + fbType)}&body=${encodeURIComponent(feedbackBody())}`;
     location.href = url;
     setTimeout(() => {
         if (document.visibilityState === 'visible')
@@ -129,7 +129,7 @@ function setCurrency(v) {
     toast(v === 'USD' ? 'Currency set to US dollars.' : 'Currency set to Canadian dollars.');
 }
 // ---- What's new + guides ----
-const GUIDES = { whats: { file: 'guides/whats-new-24.pdf', name: 'What’s new in version 24' }, guide: { file: 'guides/tester-guide.pdf', name: 'Crochet Studio Tester Guide' } };
+const GUIDES = { whats: { file: 'guides/whats-new-24.pdf', name: 'What’s new in version 24' }, guide: { file: 'guides/tester-guide.pdf', name: 'The Makers Nook Tester Guide' } };
 async function openGuide(k) {
     let g = GUIDES[k];
     if (!g)

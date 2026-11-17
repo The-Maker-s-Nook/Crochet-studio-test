@@ -1,5 +1,5 @@
 // Plans screen: what Free and Pro include, and the price.
-// Part of the Crochet Studio app. Files load in the order listed in index.html.
+// Part of The Makers Nook app. Files load in the order listed in index.html.
 // Opened from Settings › Account › Subscription and from "See plans" in the tutorials.
 // Subscribing comes with the app-store versions (Google Play / App Store billing).
 

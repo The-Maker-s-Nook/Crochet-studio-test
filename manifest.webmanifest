@@ -1,7 +1,7 @@
 {
   "id": "./",
-  "name": "Crochet Studio",
-  "short_name": "Crochet",
+  "name": "The Makers Nook",
+  "short_name": "Makers Nook",
   "description": "Inventory, pricing, patterns and market sales for makers.",
   "start_url": "./",
   "scope": "./",

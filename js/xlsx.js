@@ -1,6 +1,6 @@
 // Making files to download, with no extra libraries: a zip folder (makeZip) and an Excel workbook (makeXlsx).
 // Used by the report download (report-files.js) and the year-end receipts folder (yearend.js).
-// Part of the Crochet Studio app. Files load in the order listed in index.html.
+// Part of The Makers Nook app. Files load in the order listed in index.html.
 
 // ---- Zip (files are stored as they are; photos are already compressed) ----
 let crcTable = null;

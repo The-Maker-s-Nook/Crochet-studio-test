@@ -1,5 +1,5 @@
 // Markets: list, details, dates, address search, packing inventory, to-do list, completing a market
-// Part of the Crochet Studio app. Files load in the order listed in index.html.
+// Part of The Makers Nook app. Files load in the order listed in index.html.
 
 function packedFor(pid) {
     return data.markets.filter(m => !m.completed).reduce((a, m) => a + num(m.items?.[pid]), 0);
@@ -193,7 +193,7 @@ async function reopenMarket(mid) {
     toast(back ? `Market reopened. ${back} item${back > 1 ? 's' : ''} packed again.` : 'Market reopened.');
 }
 function marketForm() {
-    return `${backBtn()}<div class="panel" style="margin-top:12px"><h2>New market</h2><label>Market name</label><input id="marketName" placeholder="Fall Craft Fair">${addressField('marketLocation', '')}<label>Market / booth cost ($)</label><input id="marketCost" type="number" min="0" step="0.01" value="0"><h3 style="margin-top:20px">Market dates & times</h3><div id="marketDays">${marketDayRow()}</div><button class="alt small" onclick="addMarketDay()">+ Add another day</button><label>Packing goal ($) <span class="muted">(optional)</span></label><input id="marketTarget" type="number" min="0" step="1" value="0"><div class="hint">How much stock (at your selling prices) you want to bring.</div><div class="actions"><button onclick="saveMarket()">Save market</button></div></div>`;
+    return `${backBtn()}<div class="panel" style="margin-top:12px"><h2>New market</h2><label>Market name</label><input id="marketName" placeholder="Fall Craft Fair">${addressField('marketLocation', '')}<label>Market / booth cost ($)</label><input id="marketCost" type="number" min="0" step="0.01" value="0"><h3 style="margin-top:20px">Market dates & times</h3><div id="marketDays">${marketDayRow()}</div><button class="alt small" onclick="addMarketDay()">+ Add another day</button><label>Packing goal ($) <span class="muted">(optional)</span></label><input id="marketTarget" type="number" min="0" step="1" value="0"><div class="hint">How much stock (at your selling prices) you want to bring.</div><div class="actions"><button onclick="saveMarket()">Save market</button><button type="button" class="alt" onclick="goBack()">Cancel</button></div></div>`;
 }
 function readMarketDays() {
     return [...document.querySelectorAll('.market-day')].map(e => ({ date: e.querySelector('.dayDate').value, start: e.querySelector('.dayStart').value, end: e.querySelector('.dayEnd').value })).filter(d => d.date);
@@ -363,7 +363,7 @@ function marketPickRows() {
     let q = marketAddSearch.toLowerCase().trim(), list = data.products.filter(p => !q || [p.name, p.variation].some(x => String(x || '').toLowerCase().includes(q)));
     return list.map(p => {
         let av = availableFor(p.id), n = Math.min(marketAddQty[p.id] || 0, av);
-        return `<div class="addrow ${n ? 'on' : ''}"><div class="grow"><b>${esc(p.name)}${p.variation ? ' — ' + esc(p.variation) : ''}</b><div class="muted">${av} available</div></div><button type="button" class="alt small" aria-label="One less ${esc(p.name)}" ${n ? '' : 'disabled'} onclick="stepAddQty('${p.id}',-1)">−</button><b class="addqty">${n}</b><button type="button" class="alt small" aria-label="One more ${esc(p.name)}" ${n < av ? '' : 'disabled'} onclick="stepAddQty('${p.id}',1)">+</button><button type="button" class="alt small" ${av && n < av ? '' : 'disabled'} onclick="setAddQty('${p.id}',availableFor('${p.id}'))">All</button></div>`;
+        return `<div class="addrow ${n ? 'on' : ''}">${thumb(p.photo || '', 'width:40px;height:40px;flex-shrink:0;border-radius:12px')}<div class="grow"><b>${esc(p.name)}</b><div class="muted">${p.variation ? esc(p.variation) + ' · ' : ''}${av} available</div></div><button type="button" class="alt small" aria-label="One less ${esc(p.name)}" ${n ? '' : 'disabled'} onclick="stepAddQty('${p.id}',-1)">−</button><b class="addqty">${n}</b><button type="button" class="alt small" aria-label="One more ${esc(p.name)}" ${n < av ? '' : 'disabled'} onclick="stepAddQty('${p.id}',1)">+</button><button type="button" class="alt small" ${av && n < av ? '' : 'disabled'} onclick="setAddQty('${p.id}',availableFor('${p.id}'))">All</button></div>`;
     }).join('') || '<p class="muted">No matching products.</p>';
 }
 function addCountText() {

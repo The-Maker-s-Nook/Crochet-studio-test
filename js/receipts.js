@@ -1,7 +1,7 @@
 // Receipts: the list (Home › Receipts this month, Reports › Expenses & tax), add/edit form, details,
 // and the Home "Snap receipt" button and card. Every receipt is an expense in data.expenses
 // (how they count in profit and tax is in expenses.js). Photos and PDFs are stored by photos.js.
-// Part of the Crochet Studio app. Files load in the order listed in index.html.
+// Part of The Makers Nook app. Files load in the order listed in index.html.
 //
 // A receipt: { id, name (store), date 'YYYY-MM-DD', category, pre (before tax), tax, amount (total paid),
 //   pay ('card' | 'cash' | 'etransfer'), marketId, notes, photo ('ph:<id>' or ''), isPdf, fileName,

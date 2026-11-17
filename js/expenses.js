@@ -1,6 +1,6 @@
 // Expenses and receipts: categories, how each one counts in profit and tax, the market Costs panel.
 // The receipt screens (list, add/edit, details) are in receipts.js. Every receipt is an expense in data.expenses.
-// Part of the Crochet Studio app. Files load in the order listed in index.html.
+// Part of The Makers Nook app. Files load in the order listed in index.html.
 
 const EXPENSE_CATS = ['Materials', 'Supplies', 'Packaging', 'Booth fees', 'Shipping', 'Tools', 'Marketing', 'Gas & travel', 'Displays & booth', 'Fees & subscriptions', 'Other'];
 // Yarn and supplies are already in Material costs on each sale; booth fees are already on each market.

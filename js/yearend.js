@@ -1,7 +1,7 @@
 // Year-end receipts: save last year's receipt photos as one folder (zip), then clear them off the phone and account.
 // Reminders: Jan 1 a note on Home (hide a week at a time), Feb 1 a reminder each time Receipts opens,
 // Mar 1 a pink note every day, Apr 1 adding new receipts pauses until the photos are saved and cleared.
-// Part of the Crochet Studio app. Files load in the order listed in index.html.
+// Part of The Makers Nook app. Files load in the order listed in index.html.
 
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 let yearEndPick = null;
@@ -78,7 +78,7 @@ function receiptExt(r, blob) {
         return 'pdf';
     return /png/.test(blob?.type || '') ? 'png' : /webp/.test(blob?.type || '') ? 'webp' : 'jpg';
 }
-const receiptFolderName = y => `Crochet Studio receipts ${y}`;
+const receiptFolderName = y => `Makers Nook receipts ${y}`;
 // Path inside the year's folder for each receipt of that year (same names in the zip and in Excel downloads).
 function receiptPaths(y) {
     let list = (data.expenses || []).filter(r => receiptYear(r) === y).sort((a, b) => String(a.date).localeCompare(String(b.date)) || String(a.id).localeCompare(String(b.id))), used = new Set(), out = new Map();

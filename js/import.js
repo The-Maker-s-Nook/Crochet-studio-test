@@ -1,5 +1,5 @@
 // Settings › Import from spreadsheet (.xlsx/.csv): reading, review screen, undo
-// Part of the Crochet Studio app. Files load in the order listed in index.html.
+// Part of The Makers Nook app. Files load in the order listed in index.html.
 
 let importPlan = null, importBusy = false, importUseWage = true, lastImportResult = null, fbType = 'Something broke';
 // ---- File reading: .xlsx (own small reader, no library) and .csv ----
