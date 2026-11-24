@@ -1,7 +1,7 @@
 # The Makers Nook (test version)
 
 The Makers Nook (formerly "Crochet Studio"). This is the installable web app (PWA)
-that testers use at https://crochetstudiotest.netlify.app
+that testers use at https://app.themakersnook.ca (old address: https://crochetstudiotest.netlify.app)
 
 ## What's here
 - `index.html` – the page shell: header, bottom menu, and the list of code files to load (in order)

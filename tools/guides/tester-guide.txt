@@ -1,0 +1,207 @@
+# The Makers Nook: Tester Guide
+
+## Welcome
+Thanks for testing The Makers Nook! It's an app for makers (crochet, knitting, sewing, candles, jewellery and other crafts) to track products, materials, pricing, patterns, markets and sales, all in one place.
+This is an early test version. Some things may be unfinished or a little buggy, and that's exactly what your feedback helps fix. Install takes about a minute, and there's a short list of questions at the end.
+The app was called "Crochet Studio" during early testing. The Makers Nook is its final name, and it now has its own address. Your account and data carry over.
+
+## Install the app
+The app link is **app.themakersnook.ca**. Open it on your phone or tablet, then follow the steps for your device. It works on phones and tablets, and without internet once installed.
+### Android (use Chrome)
+1. Open Chrome and go to **app.themakersnook.ca**.
+2. Tap the **⋮** menu (top right) and choose **Install app** or **Add to Home screen**.
+3. Tap **Install**. The Makers Nook appears on your home screen like any other app.
+### iPhone and iPad (use Safari)
+1. Open Safari and go to **app.themakersnook.ca**. It has to be Safari: other browsers on iPhone can't add apps to the home screen.
+2. Tap the **Share** button (the square with an arrow pointing up).
+3. Scroll down, tap **Add to Home Screen**, then **Add**.
+After that, always open The Makers Nook from its home-screen icon, not the browser.
+**Updates:** when a new version is ready, a "New version ready" bubble appears. Tap **Refresh** and you're up to date.
+
+### Already testing at the old address?
+Before November 24 the app lived at crochetstudiotest.netlify.app. That address still opens, and shows a "We've moved" note at the top of Home.
+- **Signed in?** Tap **Open the new address**, sign in there, and everything comes with you: products, materials, markets, sales, photos and patterns. Then add the new address to your home screen and delete the old icon.
+- **No account?** Your data is only on that phone. On the old address, tap **Download backup**. Then open app.themakersnook.ca and tap **Restore backup** (or make an account on the old address first, then sign in on the new one).
+- Open the old app once with internet before you switch, so any last changes reach your account.
+
+### About the address
+The app has its own address now, app.themakersnook.ca, and it's safe.
+- The app is hosted by Netlify, a well-known web hosting service used by millions of websites, a bit like renting a storefront.
+- The link uses https (the padlock in your browser), so everything sent between your phone and the app is encrypted.
+- The app never asks for payment details or your bank information.
+
+## If your phone says "unsafe app"
+Some Android phones show a warning like "unsafe app" or "built for an older version of Android" when you install. It's expected for apps that aren't from the Play Store yet, and doesn't mean anything is wrong.
+- **Why it happens:** Android's built-in checker (Google Play Protect) warns about any app that didn't come from the Play Store. The Makers Nook isn't in the Play Store yet because it's still in testing.
+- **What the app can access:** it's a web app, so it can only use what you allow, like choosing a photo or file. It can't see your contacts, messages or other apps.
+- **What to do:** tap **Install anyway** (sometimes under More details).
+- **Prefer to skip the warning?** In Chrome, use **⋮ -> Add to Home screen -> Create shortcut** instead. It works the same way.
+iPhones and iPads don't show this warning.
+
+## Accounts and your data
+You can use the app with or without an account. An account keeps your data safe in the cloud and lets you use it on more than one device.
+### Creating an account
+1. On the Welcome screen, tap **Sign up with email**, enter your email and a password (twice), and tap **Create account**.
+2. Open the email from The Makers Nook (it may come from "Supabase") and tap **Confirm your mail**. Check spam or promotions if you don't see it within a few minutes.
+3. A page says "Email confirmed". Go back to the app and tap **Continue**.
+4. Enter your name. If you already used the app, tap **Yes, move it** to put your existing data into your account.
+To use the app on another phone or tablet, install it there and tap **Sign in**. Everything appears, including photos and pattern files.
+### Without an account
+Tap **Continue without an account** and everything stays on that device only. You can sign up later in **Settings -> Account**. Without an account, use **Settings -> Backup & restore** now and then, since a lost phone means lost data.
+### How your data is kept safe
+- **Private to you:** your account's data is stored with Supabase, a secure cloud database service. Security rules make sure only you can read your products, sales, photos and patterns. Other testers can't see them, and the app owner doesn't browse them.
+- **Encrypted:** everything sent between your phone and the cloud is encrypted (https).
+- **Saved on your phone first:** the app works with no signal, for example at markets, and syncs when you're back online.
+- **Your choice:** **Settings -> Account -> Sign out** removes the data from that device (it stays in your account). **Delete account** permanently deletes your account and everything in it.
+- **Patterns:** only import patterns you have permission to use. They're stored privately and are never shared. While testing, each account can keep up to 5 patterns.
+
+## Getting started: setup and tutorials
+### Setup guide
+Someone opening the app for the first time is asked a few quick questions. Every step can be skipped, and everything can be changed later in Settings.
+1. **You and your business:** your name and business name. Have a backup file? Tap **Restore** to bring everything back instead.
+2. **Country & currency:** Canada · CAD or United States · USD.
+3. **Your craft:** a placeholder for now. A later version will use it to set up material categories for your craft.
+4. **Pricing:** your hourly wage, pricing method and how suggested prices are rounded.
+5. **Supply stock:** Pricing only, Pricing and manual stock, or Pricing and automatic stock.
+6. **Sales tax:** your own rate, whether tax is added to your prices or already in them, and how you enter supply prices. Any single product, material or expense can override these defaults on its Edit screen.
+> **Already using the app?** You won't see the setup questions, so nothing you've set up changes. To try it, open **Settings -> Setup guide**. It starts with your current settings filled in, and **Close** leaves without changing anything.
+### Tutorials
+- After setup (or the first time you open version 24), a **New here?** box offers **Show me around**, **Pick a page to learn** or **Not now**.
+- Tap the **?** at the top of any page for that page's lesson, or open **Settings -> Tutorials** for the full list. Lessons take about a minute and you can skip any step.
+- Tutorials never change your data. If you don't have products, materials, an upcoming market and some sales yet, lessons show **Example** items and your own data comes back when the lesson ends.
+### Plans
+**Settings -> Account -> Subscription** shows what the Free and Pro plans will include. The Pro price hasn't been set yet; your answers in the feedback questions help decide it. While testing, everyone has every Pro feature. Plans start with the Google Play and App Store versions, and you'll be told well before anything changes.
+
+## Card payments with Square (optional)
+If you take cards with Square, The Makers Nook can open the Square app with the sale total already entered. The money goes to your own Square account, and Square's normal card fees apply.
+### One-time setup
+1. Install **Square Point of Sale** (by Block, Inc.) from the Play Store or App Store. Sign in to your Square account and choose your location. Connect your card reader in Square if you use one.
+2. In The Makers Nook, check **Settings -> Finances -> Country & currency** (Canada · CAD or United States · USD). Square charges in this currency, so it must match your Square account's country.
+3. In The Makers Nook, go to **Settings -> Finances -> Payments** and turn on **Use Square for card payments**.
+4. If The Makers Nook adds tax to your sales (**Settings -> Finances -> Tax**), turn off Square's own sales tax so tax isn't charged twice.
+5. Tap **Test Square with $1.00**, take the payment in Square, then refund the $1 in the Square app.
+### Taking a card payment
+1. Add the items to the sale (from a market, or with **Quick sale**) and tap **Review sale**.
+2. Choose **Card** and tap **Charge with Square**. Square opens with the total ready.
+3. Take the payment in Square. When it's done, Square sends you back and the sale is saved.
+### Good to know
+- **Square needs its app on this device.** The Makers Nook hands the sale to the Square Point of Sale app on the same phone or tablet. Being signed in to Square in a web browser doesn't work.
+- **"Invalid request" from Square** usually means your country & currency doesn't match your Square account, or the Square app needs updating (Play Store or App Store). Fix that, then tap Card again.
+- **On Android, Square may send you back to your web browser** instead of The Makers Nook app. This happens because the test version is a web app: Square can only send you back using a web link, and Android opens web links in your browser. Once The Makers Nook is in the Play Store and App Store, Square will return straight to the app. For now, the browser page saves the sale and tells you to close it. Close that tab and go back to The Makers Nook; the sale will be there.
+- If Square doesn't send you back at all, go back to The Makers Nook yourself. It will ask "Did the Square payment go through?" Answer **Yes** or **No**.
+- If you cancel in Square, the sale stays open so you can try again or choose cash.
+- **Refunds are done in Square.** Deleting or changing a card sale in The Makers Nook doesn't refund the customer.
+
+## Bring in your spreadsheet (beta)
+If you use the CrochetWBay pricing spreadsheet, the app can bring in your yarn and eye price lists, your hourly wage and your products, so you don't have to type them all again.
+1. If your spreadsheet is in Google Sheets, save an Excel copy first. On iPhone or Android: in the Google Sheets app tap **⋯ / ⋮ -> Share & export -> Save as Excel (.xlsx)** (Android: **Save as -> Excel**). On a computer: **File -> Download -> Microsoft Excel (.xlsx)**. More detail under the import tips in this guide.
+2. In The Makers Nook, go to **Settings -> Import from spreadsheet** and tap **Choose spreadsheet file**.
+3. Check the summary: how many products and materials were found, and any rows that were skipped and why. Tap **Add**.
+4. Open a few products and check their materials, prices and stock, then add photos.
+### Good to know
+- **Google Sheets users: save an Excel copy first.** The app needs the spreadsheet as an Excel file (.xlsx). Excel brings in every page at once; a CSV file only holds one page.
+- **On iPhone:** in the Google Sheets app, open the spreadsheet and tap **⋯** (top right) **-> Share & export -> Save as Excel (.xlsx)**. This puts an Excel copy in your Google Drive. Then in The Makers Nook tap **Choose spreadsheet file -> Browse -> Google Drive** and pick the copy (it has a green Excel-style icon). Don't see Google Drive under Browse? In the Google Drive app tap **⋯** next to the Excel copy **-> Send a copy -> Save to Files**, then pick it from **Recents** in The Makers Nook.
+- **On Android:** in the Google Sheets app, open the spreadsheet and tap **⋮** (top right) **-> Share & export -> Save as -> Excel (.xlsx)**. Then in The Makers Nook tap **Choose spreadsheet file** and pick the Excel copy from Google Drive or Downloads.
+- **On a computer:** in Google Sheets choose **File -> Download -> Microsoft Excel (.xlsx)**, then pick the downloaded file in The Makers Nook.
+- Nothing is added until you tap **Add**. Products already in the app (same name) are left as they are.
+- If the same product is on several pages (for example a page copied for each market), it's only added once. The app asks which page has your current stock and uses that page's numbers.
+- Yarn costs include the shipping per ball from your sheet. The sheet's prices already include tax, so imported materials are set to "Inputted pricing includes tax". Each product gets 1 pair of eyes, like the spreadsheet.
+- **Yarn colours aren't in the spreadsheet,** since it's built for pricing. Each yarn comes in as one type with its price and ball weight, and one variation labelled **No variation set** (for example, Chenille Home Heather, 1 variation). To track colours, open the yarn in Materials and add each colour as a variation.
+- **Eyes are grouped by type,** with the size as the variation. For example, 10mm and 12mm glitter eyes become one type, Glitter eyes, with sizes 10 mm and 12 mm. Eyes with no size in the name (like Felt) stay as their own type.
+- **Spreadsheets don't have photos.** Tap any empty photo square (on a product, or in Materials) to take a photo, choose one from your gallery or browse your files.
+- **Something look wrong?** **Undo this import** (on the last screen, or later in **Settings -> Import from spreadsheet**) removes only what was added.
+- This feature is brand new, so please tell us if anything came in wrong.
+
+## Tax, receipts, reports, stock, packing and reminders
+Version 24 makes tax clearer, adds receipts, new Reports, simpler material stock and reminders, and speeds up packing for markets. After updating, check **Settings -> Finances -> Tax** once: your old choices were carried over. The full list is in **Settings -> What's new & tester guide**.
+- Money settings are together in **Settings -> Finances**: Tax, Pricing defaults, Country & currency and Payments.
+- **Product tax:** choose whether tax is added at checkout, already included in your prices, or not charged. With tax included, a $4.40 item at 10% shows $4.00 + $0.40 tax = $4.40.
+- **Material & expense tax:** choose whether the prices you type for materials and expenses include tax, are before tax, or have no tax. Suggested prices never put markup on tax. Tick **Not claiming tax on materials and expenses** if you can't get that tax back.
+- **One item different?** Open it and tick **Override tax settings** to give it its own tax option and rate, for example a tax-free item.
+- **Receipts:** tap **Snap receipt** on Home (beside Quick sale), or **+ Add expense or receipt** on a market. Add the store, date, category, amount before tax and tax (**Add 13% tax** uses your own rate). The photo is optional: tap the empty photo spot to add it later.
+- **Receipts this month** on Home opens the full list with search and category filters. Materials, Supplies and Booth fees receipts are proof only (their cost is already counted); the rest come off your profit as Other expenses.
+- **Year-end receipts:** after January 1 the app reminds you to save last year's receipt photos as one folder (by month, then category), then clear them to free up space. From April 1, new receipts pause until that's done.
+- **Reports** has four tabs: Overview, Markets, Stock, and Expenses & tax. **Download** gives a PDF or an Excel workbook with everything for the time frame (no photos). Add a **Business name** in **Settings -> Account** to show it on reports.
+- **Material stock:** one setting in **Settings -> Finances -> Pricing defaults**: Pricing only, Pricing and manual stock, or Pricing and automatic stock. In the stock modes each material has **−1 / +1** (one full skein, bag or pack). Set the word in the category (**What do you buy it in?**). Any material can use **Override stock setting**.
+- The top bar (app name, bell, settings) stays at the top while you scroll. Tap **The Makers Nook** name in the top bar to go back to Home from anywhere.
+- **E-transfer:** choose **E-transfer** at checkout and your e-transfer email shows big for the customer, with **Show customer** for full screen. Set the email once in **Settings -> Finances -> Payments**.
+- **Packing for a market:** tap **+ Add inventory**, use **+** or **All** beside each product, then tap **Add all selected**. Each product shows its photo, so it's easy to spot. A market can have an optional **Packing goal**: how much stock, at your selling prices, you want to bring.
+- **Make a variation:** on a product's page, tap **Make a variation** to start a new colour or size with everything filled in. Product cards show the variation after the name.
+- **Oops-proofing:** deleting a product or material shows **Undo** for a few seconds; leaving a form with unsaved changes asks first; an unfinished sale is kept if the app closes; back closes pop-ups first. Long forms have a **Cancel** button beside **Save**.
+- **Reminders:** tap the bell on a product (make more) or a material (buy more), or add your own items under **My list**. The bell beside Settings opens them and shows how many are still open.
+
+## What to try
+Use the app as you normally would for your business. If you can, try each of these at least once:
+[] Take the tour from the **New here?** box, or tap the **?** on a page you haven't used much
+[] Go through **Settings -> Setup guide** and check your settings came out right
+[] Open **Settings -> Account -> Subscription** and look over the Free and Pro plans
+[] Add a few materials for your craft (for example yarn, fabric, beads or wax) with prices and where you bought them
+[] Create a product, add its materials and time to make, and check the suggested price
+[] Tap **Make a variation** on a product and save a new colour or size
+[] Swipe left to delete a product, then tap **Undo**
+[] If you have the CrochetWBay spreadsheet, import it (**Settings -> Import from spreadsheet**) and check what came in
+[] Add product photos and give products tags (a product can have more than one)
+[] Import a pattern (PDF or photo, up to 5 while testing) and open it
+[] Plan a market: dates, booth cost, packing (**+**, **All**, then **Add all selected**), to-do list and a receipt like gas
+[] Tap the bell on a product or material, add something to **My list**, then open Reminders
+[] Record sales at a market, then mark the market completed
+[] Add your e-transfer email, then pick **E-transfer** at checkout and try **Show customer**
+[] Look at Reports on each tab (Overview, Markets, Stock, Expenses & tax) and download the PDF and Excel versions
+[] Snap a receipt from Home, then find it in Receipts with the search box
+[] Pick a Material stock setting (**Settings -> Finances -> Pricing defaults**) and try the **−1 / +1** buttons on a material
+[] Change **Settings -> Finances** (Product tax, Material & expense tax, pricing defaults)
+[] Use the app with no internet (airplane mode), then turn it back on
+[] With an account: sign in on a second device and check everything came across
+[] If you use Square: run the $1 test, then take a real card sale through The Makers Nook
+[] Make a backup (**Settings -> Backup & restore**)
+
+## Feedback questions
+After a week or two of use, please answer these. Short answers are perfect.
+### About you
+1. What phone or tablet do you use (for example Samsung Galaxy S23, iPhone 14, iPad)?
+2. What do you make (crochet, knitting, sewing, candles, jewellery, something else)?
+3. Do you sell at markets, online, or both? Roughly how many markets a year?
+4. What do you use now to track inventory, costs and sales (notebook, spreadsheet, another app, nothing)?
+### Using the app
+5. Was installing and creating an account easy? Where did you get stuck, if anywhere?
+6. Were the setup questions and tutorials helpful? Was anything in them unclear, too long or missing?
+7. Which features did you use most?
+8. Was anything confusing, or did anything not work the way you expected?
+9. Did the suggested prices seem right for your work? Too high or too low?
+10. Did anything look wrong on your screen (text cut off, buttons hard to tap)?
+11. Did anything break, freeze or lose your data?
+### Looking ahead
+12. What's missing that would make you use this every day?
+13. Look at the plans in **Settings -> Account -> Subscription**. Does the split between Free and Pro seem fair? Is anything in Pro that you feel should be free, or the other way around?
+14. Which of these would you pay for Pro? Pick all that seem fair to you:
+[ ] Free only. I wouldn't pay for it
+[ ] $8 a month
+[ ] $10 a month
+[ ] $12 a month
+15. Would you rather pay monthly or once a year (at a lower overall price)?
+16. Do you pay for any other app or website to run your craft business? Which one, how much, and what does it do for you?
+17. On a scale of 1 to 10, how likely are you to recommend it to another maker? Why?
+
+## Reporting problems and good to know
+The easiest way to send feedback is **Settings -> Send feedback**. It opens an email to us with your app version and device already filled in. Use it for problems, ideas and anything confusing.
+The app version and device details are shown on screen before the email opens, and nothing is sent until you tap send in your email app. You can delete or change anything in the email first.
+When something goes wrong, send a message with:
+- a screenshot of the screen
+- what you tapped just before it happened
+- your phone or tablet model
+### Known limits of the test version
+- Google and Apple sign-in show "Soon". Use email for now.
+- Confirmation emails can be slow and may land in spam. If several people sign up at once, the email may take a while. Wait a few minutes before tapping "Send a new email".
+- Syncing between devices happens within a few minutes, not instantly. Tap **Sync now** in **Settings -> Account** if you're in a hurry.
+- Patterns are limited to 5 per account and receipt photos to 10 per account while testing, to keep storage free. Delete one to add another. Receipts without a photo don't count.
+- Spreadsheet import is in beta. Always check imported products, and use Undo if something looks off.
+- If two devices both change things before they've synced (for example one is offline), the app combines them. Only when the same detail was changed on both does the newest one win. Please tell us if anything ever goes missing.
+- The setup step for your craft is a placeholder. Starting material categories (Yarn, Eyes, Stuffing) stay the same for now; rename or add your own in Materials.
+- The test version is free and has every Pro feature. Paid plans come with the app-store versions, and you'll be told well before anything changes.
+### Tips
+- Open the app from the home-screen icon, not the browser. Data in the browser and the installed app can be separate on iPhone.
+- Tax is set in **Settings -> Finances -> Tax**. Tap the **?** beside each option for a plain explanation with examples.
+- Not sure how a page works? Tap the **?** at the top of it for a quick lesson.
+- If a small **Powered by Netlify** badge appears in the bottom-right corner, tap it and choose **Hide**. It comes from the hosting service, not the app.
+- Tap **Refresh** whenever "New version ready" appears.
+- Delete your account any time in **Settings -> Account -> Delete account**.
