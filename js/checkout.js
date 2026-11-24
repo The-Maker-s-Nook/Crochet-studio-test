@@ -2,7 +2,7 @@
 // Part of The Makers Nook app. Files load in the order listed in index.html.
 
 // ===== Sales: discounts, price changes, checkout, Square =====
-const SQ_APP_ID = 'sq0idp-J4UrXdHeSOnFaEtvwuO2HQ';
+const SQ_APP_ID = 'sq0idp-Ld6Njo7-s9h_Iqe6mHgJMg';
 function sqCurrency() {
     return data.settings.currency === 'USD' ? 'USD' : 'CAD';
 }
