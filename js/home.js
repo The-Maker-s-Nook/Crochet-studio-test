@@ -90,7 +90,7 @@ function homeMessage() {
 }
 
 // ---- Moving from crochetstudiotest.netlify.app to app.themakersnook.ca ----
-// Set MOVE_DATE (YYYY-MM-DD) when version 24 goes live: one week after launch day.
+// MOVE_DATE: the day app.themakersnook.ca went live. Before it the old address says "We're moving", from it "We've moved".
 const NEW_HOME = 'app.themakersnook.ca', MOVE_DATE = '2026-11-24';
 function appHost() {
     return window.TEST_HOST || location.hostname;
@@ -98,9 +98,16 @@ function appHost() {
 function moveNotice() {
     let h = appHost();
     if (/\.netlify\.app$/.test(h)) {
-        let d = MOVE_DATE ? new Date(MOVE_DATE + 'T12:00:00').toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' }) : '';
-        let how = signedIn() ? 'You’re signed in, so your data comes with you. After the move, open the new address and add it to your home screen again.' : 'Sign in so your data comes with you. No account? Download a backup and restore it at the new address.';
-        return `<div class="panel movenote" role="status"><b>We’re moving to ${NEW_HOME}${d ? ` on ${esc(d)}` : ' soon'}</b><p>${how}</p>${signedIn() ? '' : `<div class="actions"><button onclick="go('settingsAccount')">Sign in</button><button class="alt" onclick="go('settingsBackup')">${ic('download', 15)} Download backup</button></div>`}</div>`;
+        let moved = !MOVE_DATE || new Date() >= new Date(MOVE_DATE + 'T00:00:00');
+        let open = `<a class="btnlink primary" href="https://${NEW_HOME}/" target="_blank" rel="noopener">Open the new address</a>`;
+        if (!moved) {
+            let d = new Date(MOVE_DATE + 'T12:00:00').toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
+            let how = signedIn() ? 'You’re signed in, so your data comes with you. After the move, open the new address and add it to your home screen again.' : 'Sign in so your data comes with you. No account? Download a backup and restore it at the new address.';
+            return `<div class="panel movenote" role="status"><b>We’re moving to ${NEW_HOME} on ${esc(d)}</b><p>${how}</p>${signedIn() ? '' : `<div class="actions"><button onclick="go('settingsAccount')">Sign in</button><button class="alt" onclick="go('settingsBackup')">${ic('download', 15)} Download backup</button></div>`}</div>`;
+        }
+        if (signedIn())
+            return `<div class="panel movenote" role="status"><b>We’ve moved to ${NEW_HOME}</b><p>Your data is saved in your account. Open the new address, sign in, and everything will be there. Then add it to your home screen and delete this old icon.</p><p class="hint">Keep this page open with internet for a moment first so your latest changes finish saving.</p><div class="actions">${open}</div></div>`;
+        return `<div class="panel movenote" role="status"><b>We’ve moved to ${NEW_HOME}</b><p>Your data is only on this phone, at this old address. To bring it with you, download a backup here, then open the new address and tap Restore backup. Or sign in here first, then sign in at the new address.</p><div class="actions"><button onclick="go('settingsBackup')">${ic('download', 15)} Download backup</button>${open.replace(" primary", "")}<button class="alt" onclick="go('settingsAccount')">Sign in</button></div></div>`;
     }
     if (h === NEW_HOME && !signedIn() && !data.products.length && !data.materials.length && !lsGet('csMoveSeen', false))
         return `<div class="panel movenote" role="status"><div class="row" style="align-items:flex-start"><b>Coming from the old crochetstudiotest address?</b><button class="iconbtn sm" aria-label="Hide this" onclick="lsSet('csMoveSeen', true);render()">${ic('x', 16)}</button></div><p>Sign in to get your data back, or restore the backup you downloaded.</p><div class="actions"><button onclick="go('settingsAccount')">Sign in</button><button class="alt" onclick="go('settingsBackup')">Restore backup</button></div></div>`;

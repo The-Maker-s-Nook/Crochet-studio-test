@@ -1,12 +1,18 @@
 THE MAKERS NOOK - NOTES FOR THE APP OWNER (version 24)
 
 LIVE TEST ADDRESS
-   https://crochetstudiotest.netlify.app
+   https://app.themakersnook.ca   (since Nov 24, 2026)
+   Old address https://crochetstudiotest.netlify.app still works on purpose: it shows a
+   "We've moved" note so testers can sign in or download a backup there. Don't redirect it
+   until every tester has moved (their phone-only data lives at that old address).
+   DNS: Namecheap CNAME "app" -> crochetstudiotest.netlify.app (plus a Netlify TXT record).
+   Supabase: Authentication > URL Configuration > Site URL is the new address; both addresses
+   are in Redirect URLs.
 
 HOW TO UPDATE THE LIVE APP
    1. In the app: Settings > Backup & restore > Download backup (just in case).
    2. Claude saves the finished, tested update to the "main" branch on GitHub
-      (github.com/AaronMete/Crochet-studio-test). Netlify publishes it by itself.
+      (github.com/The-Maker-s-Nook/Crochet-studio-test). Netlify publishes it by itself.
    3. Open the app and tap "Refresh" when "New version ready" appears.
    Each deploy uses about 15 of Netlify's 300 free monthly credits.
    Work in progress is kept on other branches, which don't deploy or use credits.
@@ -40,7 +46,8 @@ BACKUPS
 
 SQUARE CARD PAYMENTS
    Square Developer account: https://developer.squareup.com (app "Crochet Studio").
-   Application ID is built into the app. Point of Sale API > Web callback URL
+   Application ID is built into the app (SQ_APP_ID in js/checkout.js, sq0idp-Ld6Njo7-...).
+   It must be the same app whose Production settings hold the callback URLs below. Point of Sale API > Web callback URL
    must match the app's address (now https://crochetstudiotest.netlify.app/).
    If the address changes (own domain, app stores), update the callback URL there.
    Users turn it on in Settings > Finances > Payments and need the Square Point of Sale app.
@@ -61,3 +68,7 @@ TESTER VERSION (24)
    - Tax (version 24): Product tax and Material tax options, "Not claiming tax on
      materials", and Override tax settings on any product, material or expense.
    - Expenses (version 24): add on a market or in Reports > Expenses; they come off profit.
+
+GUIDES (Tester Guide, What's New)
+   The PDFs in guides/ are built from the text files in tools/guides/.
+   Edit the .txt, then run: python3 tools/guides/build.py guides

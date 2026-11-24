@@ -42,7 +42,9 @@ async function sbFetch(path, { method = 'GET', body, headers = {}, auth = true, 
         }
         catch {
         }
-        throw new SbError(j.msg || j.message || j.error_description || j.error || ('Error ' + r.status), r.status, String(j.error_code || j.code || j.error || ''));
+        let err = new SbError(j.msg || j.message || j.error_description || j.error || ('Error ' + r.status), r.status, String(j.error_code || j.code || j.error || ''));
+        err.reasons = j.weak_password?.reasons || [];
+        throw err;
     }
     if (raw)
         return r;
@@ -102,8 +104,22 @@ function friendlyAuth(e) {
         return 'That code is wrong or has expired. Check the newest email, or tap Send a new code.';
     if (c.includes('rate_limit') || st === 429)
         return 'Too many tries or emails in a short time. Please wait a few minutes and try again.';
-    if (c === 'weak_password' || /password should|weak password/i.test(m))
+    if (c === 'weak_password' || /password should|weak password/i.test(m)) {
+        if (/pwned|leak|known|common/i.test(m) || (e?.reasons || []).includes('pwned'))
+            return 'That password has shown up in a data leak elsewhere, so it isn’t safe. Please choose a different one.';
+        if (/character of each|characters?:/i.test(m) || (e?.reasons || []).includes('characters')) {
+            let need = [];
+            if (/zABCDEFGHIJ/.test(m)) need.push('a letter');
+            else {
+                if (/abcdefghijklmnopqrstuvwxyz/.test(m)) need.push('a lowercase letter');
+                if (/ABCDEFGHIJKLMNOPQRSTUVWXYZ/.test(m)) need.push('a capital letter');
+            }
+            if (/0123456789/.test(m)) need.push('a number');
+            if (/!@#\$%\^&\*/.test(m)) need.push('a symbol like ! or @');
+            return need.length ? `Your password needs at least ${need.length > 1 ? need.slice(0, -1).join(', ') + ' and ' + need[need.length - 1] : need[0]}, and at least 8 characters.` : 'Your password needs a mix of letters, numbers and symbols, and at least 8 characters.';
+        }
         return 'Choose a stronger password with at least 8 characters.';
+    }
     if (c === 'user_already_exists' || c === 'email_exists' || /already (registered|exists)/i.test(m))
         return 'An account with this email already exists. Sign in instead.';
     if (c === 'email_address_invalid' || /invalid.*email|email.*invalid/i.test(m))

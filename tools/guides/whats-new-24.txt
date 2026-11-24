@@ -1,0 +1,126 @@
+# The Makers Nook: What's New in Version 24
+Thank you for testing! This update comes from your feedback: easier packing for markets, clearer tax settings, receipts, new Reports, simpler material stock, reminders, easier deleting, pattern links and tags, and a better way to add photos. It also adds tutorials for every page, a setup guide, a Plans page, and wording that suits every craft, not just crochet.
+**How to get it:** open The Makers Nook and tap **Refresh** when the "New version ready" bubble appears. If you don't see it, close the app fully and open it again. The bottom of Settings shows the version and update number, like **test version 24 · update 23**.
+Your products, materials, markets and sales stay exactly as they are. Please check **Settings -> Finances -> Tax** once after updating (see below).
+
+## New since launch {NEW}
+- **A new name: The Makers Nook.** The app was called Crochet Studio while it was being built. It now has its final name, a new logo in the top bar and a new home-screen icon (a cozy craft room). Tap the name in the top bar to go back to Home from anywhere. Already installed? Your phone may take a few days to show the new icon and name.
+- **Photos in market inventory.** Each product in a market's inventory shows its photo, including while you're selling at the market and when you pack with **+ Add inventory**. The colour or size now shows under the name too.
+- **Cancel button on long forms.** Creating or editing a product, material or market now has **Cancel** beside **Save**, so you don't have to scroll back to the top to leave. If you've typed something, it asks before throwing it away. Thanks to Sue for spotting this!
+- **Always opens on Home.** After fully closing the app, it opens on Home instead of the last pattern you had open. The Patterns page still takes you back to where you were in a pattern.
+- **Update number.** The bottom of Settings now shows which update you have, which helps when sending feedback.
+
+## We've moved to app.themakersnook.ca
+- The app's new address is **app.themakersnook.ca**. Open it, sign in, and add it to your home screen again. Then you can delete the old icon.
+- **Signed in?** Everything comes with you: products, materials, markets, sales, photos and patterns.
+- **No account?** Your data is only on your phone, at the old address. Open the old app, tap **Download backup** in the note at the top of Home, then open the new address and tap **Restore backup**.
+- The old address (crochetstudiotest.netlify.app) still opens for now, so nobody loses their data. It shows a "We've moved" note with a button to open the new address. Open it once with internet before you switch, so any last changes reach your account.
+
+## Tutorials, setup and plans {NEW}
+- **Tutorials for every page.** The first time you open this version, a **New here?** box offers a tour. Pick **Show me around**, **Pick a page to learn**, or **Not now**. Each lesson takes about a minute and points at the real buttons, and you can skip any step.
+- Find tutorials any time with the **?** button at the top of each page (it opens the lesson for the page you're on) or in **Settings -> Tutorials**, which ticks off the lessons you've done.
+- Tutorials never change your data. If you don't have products, materials, an upcoming market and some sales yet, lessons show **Example** items instead. Your own data is set aside, untouched, and comes back the moment the lesson ends.
+- **Setup guide.** New people are asked a few quick questions when they first open the app: their name and business name (or restore a backup file instead), country and currency, their craft, how they price, how to count supplies, and sales tax. Every step can be skipped. It doesn't show for anyone who already has data in the app, so your settings are safe. To go through it yourself, open **Settings -> Setup guide**; it starts with your current settings filled in, and **Close** leaves without changing anything.
+- **Plans page.** **Settings -> Account -> Subscription** shows what the Free and Pro plans will include. The Pro price is still being decided. While testing, everyone has every Pro feature, and plans start with the Google Play and App Store versions.
+
+## For every craft {NEW}
+- The app is now worded for every kind of maker: knitting, sewing, candles, jewellery, crochet and more. Examples, hints and placeholders no longer assume yarn. Hook size stays on products for those who use it.
+- The receipt category **Yarn** is now **Materials**. Receipts you already saved under Yarn moved over by themselves.
+- New messages at the top of Home, for every craft.
+- The starting material categories (Yarn, Eyes, Stuffing) stay for now. A later version will ask about your craft and set these up for you.
+
+## Markets
+- **Market inventory.** The "Inventory to bring" list is now called **Market inventory**.
+- **Packing is quicker.** Tap **+ Add inventory** and every product has **−**, **+** and **All** buttons. **+** stops when you reach the stock you have. A counter shows how many items you've picked. Tap **Add all selected** at the top to add them all at once. **Include all available** still adds everything in one tap.
+- **Costs box.** Each market shows its booth cost and any expenses for it.
+- **Hide market details** folds the dates, address, packing goal and costs into one line, so the inventory and **Start a sale** are right there. It stays folded until you open it again.
+- The **Add all selected** button now stays in the same spot while you pick.
+- **E-transfer made easy.** {NEW} Pick **E-transfer** at checkout and your e-transfer email shows in big letters with the amount, so the customer can type it in. **Show customer** fills the screen with it, and **Copy** copies it. Add your email the first time right there, or any time in **Settings -> Finances -> Payments** (a mobile number works too).
+
+## Receipts and expenses
+- **Snap receipt** sits beside Quick sale on Home. Take a photo or upload a photo or PDF, then add the store, date, category, amount before tax, tax (**Add 13% tax** uses your own rate, or **No tax**), how you paid, an optional market and notes. The photo is optional; you can add it later by tapping the empty photo spot.
+- **Receipts this month** on Home shows how many you've saved, what you spent, and how many still need a photo. Tap it to see all your receipts: pick This month, Last month, This year or All, search by store, category, market or note, and tap a category to filter. Receipts are grouped by month; tap one to see it, zoom the photo, edit or delete it.
+- While testing, each account can keep up to 10 receipt photos to stay within our free storage. Receipts without a photo don't count, so you can keep adding the details.
+- **Categories:** Materials, Supplies, Packaging, Booth fees, Shipping, Tools, Marketing, Gas & travel, Displays & booth, Fees & subscriptions and Other. Tap **+ New category** to add your own.
+- **Nothing is counted twice.** Materials and Supplies receipts are kept as proof only, because those costs are already in Material costs on each sale, and their tax isn't added again. Booth fee receipts are proof only too; the booth cost still comes from the market. Everything else counts as an Other expense, taken off profit before tax.
+- The **Store** box suggests stores you've used before, with how many receipts each, and matches the spelling you used last time.
+- Expenses you added before are now receipts, so they're all in one list. **+ Add expense or receipt** on a market adds one for that market.
+- **Year-end receipts.** After January 1, the app reminds you to save last year's receipt photos as one folder (a folder per month, a folder per category inside, each photo named by date, store and total, plus a Receipts list in Excel). Then **Clear photos** frees up space; the details and totals stay. A note shows on Home in January (hide it for a week), Receipts reminds you each time from February, a pink note shows daily from March, and from April 1 adding new receipts pauses until last year's photos are saved and cleared. Everything else keeps working.
+
+## Reports, redone
+- Reports now has four tabs: **Overview**, **Markets**, **Stock** and **Expenses & tax**.
+- **Overview:** your profit for the time frame, the totals, a profit-by-market chart (tap a bar to open that market), and shortcuts to your best market, top seller, stock, expenses and tax.
+- **Markets:** pick one market, quick sales, or all. See where the money went (discounts, materials, booth, expenses, profit), what sold with each product's price and a line for the ones sold with a discount, how customers paid, discounts by reason, and each market's profit.
+- **Stock:** materials on hand (only materials you're counting) and your finished items.
+- **Expenses & tax:** spending by category, profit after expenses, receipts that still need a photo, and sales tax for the year.
+- Profit shows in green (red only for a loss). Markets with sales that aren't marked completed get a small **Open** button.
+- **Downloads** now include everything for the time frame except photos, on as many pages as needed: a PDF, or an Excel workbook (replacing the CSV) with tabs for the summary, every item sold, products sold, markets, expenses and receipts, sales tax and materials on hand.
+- New **Business name** (optional) in **Settings -> Account**. It shows at the top of your reports and receipts folder. If it's blank, the report shows the app name.
+- **Ready for card fees.** {NEW} When card payments can be taken inside the app (planned for the app-store versions), the processing fees will show in Reports, the PDF and Excel, and come off your profit for each market and overall. Nothing changes for Square or cash sales.
+
+## Material stock, simpler
+- One setting in **Settings -> Finances -> Pricing defaults -> Material stock**: **Pricing only** (no stock counting, just price suggestions), **Pricing and manual stock** (you update stock yourself) or **Pricing and automatic stock** (stock updates as items are made). It replaces the "Track remaining stock" tick on each material and the "Automatically deduct" setting; your old choices were carried over.
+- Any material can use its own setting with **Override stock setting**, like the tax override.
+- In the two stock modes, each material shows **−1** and **+1**. One tap is one full skein, bag or pack, and the line reads like **2 skeins left · 600 g**. **−1** greys out at 0. Tap the line to type the exact amount. A material with no amount yet says **Add how much you have** and is left alone until you do.
+- Each material category has **What do you buy it in?** (skein, ball, bag, pack, bottle, sheet, spool or your own word). Yarn starts as skein, Eyes as pack, Stuffing as bag.
+- If making a product needs more than you have, the app says so plainly, like "This uses 300 g of White cotton but you have 200 g left. Update the amount?", with **Update** or **Continue anyway**.
+- With automatic stock, a product can be set to **Don't use my material stock for this product**, and **+ Add quantity** has **Don't take materials this time**.
+
+## Tax, simplified
+- Money settings are grouped under **Settings -> Finances**: Tax, Pricing defaults, Country & currency and Payments.
+- **Product tax:** Add tax to sale price, Tax already included in sale price, or Neither. If your prices already include tax, checkout charges your price and shows the tax inside it: a $4.40 item at 10% shows $4.00 + $0.40 tax = $4.40.
+- **Material & expense tax:** Inputted pricing includes tax, Add tax to inputted pricing, or Neither. It covers both materials and expenses. Suggested prices and markup use the cost before tax, so you never charge markup on tax.
+- **Not claiming tax on materials and expenses:** tick this if you can't get the tax you pay back. The tax then counts as part of your costs.
+- The tax tick on each product is gone. Any product, material or expense can have its own setting with **Override tax settings** (for example a tax-free item).
+- Tap the **?** beside each option for an explanation. "HST" is now just "sales tax", so it reads right in the US too. New US setups are asked for their local rate.
+> **After updating:** your old tax choices were carried over. If you set the tax tick differently on some products before, those products now follow the main Product tax setting, so take a quick look.
+
+## Reminders
+- A new bell beside Settings opens your **Reminders**. A number on the bell shows how many are still open.
+- Tap the bell on a product to remind yourself to make more, or on a material to buy more. Tap it again to take it off.
+- **My list** is for anything else, not tied to a market. Tick things off as you go, and tap **Clear ticked** to tidy up. Thanks to Sue for the idea!
+
+## Deleting products and materials
+- Swipe left on a product or material and a red **Delete** button appears. Nothing is deleted until you tap Delete. Tap the card or swipe back to cancel.
+- To delete several products at once, tap the trash can beside **+ Tag**, tap the products you want gone (or **Select all**), then tap **Delete** and confirm.
+- A material that a product still uses can't be deleted until it's taken out of that product.
+
+## Patterns
+- **Links work.** Links in your patterns, like YouTube tutorials or the designer's Instagram, Etsy or website, are highlighted in purple. Tap one to open it in a new tab. This works for real links and for web addresses typed into the pattern.
+- **Save pattern links.** If a pattern is online, like an Instagram post, tap **Link** under Add pattern, paste the link and give it a name. Your links are listed by name in the **Links** drop-down on the Patterns page; tap one to open it. Tap the photo spot beside a link to give it a picture, just like products. Links don't count toward the pattern limit.
+- **Pattern tags.** Tap **+ Tag** on the Patterns page to make a tag, then **Tags** on a pattern (or edit a link) to add it. Tap a tag at the top to see only those patterns and links.
+- When you link a pattern to a product, you can pick one of your saved links too. The product page then has an **Open pattern link** button.
+- Rename a pattern from its card. If you leave off .pdf, the app keeps it working.
+- Long patterns open more reliably on phones.
+- **Picks up where you left off.** Each pattern remembers how far you scrolled and your zoom, even after you close it or the app.
+
+## Also new
+- **Spreadsheet import:** if the same product is on several pages (for example a page copied for each market), it's only added once. The app asks which page has your current stock, listing your pages by name, and uses that page's numbers.
+- **Faster and lighter.** Photos are now stored as separate picture files instead of inside your data, so saving and syncing are much quicker, especially at a busy market. Your existing photos move over by themselves the first time you open this version. Backups still include your photos.
+- **Quicker with lots of sales.** {NEW} Receipts, Reports and the PDF and Excel downloads open noticeably faster when you have hundreds of products and thousands of sales.
+- **Phone and tablet changes combine.** {NEW} If two of your devices both change things before they sync (for example sales on a phone with no signal while you edit on a tablet at home), the app now keeps both: every sale, receipt and new product from each device, and stock counts add up both changes. Only when the very same detail was changed on both does the newest one win.
+- **Undo after deleting.** {NEW} Deleting a product or material shows **Undo** for a few seconds.
+- **"Discard your changes?"** {NEW} Leaving a product, material, market or receipt form with unsaved changes now asks first, so typing isn't lost by accident.
+- **Back button closes pop-ups.** {NEW} On Android (and the browser's back), back now closes an open pop-up first instead of leaving the screen behind it.
+- **Unfinished sales are kept.** {NEW} If the app is closed or refreshed partway through a sale, the items you picked are still there when you come back. Nothing is charged until you complete the sale.
+- **Packing goal.** {NEW} A market's "Inventory value target" is now called **Packing goal** (optional): how much stock, at your selling prices, you want to bring.
+- **Time to make is optional.** {NEW} Leave it empty if you don't price by the hour.
+- **Number checks.** {NEW} Number boxes no longer accept negative numbers or typos with extra zeros (the most is 9,999,999), and money amounts show commas, like $1,250.00.
+- **Your data stays safe if it can't be opened.** {NEW} In the rare case the app can't read what's saved on your phone, it now says so and saves nothing over it, instead of opening empty.
+- Photos stay in the order you picked them when you add several at once.
+- **Back button fix.** {NEW} Tapping back quickly several times no longer skips past the first page or out of the app.
+- **Make a variation.** {NEW} On a product's page, tap **Make a variation** to start a new product filled in from that one (materials, time, hook, price, tags and pattern). Type the variation, change what's different and save. Stock starts at 0, and photos and sales aren't copied. Product cards now show the variation after the name, like **Bunny plush · Blue**.
+- **Send feedback** now goes to our new support address, support@themakersnook.ca.
+- **Adding photos.** Tapping a photo spot now gives you **Take photo**, **Choose from gallery** or **Browse files**. On some Android phones it used to jump straight to the gallery.
+- When you create an account or change your password, you now type the password twice to make sure it matches.
+- **Nicer drop-down lists.** Picking a pattern for a product, sorting, and choosing a time frame or market in Reports now open a list in the app's own style, with pattern pictures.
+- **Materials and receipts:** when there are more categories than fit, a fade and arrows on both sides show there's more, and each tap moves along a few at a time so none are skipped. The reminder bell on a material just changes colour when it's on.
+- **Pinch to zoom** in patterns, guides and receipt photos, as well as the + and − buttons.
+- **Smaller photos.** New photos are compressed to the size the app shows them, so they save, sync and back up faster and take less space. Big pattern photos are shrunk too, still sharp enough to read.
+- Open groups on the Materials and Products pages fold back up when you leave the page.
+- **The top bar stays put.** The app name, reminders bell and settings stay at the top while you scroll, on every screen.
+- "Saved recipe" on a product is now **Saved formula**.
+- A few emoji were swapped for the app's own icons so they look the same on every phone, and small spelling and layout fixes throughout.
+- Very old sales (from before version 18) were moved to the same format as new sales, so they can be edited like any other sale.
+
+Please keep the feedback coming through **Settings -> Send feedback**.
