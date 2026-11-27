@@ -153,6 +153,7 @@ Use the app as you normally would for your business. If you can, try each of the
 [] Use the app with no internet (airplane mode), then turn it back on
 [] With an account: sign in on a second device and check everything came across
 [] If you use Square: run the $1 test, then take a real card sale through The Makers Nook
+[] Try each colour in **Settings -> Colour theme** and keep the one you like
 [] Make a backup (**Settings -> Backup & restore**)
 
 ## Feedback questions
@@ -201,6 +202,7 @@ When something goes wrong, send a message with:
 ### Tips
 - Open the app from the home-screen icon, not the browser. Data in the browser and the installed app can be separate on iPhone.
 - Tax is set in **Settings -> Finances -> Tax**. Tap the **?** beside each option for a plain explanation with examples.
+- Prefer different colours? **Settings -> Colour theme** has Lavender, Red, Blue and Green.
 - Not sure how a page works? Tap the **?** at the top of it for a quick lesson.
 - If a small **Powered by Netlify** badge appears in the bottom-right corner, tap it and choose **Hide**. It comes from the hosting service, not the app.
 - Tap **Refresh** whenever "New version ready" appears.

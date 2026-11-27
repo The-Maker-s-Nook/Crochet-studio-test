@@ -230,7 +230,9 @@ render = function () {
         loadFailed = await dbPromise.then(() => true, () => 'storage');
     }
     dataLoaded = true;
-    delete data.settings.theme;
+    // Old versions kept a different 'theme' setting here; keep only the current colour themes (Settings › Colour theme)
+    if (!THEMES.some(t => t.id === data.settings.theme))
+        delete data.settings.theme;
     // Photos: show them straight away, and move any still stored inside the data out to their own files (js/photos.js)
     await loadPhotoCache();
     if (externalizePhotos(data))

@@ -1,10 +1,11 @@
 # The Makers Nook: What's New in Version 24
 Thank you for testing! This update comes from your feedback: easier packing for markets, clearer tax settings, receipts, new Reports, simpler material stock, reminders, easier deleting, pattern links and tags, and a better way to add photos. It also adds tutorials for every page, a setup guide, a Plans page, and wording that suits every craft, not just crochet.
-**How to get it:** open The Makers Nook and tap **Refresh** when the "New version ready" bubble appears. If you don't see it, close the app fully and open it again. The bottom of Settings shows the version and update number, like **test version 24 · update 23**.
+**How to get it:** open The Makers Nook and tap **Refresh** when the "New version ready" bubble appears. If you don't see it, close the app fully and open it again. The bottom of Settings shows the version and update number, like **test version 24 · update 24**.
 Your products, materials, markets and sales stay exactly as they are. Please check **Settings -> Finances -> Tax** once after updating (see below).
 
 ## New since launch {NEW}
 - **A new name: The Makers Nook.** The app was called Crochet Studio while it was being built. It now has its final name, a new logo in the top bar and a new home-screen icon (a cozy craft room). Tap the name in the top bar to go back to Home from anywhere. Already installed? Your phone may take a few days to show the new icon and name.
+- **Colour themes.** {NEW} Pick the app's colours in **Settings -> Colour theme**: Lavender, Red, Blue or Green. The whole app changes right away, including your PDF reports, and if you're signed in your other devices follow along.
 - **Photos in market inventory.** Each product in a market's inventory shows its photo, including while you're selling at the market and when you pack with **+ Add inventory**. The colour or size now shows under the name too.
 - **Cancel button on long forms.** Creating or editing a product, material or market now has **Cancel** beside **Save**, so you don't have to scroll back to the top to leave. If you've typed something, it asks before throwing it away. Thanks to Sue for spotting this!
 - **Always opens on Home.** After fully closing the app, it opens on Home instead of the last pattern you had open. The Patterns page still takes you back to where you were in a pattern.

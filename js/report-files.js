@@ -165,7 +165,7 @@ function reportPdf(r) {
         h = h.replace('#', '');
         return [0, 2, 4].map(i => (parseInt(h.substr(i, 2), 16) / 255).toFixed(3)).join(' ');
     };
-    const INK = '#2E1F47', INK2 = '#5B4782', SOFT = '#EDE6FA', BOX = '#F7F3FF', LAV = '#C9B5EE', GOOD = '#1F7A3D', BAD = '#B42828';
+    const INK = cssVar('--ink', '#2E1F47'), INK2 = cssVar('--ink2', '#5B4782'), SOFT = cssVar('--lav-soft', '#EDE6FA'), BOX = cssVar('--sel-bg', '#F7F3FF'), LAV = cssVar('--lav', '#C9B5EE'), GOOD = '#1F7A3D', BAD = '#B42828';
     const money = v => ({ t: signedCash(v), c: v < 0 ? BAD : GOOD });
     const txt = (x, yy, s, size = 10, bold = false, color = INK, align = 'left') => {
         s = pdfEnc(s);
@@ -269,7 +269,7 @@ function reportPdf(r) {
     };
     let P = reportPack(r), f = P.f, cur = P.cur, now = new Date();
     // Header: business name (or the app name), then the time frame
-    txt(M, y - 14, P.who || 'The Makers Nook', 11, true, '#6B5596');
+    txt(M, y - 14, P.who || 'The Makers Nook', 11, true, cssVar('--eyebrow', '#6B5596'));
     txt(M, y - 40, 'Sales report', 24, true);
     txt(M, y - 58, `${r.rangeLabel} · ${r.marketLabel}`, 10.5, true, INK2);
     txt(W - M, y - 30, 'Made ' + now.toLocaleDateString('en-CA', { year: 'numeric', month: 'short', day: 'numeric' }), 9, false, INK2, 'right');
